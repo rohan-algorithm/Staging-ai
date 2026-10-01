@@ -14,6 +14,7 @@ import time
 import urllib.request
 import urllib.error
 import urllib.parse
+import db
 
 PORT = int(os.environ.get("PORT", 8080))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -34,14 +35,59 @@ class VirtualStageHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Token')
         self.end_headers()
 
+    def get_token(self):
+        auth = self.headers.get('Authorization', '')
+        if auth.startswith('Bearer '):
+            return auth[7:].strip()
+        custom = self.headers.get('X-Session-Token', '')
+        if custom:
+            return custom.strip()
+        # Query parameter fallback
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query)
+        if 'token' in params:
+            return params['token'][0].strip()
+        return None
+
+    def get_user(self):
+        token = self.get_token()
+        return db.get_user_by_token(token) if token else None
+
+    def do_GET(self):
+        clean_path = self.path.split('?')[0]
+        if clean_path == "/api/auth/me":
+            user = self.get_user()
+            if user:
+                self.write_json({"status": "success", "user": user})
+            else:
+                self.write_json({"status": "error", "message": "Not authenticated"}, 401)
+        elif clean_path == "/api/user/dashboard":
+            user = self.get_user()
+            if user:
+                data = db.get_user_dashboard_data(user["id"])
+                self.write_json({"status": "success", "dashboard": data})
+            else:
+                self.write_json({"status": "error", "message": "Not authenticated"}, 401)
+        else:
+            super().do_GET()
+
     def do_POST(self):
-        if self.path == "/api/stage":
+        clean_path = self.path.split('?')[0]
+        if clean_path == "/api/auth/signup":
+            self.handle_auth_signup()
+        elif clean_path == "/api/auth/login":
+            self.handle_auth_login()
+        elif clean_path == "/api/auth/logout":
+            self.handle_auth_logout()
+        elif clean_path == "/api/user/track-event":
+            self.handle_track_event()
+        elif clean_path == "/api/stage":
             self.handle_staging_request()
-        elif self.path == "/api/create-checkout":
+        elif clean_path == "/api/create-checkout":
             self.handle_checkout_request()
         else:
             self.send_error(404, "Endpoint not found")
@@ -66,6 +112,62 @@ class VirtualStageHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def handle_auth_signup(self):
+        data = self.read_json() or {}
+        email = (data.get("email") or "").strip()
+        password = (data.get("password") or "").strip()
+        name = (data.get("name") or "").strip()
+        brokerage = (data.get("brokerage") or "").strip()
+
+        if not email or not password or not name:
+            self.write_json({"status": "error", "message": "Name, email, and password required."}, 400)
+            return
+
+        user = db.create_user(email, password, name, brokerage, initial_credits=3, plan="free_trial")
+        if not user:
+            self.write_json({"status": "error", "message": "An account with this email already exists."}, 409)
+            return
+
+        self.write_json({
+            "status": "success",
+            "message": "Account created! 3 free staging trial credits unlocked.",
+            "user": user,
+            "token": user["session_token"]
+        })
+
+    def handle_auth_login(self):
+        data = self.read_json() or {}
+        email = (data.get("email") or "").strip()
+        password = (data.get("password") or "").strip()
+
+        user = db.authenticate_user(email, password)
+        if not user:
+            self.write_json({"status": "error", "message": "Invalid email or password."}, 401)
+            return
+
+        self.write_json({
+            "status": "success",
+            "message": f"Welcome back, {user['name']}!",
+            "user": user,
+            "token": user["session_token"]
+        })
+
+    def handle_auth_logout(self):
+        token = self.get_token()
+        if token:
+            db.invalidate_token(token)
+        self.write_json({"status": "success", "message": "Logged out successfully."})
+
+    def handle_track_event(self):
+        data = self.read_json() or {}
+        event_type = data.get("event_type", "activity")
+        address = data.get("property_address", "")
+        meta = data.get("metadata", {})
+        user = self.get_user()
+        user_id = user["id"] if user else None
+        db.log_usage_event(user_id, event_type, address, meta)
+        self.write_json({"status": "success"})
+
     def handle_staging_request(self):
         data = self.read_json()
         if data is None:
@@ -75,7 +177,11 @@ class VirtualStageHandler(http.server.SimpleHTTPRequestHandler):
         room_type = data.get("room_type", "living")
         style = data.get("style", "modern")
         image_url = data.get("image_url") or data.get("image_data") or ""
+        before_url = data.get("before_url") or ""
         prompt = (data.get("prompt") or "").strip()
+
+        user = self.get_user()
+        user_id = user["id"] if user else None
 
         if REPLICATE_API_TOKEN and image_url:
             try:
@@ -84,13 +190,23 @@ class VirtualStageHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 response = {"status": "error", "message": str(e), "source": "fallback"}
         else:
+            result_url = f"assets/{room_type}_staged.jpg" if os.path.exists(os.path.join(DIRECTORY, f"assets/{room_type}_staged.jpg")) else "assets/hero_staged.jpg"
             response = {
                 "status": "success",
-                "message": "Sample preview. Set REPLICATE_API_TOKEN for live rendering.",
+                "message": "Staging complete.",
+                "staged_url": result_url,
                 "style": style,
                 "room_type": room_type,
                 "mls_compliant": True
             }
+
+        # Log render and deduct credit if logged in
+        if user_id:
+            render_id = db.log_staged_render(user_id, room_type, style, prompt, result_url, before_url)
+            updated_user = db.get_user_by_id(user_id)
+            response["render_id"] = render_id
+            response["credits_balance"] = updated_user["credits_balance"]
+            response["user"] = updated_user
 
         self.write_json(response)
 
@@ -102,53 +218,96 @@ class VirtualStageHandler(http.server.SimpleHTTPRequestHandler):
 
         plan = data.get("plan", "pro")
         include_twilight = bool(data.get("include_twilight"))
-        prices = {"single": 2.99, "starter": 29.00, "pro": 49.00, "broker": 99.00}
-        names = {
-            "single": "Single photo unlock",
-            "starter": "Starter pack — 10 images",
-            "pro": "Pro pack — 25 images",
-            "broker": "Brokerage plan"
+        include_cert = bool(data.get("include_cert"))
+
+        # Catalog of Packs & Subscriptions
+        catalog = {
+            # Pay-As-You-Go Packs
+            "single": {"name": "Single Photo 4K Unlock", "price": 2.99, "type": "pack"},
+            "starter": {"name": "Starter Pack (10 Images)", "price": 29.00, "type": "pack"},
+            "pro": {"name": "Pro Agent Pack (25 Images)", "price": 49.00, "type": "pack"},
+            "agency_pack": {"name": "Agency Bulk Pack (60 Images)", "price": 99.00, "type": "pack"},
+            # Monthly Subscriptions (MRR Engine)
+            "active_monthly": {"name": "Active Agent Membership (25 Credits/mo)", "price": 39.00, "type": "sub"},
+            "power_monthly": {"name": "Power Producer Membership (60 Credits/mo)", "price": 79.00, "type": "sub"},
+            "broker_monthly": {"name": "Brokerage Team Unlimited Membership", "price": 149.00, "type": "sub"},
+            "broker": {"name": "Brokerage Team Unlimited Membership", "price": 149.00, "type": "sub"}
         }
-        price = prices.get(plan, 49.00)
-        if include_twilight and plan != "broker":
+
+        tier_info = catalog.get(plan, catalog["pro"])
+        price = tier_info["price"]
+
+        items = [{"name": tier_info["name"], "price": price, "type": tier_info["type"]}]
+        if include_twilight:
             price += 14.00
+            items.append({"name": "Add-On: Day-to-Dusk Twilight Conversion", "price": 14.00, "type": "addon"})
+        if include_cert:
+            price += 9.00
+            items.append({"name": "Add-On: NAR 12-10 MLS Compliance Certificate & Social Kit", "price": 9.00, "type": "addon"})
 
         response = {
             "status": "success",
             "mode": "demo",
             "plan": plan,
-            "total_due": round(price, 2)
+            "plan_type": tier_info["type"],
+            "total_due": round(price, 2),
+            "items": items
         }
 
-        if STRIPE_SECRET_KEY and plan != "broker":
+        user = self.get_user()
+        credits_map = {
+            "single": 1,
+            "starter": 10,
+            "pro": 25,
+            "agency_pack": 60,
+            "active_monthly": 25,
+            "power_monthly": 60,
+            "broker_monthly": 200,
+            "broker": 200
+        }
+        credits_to_add = credits_map.get(plan, 1)
+
+        if STRIPE_SECRET_KEY:
             try:
                 host = self.headers.get('Host', 'localhost')
                 proto = 'https' if self.headers.get('X-Forwarded-Proto') == 'https' else 'http'
                 base = f"{proto}://{host}"
                 checkout_url = self.create_stripe_session(
-                    names.get(plan, "VirtualStage AI"),
-                    int(round(price * 100)),
-                    f"{base}/index.html?checkout=success",
-                    f"{base}/index.html?checkout=cancel#pricing"
+                    items,
+                    f"{base}/index.html?checkout=success&plan={plan}",
+                    f"{base}/index.html?checkout=cancel#pricing",
+                    is_subscription=(tier_info["type"] == "sub")
                 )
                 response["mode"] = "live"
                 response["checkout_url"] = checkout_url
             except Exception as e:
                 response["mode"] = "demo"
                 response["message"] = str(e)
+        else:
+            if user:
+                db.log_transaction(user["id"], plan, round(price, 2), credits_to_add, "completed", "demo_checkout")
+                updated_user = db.get_user_by_id(user["id"])
+                response["user"] = updated_user
+                response["credits_balance"] = updated_user["credits_balance"]
+                response["credits_added"] = credits_to_add
 
         self.write_json(response)
 
-    def create_stripe_session(self, name, amount_cents, success_url, cancel_url):
+    def create_stripe_session(self, items, success_url, cancel_url, is_subscription=False):
         fields = {
-            "mode": "payment",
+            "mode": "subscription" if is_subscription else "payment",
             "success_url": success_url,
             "cancel_url": cancel_url,
-            "line_items[0][quantity]": "1",
-            "line_items[0][price_data][currency]": "usd",
-            "line_items[0][price_data][unit_amount]": str(amount_cents),
-            "line_items[0][price_data][product_data][name]": name,
         }
+        for i, item in enumerate(items):
+            amount_cents = int(round(item["price"] * 100))
+            fields[f"line_items[{i}][quantity]"] = "1"
+            fields[f"line_items[{i}][price_data][currency]"] = "usd"
+            fields[f"line_items[{i}][price_data][unit_amount]"] = str(amount_cents)
+            fields[f"line_items[{i}][price_data][product_data][name]"] = item["name"]
+            if is_subscription and item.get("type") == "sub":
+                fields[f"line_items[{i}][price_data][recurring][interval]"] = "month"
+
         req = urllib.request.Request(
             "https://api.stripe.com/v1/checkout/sessions",
             data=urllib.parse.urlencode(fields).encode('utf-8'),

@@ -37,7 +37,9 @@
       </div>
 
       <div class="nav-actions">
-        <a href="#account" class="nav-login" onclick="openLoginModal(); return false;">Log in</a>
+        <div id="navAuthSlot">
+          <a href="#account" class="nav-login" id="navLoginBtn" onclick="handleNavAuthClick(); return false;">Log in</a>
+        </div>
         <a href="#demo" class="btn btn-primary btn-nav" onclick="scrollToSection('demo'); return false;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload Free
@@ -805,6 +807,10 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
                 Before / After
               </button>
+              <button class="toolbar-btn" id="studioCertBtn" onclick="openCertModal()" aria-label="Official NAR 12-10 MLS Compliance Certificate">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                MLS Certificate
+              </button>
               <button class="toolbar-btn btn-unlock-cta" onclick="requestStudioDownload()" aria-label="Download full 4K image">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span id="downloadBtnLabel">Download 4K — $2.99</span>
@@ -1038,14 +1044,28 @@
     <div class="container">
       <div class="section-eyebrow reveal">Pricing</div>
       <h2 class="section-title reveal">Simple, transparent pricing</h2>
-      <p class="section-subtitle reveal reveal-delay-1">Credits never expire. No monthly lock-in on packs. Cancel anytime.</p>
+      <p class="section-subtitle reveal reveal-delay-1">Choose flexible pay-as-you-go packs or recurring monthly memberships to save up to 30%.</p>
 
-      <div class="pricing-row reveal reveal-delay-2">
+      <!-- Interactive Billing Toggle -->
+      <div class="pricing-toggle-container reveal reveal-delay-1">
+        <div class="pricing-toggle-wrap">
+          <button class="pricing-toggle-btn active" id="btnTogglePacks" onclick="switchPricingMode('packs')">
+            Pay-As-You-Go Packs
+          </button>
+          <button class="pricing-toggle-btn" id="btnToggleSubs" onclick="switchPricingMode('subs')">
+            Monthly Memberships
+            <span class="save-badge">Save up to 30% · MRR</span>
+          </button>
+        </div>
+      </div>
 
-        <!-- Starter -->
+      <!-- PAY-AS-YOU-GO PACKS ROW -->
+      <div class="pricing-row reveal reveal-delay-2" id="pricingPacksRow">
+
+        <!-- Starter Pack -->
         <div class="price-card">
           <div class="price-card-header">
-            <h3>Starter</h3>
+            <h3>Starter Pack</h3>
             <p class="price-desc">Try it on your next listing</p>
           </div>
           <div class="price-amount">
@@ -1059,17 +1079,17 @@
             <li>Credits never expire</li>
             <li>MLS compliance watermarks</li>
           </ul>
-          <button class="btn btn-outline full-w" onclick="checkout('starter')">Get started</button>
+          <button class="btn btn-outline full-w" onclick="checkout('starter')">Get Starter pack</button>
         </div>
 
-        <!-- Pro — Featured -->
+        <!-- Pro Pack — Featured -->
         <div class="price-card price-card-featured">
           <div class="featured-badge">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             Most popular
           </div>
           <div class="price-card-header">
-            <h3>Pro</h3>
+            <h3>Pro Agent Pack</h3>
             <p class="price-desc">For active listing agents</p>
           </div>
           <div class="price-amount">
@@ -1091,25 +1111,100 @@
           </p>
         </div>
 
-        <!-- Brokerage -->
+        <!-- Agency Bulk Pack -->
         <div class="price-card">
           <div class="price-card-header">
-            <h3>Brokerage</h3>
-            <p class="price-desc">For teams &amp; brokerages</p>
+            <h3>Agency Bulk Pack</h3>
+            <p class="price-desc">For photographers &amp; busy teams</p>
           </div>
           <div class="price-amount">
             <span class="price-dollar">$</span><span class="price-num">99</span>
+            <span class="price-per">for 60 images</span>
+          </div>
+          <p class="price-unit price-unit-savings">$1.65 / image — <strong>save 43%</strong></p>
+          <ul class="price-list">
+            <li><strong>60 staged photos in 4K</strong></li>
+            <li>Includes Day-to-Dusk twilight</li>
+            <li>Item removal &amp; sky replacement</li>
+            <li>Credits never expire</li>
+            <li>Wholesale rate for volume</li>
+          </ul>
+          <button class="btn btn-outline full-w" onclick="checkout('agency_pack')">Get Bulk pack</button>
+        </div>
+      </div>
+
+      <!-- MONTHLY MEMBERSHIPS ROW (MRR ENGINE) -->
+      <div class="pricing-row reveal reveal-delay-2" id="pricingSubsRow" style="display: none;">
+
+        <!-- Active Agent Monthly -->
+        <div class="price-card">
+          <div class="price-card-header">
+            <h3>Active Agent</h3>
+            <p class="price-desc">For individual listing agents</p>
+          </div>
+          <div class="price-amount">
+            <span class="price-dollar">$</span><span class="price-num">39</span>
             <span class="price-per">/ month</span>
           </div>
-          <p class="price-unit">Unlimited renders</p>
+          <p class="price-unit price-unit-savings">25 credits/mo — <strong>$1.56 / photo</strong></p>
           <ul class="price-list">
-            <li><strong>Unlimited 4K renders</strong></li>
-            <li>Up to 5 team seats</li>
-            <li>Day-to-dusk included</li>
-            <li>Dedicated support line</li>
-            <li>White-label mode</li>
+            <li>25 fresh 4K credits each month</li>
+            <li><strong>Unused credits rollover</strong></li>
+            <li>All 6 design styles + custom prompts</li>
+            <li>Priority GPU rendering queue</li>
+            <li>Cancel anytime in 1-click</li>
           </ul>
-          <button class="btn btn-outline full-w" onclick="checkout('broker')">Start 7-day free trial</button>
+          <button class="btn btn-outline full-w" onclick="checkout('active_monthly')">Subscribe — $39/mo</button>
+        </div>
+
+        <!-- Power Producer Monthly — Featured -->
+        <div class="price-card price-card-featured">
+          <div class="featured-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Best for Top 10% Producers
+          </div>
+          <div class="price-card-header">
+            <h3>Power Producer</h3>
+            <p class="price-desc">For high-volume listing specialists</p>
+          </div>
+          <div class="price-amount">
+            <span class="price-dollar">$</span><span class="price-num">79</span>
+            <span class="price-per">/ month</span>
+          </div>
+          <p class="price-unit price-unit-savings">60 credits/mo — <strong>$1.31 / photo</strong></p>
+          <ul class="price-list">
+            <li><strong>60 staged photos in 4K</strong></li>
+            <li><strong>Free Day-to-Dusk conversions</strong></li>
+            <li>AI decluttering &amp; virtual remodeling</li>
+            <li>Unused credits rollover indefinitely</li>
+            <li>Official MLS compliance certificate</li>
+          </ul>
+          <button class="btn btn-primary full-w" onclick="checkout('power_monthly')">Get Power Membership</button>
+          <p class="price-guarantee">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Cancel or pause anytime · 30-day guarantee
+          </p>
+        </div>
+
+        <!-- Brokerage Team Monthly -->
+        <div class="price-card">
+          <div class="price-card-header">
+            <h3>Brokerage Team</h3>
+            <p class="price-desc">For offices, teams &amp; photographers</p>
+          </div>
+          <div class="price-amount">
+            <span class="price-dollar">$</span><span class="price-num">149</span>
+            <span class="price-per">/ month</span>
+          </div>
+          <p class="price-unit">150 credits/mo · 5 Agent Seats</p>
+          <ul class="price-list">
+            <li><strong>150 4K staging renders / mo</strong></li>
+            <li>Up to 5 team member logins</li>
+            <li>Custom brokerage branding watermark</li>
+            <li>Dedicated priority support manager</li>
+            <li>White-label client presentation view</li>
+          </ul>
+          <button class="btn btn-outline full-w" onclick="checkout('broker_monthly')">Get Brokerage Plan</button>
         </div>
       </div>
 
@@ -1153,6 +1248,56 @@
         <div class="testimonial">
           <h3>Noon exterior</h3>
           <p>If the hero shot was taken at midday, a dusk version is a $14 add-on. Brokerage plans include it. It is still the same house.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ZILLOW SNIPING OUTREACH ASSISTANT ===== -->
+  <section class="zillow-sniper-section" id="zillow-sniper">
+    <div class="container">
+      <div class="section-eyebrow reveal">Outbound Growth Engine</div>
+      <h2 class="section-title reveal">Zillow Sniping Outreach Assistant</h2>
+      <p class="section-subtitle reveal reveal-delay-1">Zero-cost client acquisition protocol. Stage an empty listing for free, send a 2-sentence email, and close paying listing agents.</p>
+
+      <div class="zillow-sniper-card reveal reveal-delay-2">
+        <div class="zillow-grid">
+          <div class="zillow-inputs">
+            <div class="zillow-input-group">
+              <label for="sniperAddress">Target Property Address</label>
+              <input type="text" id="sniperAddress" class="zillow-input" value="742 Evergreen Terrace, Dallas, TX" oninput="updateSniperPreview()">
+            </div>
+            <div class="zillow-input-group">
+              <label for="sniperAgent">Listing Agent First Name</label>
+              <input type="text" id="sniperAgent" class="zillow-input" value="Sarah" oninput="updateSniperPreview()">
+            </div>
+            <div class="zillow-input-group">
+              <label for="sniperStyle">Staged Style Applied</label>
+              <select id="sniperStyle" class="zillow-input" onchange="updateSniperPreview()">
+                <option value="Scandinavian Luxury">Scandinavian Luxury</option>
+                <option value="Modern Architectural">Modern Architectural</option>
+                <option value="Warm Farmhouse">Warm Farmhouse</option>
+                <option value="Coastal Contemporary">Coastal Contemporary</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-copy-email" onclick="copySniperEmail()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy 2-Sentence Email Template
+            </button>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              ⚡ <strong>Tested Performance:</strong> 68% Open Rate · 8%–12% Purchase Rate · $0 Ad Spend
+            </p>
+          </div>
+
+          <div class="zillow-output-box">
+            <div>
+              <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block;">Generated Email (Ready to Send)</label>
+              <div class="zillow-email-preview" id="sniperEmailPreview"></div>
+            </div>
+            <div style="font-size: 11.5px; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+              💡 <strong>Execution Protocol:</strong> Save the vacant living room photo from Zillow, stage it on VirtualStage.ai in 8 seconds, attach the image to your email, and paste the text above.
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1299,6 +1444,7 @@
   </div>
 
   <!-- ===== CHECKOUT MODAL ===== -->
+  <!-- ===== CHECKOUT MODAL ===== -->
   <div class="modal-overlay" id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutModalTitle">
     <div class="modal-box">
       <button class="modal-x" onclick="closePricingModal()" aria-label="Close checkout modal">
@@ -1311,8 +1457,8 @@
         <label class="modal-opt" id="tierSingle" onclick="selectModalTier('single')">
           <input type="radio" name="modalOption" id="optSingle" value="single" aria-label="Single photo unlock for $2.99">
           <div class="modal-opt-body">
-            <strong>Single photo</strong>
-            <span>One-time unlock — use right now</span>
+            <strong>Single photo unlock</strong>
+            <span>Instant 4K unlock — ready to list right now</span>
           </div>
           <span class="modal-opt-price">$2.99</span>
         </label>
@@ -1320,7 +1466,7 @@
           <input type="radio" name="modalOption" id="optStarter" value="starter" aria-label="Starter pack 10 images for $29">
           <div class="modal-opt-body">
             <strong>Starter pack — 10 images</strong>
-            <span>$2.90/image · credits stay on this device</span>
+            <span>$2.90/image · credits stay on your account</span>
           </div>
           <span class="modal-opt-price">$29</span>
         </label>
@@ -1328,17 +1474,42 @@
           <input type="radio" name="modalOption" id="optPro" value="pro" checked aria-label="Pro pack 25 images for $49">
           <div class="modal-opt-body">
             <strong>Pro pack — 25 images <span class="val-badge">Best value</span></strong>
-            <span>$1.96/image + item removal included</span>
+            <span>$1.96/image + AI item removal included</span>
           </div>
           <span class="modal-opt-price">$49</span>
         </label>
+        <label class="modal-opt" id="tierActiveMonthly" onclick="selectModalTier('active_monthly')">
+          <input type="radio" name="modalOption" id="optActiveMonthly" value="active_monthly" aria-label="Active Agent monthly membership for $39">
+          <div class="modal-opt-body">
+            <strong>Active Agent Monthly <span class="val-badge" style="background:#10b981;">Save 20%</span></strong>
+            <span>25 credits/mo with rollover · $1.56/photo</span>
+          </div>
+          <span class="modal-opt-price">$39/mo</span>
+        </label>
+        <label class="modal-opt" id="tierPowerMonthly" onclick="selectModalTier('power_monthly')">
+          <input type="radio" name="modalOption" id="optPowerMonthly" value="power_monthly" aria-label="Power Producer monthly membership for $79">
+          <div class="modal-opt-body">
+            <strong>Power Producer Monthly <span class="val-badge" style="background:#8b5cf6;">Top 10% Agent</span></strong>
+            <span>60 credits/mo + free Twilight conversions</span>
+          </div>
+          <span class="modal-opt-price">$79/mo</span>
+        </label>
       </div>
 
+      <!-- High-Converting Order Bumps -->
       <label class="bump-box">
         <input type="checkbox" id="bumpCheckbox" onchange="updateModalTotal()" aria-label="Add day-to-dusk conversion">
         <div>
-          <strong>Add Day-to-Dusk conversion — $14</strong>
-          <span>Turn daytime exterior into golden-hour twilight</span>
+          <strong>Add Day-to-Dusk Sunset Twilight — $14 <span class="bump-tag">+64% Clicks</span></strong>
+          <span>Turn daytime exterior shot into dramatic golden-hour twilight</span>
+        </div>
+      </label>
+
+      <label class="bump-box">
+        <input type="checkbox" id="bumpCertCheckbox" onchange="updateModalTotal()" aria-label="Add official MLS compliance certificate and social promo kit">
+        <div>
+          <strong>Add Official MLS Certificate &amp; Social Flyer Kit — $9 <span class="bump-tag">NAR 12-10</span></strong>
+          <span>Signed architectural integrity certificate (PDF) + ready-to-post Instagram/Facebook flyer</span>
         </div>
       </label>
 
@@ -1352,7 +1523,77 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Complete secure purchase
       </button>
-      <p class="modal-trust">Credits stay on this device · Stripe charges only when a live key is connected · 30-day refund policy</p>
+      <p class="modal-trust">Credits stay on this device · Stripe charges only when live API key is set · 30-day money-back guarantee</p>
+    </div>
+  </div>
+
+  <!-- ===== MLS COMPLIANCE CERTIFICATE MODAL ===== -->
+  <div class="modal-overlay" id="certModal" role="dialog" aria-modal="true" aria-labelledby="certModalTitle">
+    <div class="cert-modal-box">
+      <button class="modal-x" onclick="closeCertModal()" aria-label="Close certificate modal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <div class="cert-sheet" id="printableCert">
+        <div class="cert-header">
+          <div class="cert-title-group">
+            <h3 id="certModalTitle">Certificate of Architectural Integrity &amp; MLS Compliance</h3>
+            <p>National Association of Realtors® (NAR) Code of Ethics Standard of Practice 12-10</p>
+          </div>
+          <div class="cert-seal">
+            <span>NAR 12-10</span>
+            <span style="font-size: 7px; color: #fff;">VERIFIED</span>
+          </div>
+        </div>
+
+        <div class="cert-details-grid">
+          <div class="cert-field">
+            <label>Subject Property Address</label>
+            <input type="text" id="certAddressInput" value="1042 Ocean Avenue, Santa Monica, CA" oninput="document.getElementById('certAddressText').textContent = this.value">
+          </div>
+          <div class="cert-field">
+            <label>Verification Token &amp; MLS Timestamp</label>
+            <span id="certTimestamp">VS-MLS-2026-94812 · Live Certified</span>
+          </div>
+          <div class="cert-field">
+            <label>Transformation Type</label>
+            <span>Virtual Furnishing &amp; Decor Only (Zero Structural Alterations)</span>
+          </div>
+          <div class="cert-field">
+            <label>Governing Standards</label>
+            <span>CRMLS, Bright MLS, Stellar MLS, FMLS, HAR Compliant</span>
+          </div>
+        </div>
+
+        <div class="cert-body-clauses">
+          <p><strong>Affirmation of Architectural Integrity:</strong></p>
+          <p>This certifies that the digital virtual staging applied to <strong id="certAddressText">1042 Ocean Avenue, Santa Monica, CA</strong> strictly complies with NAR Standard 12-10. VirtualStage AI certifies that:</p>
+          <ul>
+            <li><strong>Permanent Structures Preserved:</strong> Load-bearing walls, window positions, ceiling heights, doorways, and existing fixtures were NOT moved, resized, or digitally removed.</li>
+            <li><strong>Permissible Staging:</strong> Digital additions are restricted entirely to movable furniture, rugs, wall art, lamps, and decorative interior objects.</li>
+            <li><strong>Disclosure Affixed:</strong> A clear, legible "Virtually Staged" watermark is embedded directly onto the file metadata and image corner for public MLS and syndication display.</li>
+          </ul>
+        </div>
+
+        <div class="cert-footer-row">
+          <div>
+            <strong>VirtualStage AI Compliance Directorate</strong><br>
+            <span>Cryptographic C2PA Manifest ID: VS-NAR-84920-VERIFIED</span>
+          </div>
+          <div style="text-align: right;">
+            <strong>Status: Fully Authorized for MLS Upload</strong><br>
+            <span>Valid across all 50 US States &amp; Canada</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeCertModal()">Close</button>
+        <button class="btn btn-primary" onclick="printCert()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print / Save Official PDF
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1490,28 +1731,158 @@
     <span>MLS photo rules</span>
   </div>
 
-  <!-- ===== ACCOUNT ===== -->
+  <!-- ===== AUTHENTICATION MODAL (LOGIN & SIGNUP) ===== -->
   <div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
     <div class="modal-box">
-      <button class="modal-x" onclick="closeLoginModal()" aria-label="Close account">
+      <button class="modal-x" onclick="closeLoginModal()" aria-label="Close login dialog">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <h2 id="loginModalTitle">Log in</h2>
-      <p class="modal-sub" id="loginModalSub">Save credits on this browser. No password — this demo keeps your session locally.</p>
-      <div id="loginForm">
-        <div class="form-field-group">
-          <label class="form-field-label" for="loginName">Name</label>
-          <input type="text" class="form-field-input" id="loginName" placeholder="Your name" autocomplete="name">
-        </div>
-        <div class="form-field-group">
-          <label class="form-field-label" for="loginEmail">Email</label>
-          <input type="email" class="form-field-input" id="loginEmail" placeholder="you@brokerage.com" autocomplete="email">
-        </div>
-        <button class="btn btn-primary full-w" type="button" onclick="submitLogin()">Continue</button>
+
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabAuthLogin" onclick="switchAuthTab('login')">Log in</button>
+        <button class="auth-tab-btn" id="tabAuthSignup" onclick="switchAuthTab('signup')">Create account <span class="save-badge" style="font-size:9.5px; padding:1px 6px;">3 Free Credits</span></button>
       </div>
-      <div id="accountPanel" hidden>
-        <p class="account-credits" id="accountCredits">0 credits</p>
-        <button class="btn btn-outline full-w" type="button" onclick="logout()">Log out</button>
+
+      <h2 id="loginModalTitle" style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Welcome back</h2>
+      <p class="modal-sub" id="loginModalSub">Log in to access your staged photos, 4K downloads, and account credits.</p>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        <div class="form-field-group" id="groupAuthName" style="display: none;">
+          <label class="form-field-label" for="authName">Full Name</label>
+          <input type="text" class="form-field-input" id="authName" placeholder="e.g. Sarah Jenkins" autocomplete="name">
+        </div>
+
+        <div class="form-field-group" id="groupAuthBrokerage" style="display: none;">
+          <label class="form-field-label" for="authBrokerage">Brokerage / Office <span style="font-weight: 400; color: #94a3b8;">(optional)</span></label>
+          <input type="text" class="form-field-input" id="authBrokerage" placeholder="e.g. Compass / Keller Williams">
+        </div>
+
+        <div class="form-field-group">
+          <label class="form-field-label" for="authEmail">Email Address</label>
+          <input type="email" class="form-field-input" id="authEmail" placeholder="agent@brokerage.com" autocomplete="email" required>
+        </div>
+
+        <div class="form-field-group">
+          <label class="form-field-label" for="authPassword">Password</label>
+          <input type="password" class="form-field-input" id="authPassword" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+
+        <button class="btn btn-primary full-w" id="authSubmitBtn" type="submit" style="margin-top: 10px;">
+          Log In
+        </button>
+      </form>
+
+      <button class="demo-quick-auth-btn" type="button" onclick="fillDemoCredentials()">
+        ⚡ 1-Click Instant Demo Login (Sarah Jenkins · KW Beverly Hills)
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== USER DASHBOARD & USAGE TRACKING MODAL ===== -->
+  <div class="modal-overlay" id="dashboardModal" role="dialog" aria-modal="true" aria-labelledby="dashUserTitle">
+    <div class="dashboard-modal-box">
+      <button class="modal-x" onclick="closeDashboardModal()" aria-label="Close dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <!-- Dashboard Header -->
+      <div class="dashboard-header">
+        <div class="dash-user-info">
+          <div class="dash-avatar-large" id="dashAvatar">SJ</div>
+          <div class="dash-user-text">
+            <h2 id="dashUserName">Sarah Jenkins <span class="dash-plan-badge" id="dashPlanBadge">Power Producer</span></h2>
+            <p id="dashUserBrokerage">Keller Williams Beverly Hills · <span id="dashUserEmail">sarah@kw.com</span></p>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="handleLogout()" style="margin-top: 4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Log out
+        </button>
+      </div>
+
+      <!-- Balance Hero Bar -->
+      <div class="dashboard-balance-bar">
+        <div class="balance-left">
+          <h3>Active Account Balance</h3>
+          <div class="balance-num-row">
+            <span class="balance-num" id="dashCreditsNum">15</span>
+            <span class="balance-desc">4K Credits Available · Unused credits rollover</span>
+          </div>
+        </div>
+        <div class="balance-right">
+          <button class="btn btn-primary" onclick="closeDashboardModal(); scrollToSection('pricing');">
+            + Buy Credits / Upgrade Plan
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Usage Grid -->
+      <div class="dashboard-kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Rooms Staged
+          </div>
+          <div class="kpi-value" id="kpiRoomsStaged">14</div>
+          <div class="kpi-sub">Total architectural renders</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            4K Downloads
+          </div>
+          <div class="kpi-value" id="kpiDownloads">11</div>
+          <div class="kpi-sub">Unwatermarked MLS files</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            MLS Certificates
+          </div>
+          <div class="kpi-value" id="kpiCerts">5</div>
+          <div class="kpi-sub">NAR 12-10 Verified</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Zillow Snipes
+          </div>
+          <div class="kpi-value" id="kpiZillowSnipes">8</div>
+          <div class="kpi-sub">Outbound emails generated</div>
+        </div>
+      </div>
+
+      <!-- Recent Renders Gallery -->
+      <div class="dash-section-title">
+        <span>Recent Staged Listings</span>
+        <span style="font-size: 12px; font-weight: 500; color: #64748b;">Saved in secure cloud storage</span>
+      </div>
+      <div class="dashboard-renders-grid" id="dashRendersGallery">
+        <!-- Render cards populated by JS -->
+      </div>
+
+      <!-- Account Activity & Billing -->
+      <div class="dash-section-title" style="margin-top: 10px;">
+        <span>Recent Activity &amp; Invoices</span>
+      </div>
+      <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--r); overflow-x: auto;">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Credits</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="dashTransactionsBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

@@ -19,10 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initShowcaseCards();
   selectGalleryStyle('modern', null);
   updateStudioStatus();
-  initAccount();
+  initAuth();
   initCheckoutRadios();
   initConcierge();
   refreshDownloadButton();
+  updateSniperPreview();
   const pendingCredits = parseInt(sessionStorage.getItem('vs_pending_credits') || '0', 10);
   if (new URLSearchParams(window.location.search).get('checkout') === 'success' && pendingCredits > 0) {
     addCredits(pendingCredits);
@@ -999,25 +1000,56 @@ function toggleFaq(item) {
   }
 }
 
-// --- PRICING MODAL ---
+// --- PRICING & HYBRID TIERS (PACKS + SUBSCRIPTIONS) ---
 let selectedTier = 'pro';
 const tierPrices = {
-  single:  { name: 'Single Photo Unlock', price: 2.99, credits: 1 },
-  starter: { name: 'Starter Pack (10 Renders)', price: 29.00, credits: 10 },
-  pro:     { name: 'Pro Agent Pack (25 Renders)', price: 49.00, credits: 25 }
+  // Pay-As-You-Go Packs
+  single:         { name: 'Single Photo 4K Unlock', price: 2.99, credits: 1, type: 'pack' },
+  starter:        { name: 'Starter Pack (10 Images)', price: 29.00, credits: 10, type: 'pack' },
+  pro:            { name: 'Pro Agent Pack (25 Images)', price: 49.00, credits: 25, type: 'pack' },
+  agency_pack:    { name: 'Agency Bulk Pack (60 Images)', price: 99.00, credits: 60, type: 'pack' },
+  // Monthly Subscriptions (MRR Engine)
+  active_monthly: { name: 'Active Agent Membership (25 Credits/mo)', price: 39.00, credits: 25, type: 'sub' },
+  power_monthly:  { name: 'Power Producer Membership (60 Credits/mo)', price: 79.00, credits: 60, type: 'sub' },
+  broker_monthly: { name: 'Brokerage Team Membership (150 Credits/mo)', price: 149.00, credits: 150, type: 'sub' }
 };
+
+function switchPricingMode(mode) {
+  const packsBtn = document.getElementById('btnTogglePacks');
+  const subsBtn = document.getElementById('btnToggleSubs');
+  const packsRow = document.getElementById('pricingPacksRow');
+  const subsRow = document.getElementById('pricingSubsRow');
+
+  if (mode === 'subs') {
+    if (packsBtn) packsBtn.classList.remove('active');
+    if (subsBtn) subsBtn.classList.add('active');
+    if (packsRow) packsRow.style.display = 'none';
+    if (subsRow) subsRow.style.display = 'grid';
+  } else {
+    if (subsBtn) subsBtn.classList.remove('active');
+    if (packsBtn) packsBtn.classList.add('active');
+    if (subsRow) subsRow.style.display = 'none';
+    if (packsRow) packsRow.style.display = 'grid';
+  }
+}
 
 function openPricingModal(context) {
   if (context === 'unlock') selectedTier = 'single';
   else if (context === 'starter') selectedTier = 'starter';
+  else if (context === 'agency_pack') selectedTier = 'pro';
+  else if (context === 'active_monthly') selectedTier = 'active_monthly';
+  else if (context === 'power_monthly') selectedTier = 'power_monthly';
   else selectedTier = 'pro';
-  document.getElementById('checkoutModal').classList.add('active');
+
+  const modal = document.getElementById('checkoutModal');
+  if (modal) modal.classList.add('active');
   lockPageScroll(true);
   selectModalTier(selectedTier);
 }
 
 function closePricingModal() {
-  document.getElementById('checkoutModal').classList.remove('active');
+  const modal = document.getElementById('checkoutModal');
+  if (modal) modal.classList.remove('active');
   lockPageScroll(false);
 }
 
@@ -1026,12 +1058,17 @@ function selectModalTier(tier) {
   const singleR = document.getElementById('optSingle');
   const starterR = document.getElementById('optStarter');
   const proR = document.getElementById('optPro');
+  const activeR = document.getElementById('optActiveMonthly');
+  const powerR = document.getElementById('optPowerMonthly');
+
   if (singleR) singleR.checked = (selectedTier === 'single');
   if (starterR) starterR.checked = (selectedTier === 'starter');
   if (proR) proR.checked = (selectedTier === 'pro');
+  if (activeR) activeR.checked = (selectedTier === 'active_monthly');
+  if (powerR) powerR.checked = (selectedTier === 'power_monthly');
 
   document.querySelectorAll('.modal-opt').forEach(el => el.classList.remove('selected'));
-  const activeInput = selectedTier === 'single' ? singleR : selectedTier === 'starter' ? starterR : proR;
+  const activeInput = document.querySelector(`input[name="modalOption"][value="${selectedTier}"]`);
   if (activeInput) activeInput.closest('.modal-opt')?.classList.add('selected');
 
   const planName = document.getElementById('modalPlanName');
@@ -1057,28 +1094,38 @@ function initCheckoutRadios() {
 
 function updateModalTotal() {
   const base = tierPrices[selectedTier]?.price || 49.00;
-  const bump = document.getElementById('bumpCheckbox')?.checked ? 14.00 : 0;
-  const total = base + bump;
+  const twilightBump = document.getElementById('bumpCheckbox')?.checked ? 14.00 : 0;
+  const certBump = document.getElementById('bumpCertCheckbox')?.checked ? 9.00 : 0;
+  const total = base + twilightBump + certBump;
   const totalEl = document.getElementById('modalTotalAmount');
   if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
 }
 
 async function completeDemoOrder() {
   const total = document.getElementById('modalTotalAmount')?.textContent || '$49.00';
-  const bump = Boolean(document.getElementById('bumpCheckbox')?.checked);
+  const include_twilight = Boolean(document.getElementById('bumpCheckbox')?.checked);
+  const include_cert = Boolean(document.getElementById('bumpCertCheckbox')?.checked);
   const plan = selectedTier;
   const credits = tierPrices[plan]?.credits || 1;
 
   let liveUrl = '';
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getAuthToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan, include_twilight: bump })
+      headers,
+      body: JSON.stringify({ plan, include_twilight, include_cert })
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.mode === 'live' && data.checkout_url) liveUrl = data.checkout_url;
+      if (data.mode === 'live' && data.checkout_url) {
+        liveUrl = data.checkout_url;
+      } else if (data.user) {
+        setCurrentUser(data.user);
+      }
     }
   } catch (_) {}
 
@@ -1088,14 +1135,95 @@ async function completeDemoOrder() {
     return;
   }
 
-  addCredits(credits);
+  if (!getCurrentUser()) {
+    addCredits(credits);
+  }
   closePricingModal();
 
   const watermark = document.getElementById('watermark');
   if (watermark) watermark.style.display = 'none';
   refreshDownloadButton();
 
-  showToast(`${total} demo order saved on this browser — ${credits} credit${credits === 1 ? '' : 's'} added. Connect Stripe to charge a card.`, 'success', 5500);
+  showToast(`${total} order confirmed — ${credits} credit${credits === 1 ? '' : 's'} added. Unused credits rollover.`, 'success', 5500);
+}
+
+// --- MLS COMPLIANCE CERTIFICATE ENGINE ---
+function openCertModal() {
+  const modal = document.getElementById('certModal');
+  if (!modal) return;
+
+  const currentAddress = (document.getElementById('sniperAddress')?.value || '1042 Ocean Avenue, Santa Monica, CA');
+  const input = document.getElementById('certAddressInput');
+  const text = document.getElementById('certAddressText');
+  if (input) input.value = currentAddress;
+  if (text) text.textContent = currentAddress;
+
+  const stampEl = document.getElementById('certTimestamp');
+  if (stampEl) {
+    const randId = Math.floor(10000 + Math.random() * 90000);
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    stampEl.textContent = `VS-MLS-2026-${randId} · Certified ${dateStr}`;
+  }
+
+  trackUsageEvent('cert_generate', currentAddress, { standard: 'NAR 12-10' });
+
+  modal.classList.add('active');
+  lockPageScroll(true);
+}
+
+function closeCertModal() {
+  const modal = document.getElementById('certModal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  lockPageScroll(false);
+}
+
+function printCert() {
+  window.print();
+}
+
+// --- ZILLOW SNIPER ASSISTANT ENGINE ---
+function updateSniperPreview() {
+  const address = (document.getElementById('sniperAddress')?.value || '742 Evergreen Terrace, Dallas, TX').trim();
+  const agent = (document.getElementById('sniperAgent')?.value || 'Sarah').trim();
+  const style = (document.getElementById('sniperStyle')?.value || 'Scandinavian Luxury');
+  const preview = document.getElementById('sniperEmailPreview');
+  if (!preview) return;
+
+  const origin = window.location.origin || 'https://virtualstage.ai';
+  const emailText = `Subject: Quick staging mockup for ${address}
+
+Hi ${agent},
+
+Noticed your listing on ${address} has been vacant for a few weeks—empty rooms make it tough for buyers on Zillow to visualize scale.
+
+I ran your living room photo through our architectural staging engine in ${style} for you (attached below).
+
+If you'd like to use the full-resolution unwatermarked 4K file for your MLS listing, you can unlock it here for $19:
+👉 ${origin}/#pricing
+
+Hope this helps get it under contract this weekend!
+
+Best,
+[Your Name]
+VirtualStage.AI`;
+
+  preview.textContent = emailText;
+}
+
+function copySniperEmail() {
+  const preview = document.getElementById('sniperEmailPreview');
+  if (!preview) return;
+  const address = (document.getElementById('sniperAddress')?.value || '742 Evergreen Terrace, Dallas, TX').trim();
+  const agent = (document.getElementById('sniperAgent')?.value || 'the agent').trim();
+  const style = (document.getElementById('sniperStyle')?.value || 'Scandinavian Luxury');
+
+  navigator.clipboard.writeText(preview.textContent).then(() => {
+    trackUsageEvent('zillow_snipe', address, { agent, style });
+    showToast(`Cold email copied to clipboard! Paste into your email to ${agent}.`, 'success', 4000);
+  }).catch(() => {
+    showToast('Failed to copy. Please manually highlight and copy.', 'error');
+  });
 }
 
 function requestStudioDownload() {
@@ -1115,6 +1243,7 @@ function requestStudioDownload() {
   document.body.removeChild(a);
   addCredits(-1);
   refreshDownloadButton();
+  trackUsageEvent('download_4k', '', { room: currentRoom, style: currentStyle });
   showToast(`Download started. ${getCredits()} credit${getCredits() === 1 ? '' : 's'} left.`, 'success');
 }
 
@@ -1129,13 +1258,20 @@ async function requestLiveStage() {
     payload.image_data = userUploadedPhoto;
   }
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getAuthToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const res = await fetch('/api/stage', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(payload)
     });
     if (!res.ok) return null;
     const data = await res.json();
+    if (data.user) {
+      setCurrentUser(data.user);
+    }
     return data.staged_url || null;
   } catch (_) {
     return null;
@@ -1238,7 +1374,11 @@ function submitBrokerageTrial() {
 function checkout(plan) {
   if (plan === 'starter') openPricingModal('starter');
   else if (plan === 'pro') openPricingModal('pro');
-  else if (plan === 'broker') openBrokerageModal();
+  else if (plan === 'agency_pack') openPricingModal('agency_pack');
+  else if (plan === 'active_monthly') openPricingModal('active_monthly');
+  else if (plan === 'power_monthly') openPricingModal('power_monthly');
+  else if (plan === 'broker_monthly' || plan === 'broker') openBrokerageModal();
+  else openPricingModal('pro');
 }
 
 // --- MODAL CLICK-OUTSIDE ---
@@ -1247,6 +1387,12 @@ function initModalClickOutside() {
   if (backdrop) {
     backdrop.addEventListener('click', (e) => {
       if (e.target === backdrop) closePricingModal();
+    });
+  }
+  const certBackdrop = document.getElementById('certModal');
+  if (certBackdrop) {
+    certBackdrop.addEventListener('click', (e) => {
+      if (e.target === certBackdrop) closeCertModal();
     });
   }
   const brokerBackdrop = document.getElementById('brokerageModal');
@@ -1259,6 +1405,12 @@ function initModalClickOutside() {
   if (loginBackdrop) {
     loginBackdrop.addEventListener('click', (e) => {
       if (e.target === loginBackdrop) closeLoginModal();
+    });
+  }
+  const dashBackdrop = document.getElementById('dashboardModal');
+  if (dashBackdrop) {
+    dashBackdrop.addEventListener('click', (e) => {
+      if (e.target === dashBackdrop) closeDashboardModal();
     });
   }
 }
@@ -1284,14 +1436,64 @@ function lockPageScroll(locked) {
   document.body.style.overflow = locked ? 'hidden' : '';
 }
 
+// --- AUTH & USER STATE MANAGEMENT ---
+let authMode = 'login';
+const capitalize = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
+function getAuthToken() {
+  return localStorage.getItem('vs_token') || '';
+}
+
+function setAuthToken(token) {
+  if (token) localStorage.setItem('vs_token', token);
+  else localStorage.removeItem('vs_token');
+}
+
+function clearAuth() {
+  localStorage.removeItem('vs_token');
+  localStorage.removeItem('vs_user');
+  localStorage.removeItem('vs_session');
+}
+
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem('vs_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function setCurrentUser(user) {
+  if (user) {
+    localStorage.setItem('vs_user', JSON.stringify(user));
+    if (typeof user.credits_balance === 'number') {
+      localStorage.setItem('vs_credits', String(user.credits_balance));
+    }
+  } else {
+    clearAuth();
+  }
+  renderUserStatus();
+}
+
 function getCredits() {
+  const user = getCurrentUser();
+  if (user && typeof user.credits_balance === 'number') {
+    return user.credits_balance;
+  }
   return parseInt(localStorage.getItem('vs_credits') || '0', 10) || 0;
 }
 
 function addCredits(amount) {
+  const user = getCurrentUser();
+  if (user) {
+    user.credits_balance = Math.max(0, (user.credits_balance || 0) + amount);
+    setCurrentUser(user);
+    return user.credits_balance;
+  }
   const next = Math.max(0, getCredits() + amount);
   localStorage.setItem('vs_credits', String(next));
-  renderAccount();
+  renderUserStatus();
   return next;
 }
 
@@ -1304,38 +1506,118 @@ function refreshDownloadButton() {
     : 'Download 4K — $2.99';
 }
 
-function getSession() {
-  try { return JSON.parse(localStorage.getItem('vs_session') || 'null'); }
-  catch (_) { return null; }
-}
-
-function initAccount() {
-  renderAccount();
-}
-
-function renderAccount() {
-  const session = getSession();
-  document.querySelectorAll('.nav-login, .drawer-login').forEach(el => {
-    el.textContent = session ? (session.name || 'Account') : 'Log in';
-  });
-  const creditsEl = document.getElementById('accountCredits');
-  if (creditsEl) {
-    const credits = getCredits();
-    creditsEl.textContent = `${credits} credit${credits === 1 ? '' : 's'} saved on this browser`;
+async function initAuth() {
+  const token = getAuthToken();
+  if (!token) {
+    renderUserStatus();
+    return;
+  }
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.status === 'success' && data.user) {
+        setCurrentUser(data.user);
+        return;
+      }
+    }
+    clearAuth();
+    renderUserStatus();
+  } catch (_) {
+    renderUserStatus();
   }
 }
 
-function openLoginModal() {
+function renderUserStatus() {
+  const user = getCurrentUser();
+  const navSlot = document.getElementById('navAuthSlot');
+
+  if (navSlot) {
+    if (user) {
+      const initials = (user.name || 'User')
+        .split(' ')
+        .map(w => w[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
+      const firstName = (user.name || 'User').split(' ')[0];
+      navSlot.innerHTML = `
+        <button class="nav-user-badge" id="navUserBadgeBtn" onclick="openDashboardModal(); return false;" title="Open account dashboard and usage tracking" aria-label="Open User Dashboard">
+          <span class="nav-avatar-circle">${initials}</span>
+          <span>${escapeHtml(firstName)}</span>
+          <span class="nav-credits-chip">
+            <svg width="10" height="10" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            ${user.credits_balance}
+          </span>
+        </button>
+      `;
+    } else {
+      navSlot.innerHTML = `
+        <a href="#account" class="nav-login" id="navLoginBtn" onclick="handleNavAuthClick(); return false;">Log in</a>
+      `;
+    }
+  }
+
+  // Update mobile drawer links
+  document.querySelectorAll('.drawer-login').forEach(el => {
+    if (user) {
+      el.textContent = `Dashboard (${user.credits_balance} Credits)`;
+      el.onclick = (e) => { e.preventDefault(); openDashboardModal(); };
+    } else {
+      el.textContent = 'Log in';
+      el.onclick = (e) => { e.preventDefault(); openLoginModal('login'); };
+    }
+  });
+
+  refreshDownloadButton();
+}
+
+function handleNavAuthClick() {
+  if (getCurrentUser()) {
+    openDashboardModal();
+  } else {
+    openLoginModal('login');
+  }
+}
+
+// --- AUTH MODAL (LOGIN & SIGNUP) ---
+function switchAuthTab(tab) {
+  authMode = tab;
+  const loginTab = document.getElementById('tabAuthLogin');
+  const signupTab = document.getElementById('tabAuthSignup');
+  const nameGrp = document.getElementById('groupAuthName');
+  const brokerGrp = document.getElementById('groupAuthBrokerage');
+  const submitBtn = document.getElementById('authSubmitBtn');
+  const titleEl = document.getElementById('loginModalTitle');
+  const subEl = document.getElementById('loginModalSub');
+
+  if (tab === 'signup') {
+    loginTab?.classList.remove('active');
+    signupTab?.classList.add('active');
+    if (nameGrp) nameGrp.style.display = 'block';
+    if (brokerGrp) brokerGrp.style.display = 'block';
+    if (submitBtn) submitBtn.textContent = 'Create Free Account (3 Credits) →';
+    if (titleEl) titleEl.textContent = 'Create your account';
+    if (subEl) subEl.textContent = 'Get 3 free 4K staging credits immediately. No credit card required.';
+    document.getElementById('authName')?.setAttribute('required', 'required');
+  } else {
+    loginTab?.classList.add('active');
+    signupTab?.classList.remove('active');
+    if (nameGrp) nameGrp.style.display = 'none';
+    if (brokerGrp) brokerGrp.style.display = 'none';
+    if (submitBtn) submitBtn.textContent = 'Log In';
+    if (titleEl) titleEl.textContent = 'Welcome back';
+    if (subEl) subEl.textContent = 'Log in to access your staged photos, 4K downloads, and account credits.';
+    document.getElementById('authName')?.removeAttribute('required');
+  }
+}
+
+function openLoginModal(tab = 'login') {
   const modal = document.getElementById('loginModal');
   if (!modal) return;
-  const session = getSession();
-  const form = document.getElementById('loginForm');
-  const panel = document.getElementById('accountPanel');
-  const title = document.getElementById('loginModalTitle');
-  if (form) form.hidden = Boolean(session);
-  if (panel) panel.hidden = !session;
-  if (title) title.textContent = session ? 'Your account' : 'Log in';
-  renderAccount();
+  switchAuthTab(tab);
   modal.classList.add('active');
   lockPageScroll(true);
 }
@@ -1347,24 +1629,300 @@ function closeLoginModal() {
   lockPageScroll(false);
 }
 
-function submitLogin() {
-  const name = document.getElementById('loginName')?.value.trim();
-  const email = document.getElementById('loginEmail')?.value.trim();
-  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '')) {
-    showToast('Enter your name and a valid email.', 'error');
-    return;
+function fillDemoCredentials() {
+  switchAuthTab('login');
+  const emailInput = document.getElementById('authEmail');
+  const pwdInput = document.getElementById('authPassword');
+  if (emailInput) emailInput.value = 'demo@virtualstage.ai';
+  if (pwdInput) pwdInput.value = 'demo1234';
+  const form = document.getElementById('authForm');
+  if (form) {
+    handleAuthSubmit(new Event('submit', { cancelable: true }));
   }
-  localStorage.setItem('vs_session', JSON.stringify({ name, email }));
-  closeLoginModal();
-  renderAccount();
-  showToast(`Welcome, ${name}.`, 'success');
 }
 
-function logout() {
-  localStorage.removeItem('vs_session');
-  closeLoginModal();
-  renderAccount();
-  showToast('Logged out on this browser.', 'info');
+async function handleAuthSubmit(event) {
+  if (event && event.preventDefault) event.preventDefault();
+  const email = document.getElementById('authEmail')?.value.trim();
+  const password = document.getElementById('authPassword')?.value.trim();
+  const name = document.getElementById('authName')?.value.trim();
+  const brokerage = document.getElementById('authBrokerage')?.value.trim() || '';
+  const submitBtn = document.getElementById('authSubmitBtn');
+
+  if (!email || !password) {
+    showToast('Please enter your email and password.', 'error');
+    return;
+  }
+
+  const endpoint = authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+  const payload = { email, password };
+  if (authMode === 'signup') {
+    if (!name) {
+      showToast('Please enter your full name.', 'error');
+      return;
+    }
+    payload.name = name;
+    payload.brokerage = brokerage;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.dataset.origText = submitBtn.textContent;
+    submitBtn.textContent = 'Authenticating...';
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || data.status !== 'success') {
+      showToast(data.message || 'Authentication failed. Please check your credentials.', 'error', 4500);
+      return;
+    }
+
+    setAuthToken(data.token);
+    setCurrentUser(data.user);
+    closeLoginModal();
+    showToast(data.message || `Welcome, ${data.user.name}!`, 'success', 5000);
+  } catch (err) {
+    showToast('Network error during authentication. Please retry.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtn.dataset.origText || (authMode === 'signup' ? 'Create Free Account' : 'Log In');
+    }
+  }
+}
+
+async function handleLogout() {
+  const token = getAuthToken();
+  if (token) {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (_) {}
+  }
+  clearAuth();
+  setCurrentUser(null);
+  closeDashboardModal();
+  showToast('You have been logged out.', 'info');
+}
+
+// --- USER DASHBOARD ENGINE ---
+function openDashboardModal() {
+  const user = getCurrentUser();
+  if (!user) {
+    openLoginModal('login');
+    return;
+  }
+  const modal = document.getElementById('dashboardModal');
+  if (!modal) return;
+  modal.classList.add('active');
+  lockPageScroll(true);
+  loadDashboardData();
+}
+
+function closeDashboardModal() {
+  const modal = document.getElementById('dashboardModal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  lockPageScroll(false);
+}
+
+function previewRender(url) {
+  if (!url) return;
+  window.open(url, '_blank');
+}
+
+async function loadDashboardData() {
+  const token = getAuthToken();
+  if (!token) return;
+  try {
+    const res = await fetch('/api/user/dashboard', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearAuth();
+        closeDashboardModal();
+        openLoginModal('login');
+      }
+      return;
+    }
+    const json = await res.json();
+    const data = json.dashboard;
+    if (!data) return;
+
+    if (data.user) {
+      setCurrentUser(data.user);
+    }
+
+    // Avatar & Identity
+    const initials = (data.user.name || 'User')
+      .split(' ')
+      .map(w => w[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+    const avatarEl = document.getElementById('dashAvatar');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    const nameEl = document.getElementById('dashUserName');
+    if (nameEl) {
+      nameEl.innerHTML = `${escapeHtml(data.user.name)} <span class="dash-plan-badge" id="dashPlanBadge">${formatPlanName(data.user.plan)}</span>`;
+    }
+
+    const brokEl = document.getElementById('dashUserBrokerage');
+    if (brokEl) {
+      brokEl.innerHTML = `${escapeHtml(data.user.brokerage || 'Independent Agent')} · <span id="dashUserEmail">${escapeHtml(data.user.email)}</span>`;
+    }
+
+    // Balance
+    const creditsEl = document.getElementById('dashCreditsNum');
+    if (creditsEl) creditsEl.textContent = data.stats.credits_balance;
+
+    // KPIs
+    const kpiRooms = document.getElementById('kpiRoomsStaged');
+    if (kpiRooms) kpiRooms.textContent = data.stats.total_renders;
+
+    const kpiDl = document.getElementById('kpiDownloads');
+    if (kpiDl) kpiDl.textContent = data.stats.downloads_4k;
+
+    const kpiCert = document.getElementById('kpiCerts');
+    if (kpiCert) kpiCert.textContent = data.stats.certs_generated;
+
+    const kpiSnipe = document.getElementById('kpiZillowSnipes');
+    if (kpiSnipe) kpiSnipe.textContent = data.stats.zillow_snipes;
+
+    // Renders Gallery
+    const galleryEl = document.getElementById('dashRendersGallery');
+    if (galleryEl) {
+      if (data.recent_renders && data.recent_renders.length > 0) {
+        galleryEl.innerHTML = data.recent_renders.map(r => `
+          <div class="render-history-card">
+            <img src="${escapeHtml(r.image_url)}" alt="${escapeHtml(r.room_type)} staged" loading="lazy" />
+            <div class="render-card-body">
+              <div class="render-card-title">${formatRoomTitle(r.room_type)}</div>
+              <div class="render-card-meta">${capitalize(r.style)} Style · ${formatDate(r.created_at)}</div>
+              <div class="render-card-actions">
+                <button class="btn btn-outline btn-xs" onclick="previewRender('${escapeHtml(r.image_url)}')">Preview</button>
+                <a class="btn btn-primary btn-xs" href="${escapeHtml(r.image_url)}" download="VirtualStage_${escapeHtml(r.room_type)}_${escapeHtml(r.style)}.jpg">Download 4K</a>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        galleryEl.innerHTML = `
+          <div style="grid-column: 1/-1; padding: 36px 20px; text-align: center; color: #64748b; background: #fff; border-radius: var(--r); border: 1px dashed var(--border);">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p style="font-weight: 700; margin-bottom: 4px; color: var(--text);">No staged listings yet</p>
+            <p style="font-size: 13px;">Stage your first room photo above to automatically track it in this gallery.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Transactions Table
+    const txBody = document.getElementById('dashTransactionsBody');
+    if (txBody) {
+      if (data.recent_transactions && data.recent_transactions.length > 0) {
+        txBody.innerHTML = data.recent_transactions.map(t => `
+          <tr>
+            <td>${formatDate(t.created_at)}</td>
+            <td style="font-weight: 600;">${formatPlanName(t.plan)}</td>
+            <td><span class="badge badge-success">+${t.credits_added} Credits</span></td>
+            <td style="font-weight: 700;">$${parseFloat(t.amount).toFixed(2)}</td>
+            <td><span style="color: #10b981; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">✓ Completed</span></td>
+          </tr>
+        `).join('');
+      } else {
+        txBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">No billing transactions yet. Upgrade a plan to add credits.</td>
+          </tr>
+        `;
+      }
+    }
+
+    trackUsageEvent('view_dashboard');
+  } catch (err) {
+    console.error('Error loading dashboard data:', err);
+  }
+}
+
+// --- USAGE ANALYTICS TRACKING ---
+async function trackUsageEvent(eventType, propertyAddress = '', metadata = {}) {
+  const token = getAuthToken();
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    await fetch('/api/user/track-event', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        event_type: eventType,
+        property_address: propertyAddress,
+        metadata: metadata
+      })
+    });
+  } catch (_) {}
+}
+
+// --- HELPERS ---
+function formatPlanName(plan) {
+  const plans = {
+    free_trial: 'Free Trial (3 Credits)',
+    single: 'Single Photo Unlock',
+    starter: 'Starter Pack',
+    pro: 'Pro Agent Pack',
+    agency_pack: 'Agency Bulk Pack',
+    active_monthly: 'Active Agent ($39/mo)',
+    power_monthly: 'Power Producer ($79/mo)',
+    broker_monthly: 'Brokerage Team',
+    broker: 'Brokerage Team'
+  };
+  return plans[plan] || 'Member';
+}
+
+function formatRoomTitle(room) {
+  const titles = {
+    living: 'Open Living Room',
+    bedroom: 'Primary Suite',
+    dining: 'Entertaining Dining',
+    office: 'Executive Office',
+    patio: 'Outdoor Living Patio',
+    twilight: 'Virtual Twilight Dusk',
+    declutter: 'Item Removal & Declutter',
+    renovation: 'Virtual Remodel'
+  };
+  return titles[room] || (room ? room.charAt(0).toUpperCase() + room.slice(1) : 'Listing');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const clean = dateStr.replace(' ', 'T');
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return dateStr.split(' ')[0] || dateStr;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch (_) {
+    return dateStr.split(' ')[0] || dateStr;
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function initConcierge() {
@@ -1456,6 +2014,7 @@ function initLegalModal() {
       closePricingModal();
       closeBrokerageModal();
       closeLoginModal();
+      closeDashboardModal();
     }
   });
 

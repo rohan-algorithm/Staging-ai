@@ -19,6 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initShowcaseCards();
   selectGalleryStyle('modern', null);
   updateStudioStatus();
+  initAccount();
+  initCheckoutRadios();
+  initConcierge();
+  refreshDownloadButton();
+  const pendingCredits = parseInt(sessionStorage.getItem('vs_pending_credits') || '0', 10);
+  if (new URLSearchParams(window.location.search).get('checkout') === 'success' && pendingCredits > 0) {
+    addCredits(pendingCredits);
+    sessionStorage.removeItem('vs_pending_credits');
+    showToast('Payment received. Credits are ready to download.', 'success', 5000);
+  }
 });
 
 // --- SCROLL REVEAL ---
@@ -48,6 +58,8 @@ const roomImages = {
     title: 'Open-Concept Modern Living Room',
     category: 'Vacant Staging · Living Area',
     badge: 'Open-Concept Living',
+    buyerLine: 'An empty living room photographs smaller than it is. Furniture shows a buyer that the sofa fits and that the view is the point of the room.',
+    edge: 'One living-room photo at $1.96 replaces a staging visit that usually starts around $2,500.',
     before: 'assets/hero_empty.jpg',
     after: 'assets/hero_staged.jpg',
     daysOnMarket: '9 Days',
@@ -57,12 +69,14 @@ const roomImages = {
     savings: '$2,800 saved vs physical',
     agentName: 'Sarah Jenkins',
     agentBrokerage: 'Keller Williams Beverly Hills',
-    agentQuote: '"We virtually staged the vacant living area on Thursday morning and received 3 written offers over asking by Sunday afternoon. The 15-second speed is unmatched."'
+    agentQuote: 'Photograph the empty room, then stage that same frame. The windows should line up when a buyer drags across the photo.'
   },
   bedroom: {
     title: 'Primary Master Suite',
     category: 'Vacant Staging · Master Suite',
-    badge: 'NAR #2 Value Driver',
+    badge: 'Primary suite',
+    buyerLine: 'Buyers rank the primary bedroom just behind the kitchen. A made bed and nightstands make a vacant suite feel like a place to sleep, not a white box.',
+    edge: 'BoxBrownie charges about $24 and a day for this same shot. You can restage the suite before the listing appointment ends.',
     before: 'assets/bedroom_empty.jpg',
     after: 'assets/bedroom_staged.jpg',
     daysOnMarket: '12 Days',
@@ -72,12 +86,14 @@ const roomImages = {
     savings: '$1,900 saved vs physical',
     agentName: 'David Marcus',
     agentBrokerage: 'Compass Real Estate',
-    agentQuote: '"Empty bedrooms always photograph small and clinical. Staging the primary suite made buyers feel like they were checking into a boutique 5-star hotel."'
+    agentQuote: 'A made bed and two nightstands are enough. Buyers are checking whether the suite feels like a place to sleep.'
   },
   dining: {
     title: 'Executive Entertaining Dining Room',
     category: 'Vacant Staging · Dining & Kitchen',
-    badge: 'Entertaining Hub',
+    badge: 'Entertaining hub',
+    buyerLine: 'Buyers ask whether a real table fits. Setting eight chairs answers that on the listing, before anyone drives over.',
+    edge: 'A physical stager spends a day moving a table in. This photo does that job for under $2.',
     before: 'assets/dining_empty.jpg',
     after: 'assets/dining_staged.jpg',
     daysOnMarket: '8 Days',
@@ -87,12 +103,14 @@ const roomImages = {
     savings: '$2,400 saved vs physical',
     agentName: 'Elena Rostova',
     agentBrokerage: 'Sotheby’s International Realty',
-    agentQuote: '"Buyers kept asking if an 8-seater dining table would fit with the glass doors. Staging it virtually answered the question instantly — zero doubts left."'
+    agentQuote: 'Set the table with the number of chairs that actually fit. That is the question buyers ask before they drive over.'
   },
   office: {
     title: 'Executive Work-From-Home Office',
     category: 'Flex Space · Remote Workspace',
-    badge: '#1 Trending Zillow Filter',
+    badge: 'Top buyer filter',
+    buyerLine: 'Home office is one of the first filters buyers turn on. Showing the extra room as a desk, not an empty spare, keeps the listing in that search.',
+    edge: 'Editors bill this as a separate room and a separate wait. Here it is the same 15-second credit.',
     before: 'assets/office_empty.jpg',
     after: 'assets/office_staged.jpg',
     daysOnMarket: '11 Days',
@@ -102,12 +120,14 @@ const roomImages = {
     savings: '$2,100 saved vs physical',
     agentName: 'Marcus Vance',
     agentBrokerage: 'eXp Realty Silicon Valley',
-    agentQuote: '"Home office is the #1 search filter for tech professionals here. Staging this extra bedroom as an executive study attracted our cash buyer in 11 days."'
+    agentQuote: 'If the spare room is the home office, show a desk. An empty room drops out of that search filter.'
   },
   twilight: {
     title: 'Virtual Twilight / Day-to-Dusk Exterior',
     category: 'Curb Appeal · Exterior Lighting',
-    badge: '+400% Listing Clicks',
+    badge: 'Stronger hero photo',
+    buyerLine: 'A flat noon exterior is easy to scroll past. Warm windows and a dusk sky make the same house the photo people stop on.',
+    edge: 'A second twilight photo shoot is often $350. This conversion is a $14 add-on on a photo you already have. Brokerage plans include it.',
     before: 'assets/twilight_day.jpg',
     after: 'assets/twilight_dusk.jpg',
     daysOnMarket: '6 Days',
@@ -117,12 +137,14 @@ const roomImages = {
     savings: '$350 saved vs dusk photo',
     agentName: 'Amanda Ruiz',
     agentBrokerage: 'RE/MAX Premier',
-    agentQuote: '"Changing our primary MLS hero photo to the Virtual Twilight dusk shot boosted our Zillow views by 412%. We were in escrow by Wednesday."'
+    agentQuote: 'Use this when the exterior was shot at noon. It is the same house, with the light moved to dusk. Say so on the listing.'
   },
   declutter: {
     title: 'Tenant Item Removal & Decluttering',
     category: 'Pre-Listing · Digital Deep Clean',
-    badge: 'Zero Eviction Hassle',
+    badge: 'Occupied listing',
+    buyerLine: 'Boxes and laundry tell buyers the house is a project. Removing the mess keeps the real sofa and the real floor, so the listing looks ready without a pack-out.',
+    edge: 'Waiting for tenants to move delays the listing. A removal credit lets you photograph now and publish a clean room the same day.',
     before: 'assets/declutter_before.jpg',
     after: 'assets/declutter_after.jpg',
     daysOnMarket: '14 Days',
@@ -132,12 +154,14 @@ const roomImages = {
     savings: '$1,500 saved in delays',
     agentName: 'Michael Chang',
     agentBrokerage: 'Coldwell Banker Realty',
-    agentQuote: '"The tenants were in the middle of packing and the house was a complete disaster. VirtualStage AI erased every cardboard box and mess in seconds."'
+    agentQuote: 'Remove the boxes and leave the real sofa. Buyers should still recognize the room they walk into.'
   },
   patio: {
     title: 'Luxury Backyard Living & Fire Pit Patio',
     category: 'Outdoor Living · Resort Lifestyle',
-    badge: '+$35k Perceived Equity',
+    badge: 'Outdoor living',
+    buyerLine: 'A bare slab reads as unused yard. A fire pit and seating show the outdoor room buyers pay for, without renting furniture that sits in the rain.',
+    edge: 'Outdoor rental staging is one of the most expensive rooms to do physically. This shot is still one image credit.',
     before: 'assets/patio_empty.jpg',
     after: 'assets/patio_staged.jpg',
     daysOnMarket: '7 Days',
@@ -147,12 +171,14 @@ const roomImages = {
     savings: '$3,200 saved vs outdoor rental',
     agentName: 'Jessica Thornton',
     agentBrokerage: 'The Corcoran Group',
-    agentQuote: '"Outdoor living sells the dream. Taking a cold concrete slab and staging it with a fire pit and festoon lighting created an instant bidding war."'
+    agentQuote: 'A bare patio reads as unused yard. Seating shows the outdoor room. You do not have to rent furniture that sits in the weather.'
   },
   renovation: {
     title: 'Virtual Remodel & Architectural Renovation',
     category: 'Fixer-Upper · As-Is Renovation Vision',
-    badge: 'Avoid $50k+ Price Cuts',
+    badge: 'Renovation vision',
+    buyerLine: 'Dated paneling makes buyers price in a remodel. A virtual refresh shows the potential while the listing stays honest that the work is not done yet.',
+    edge: 'A real remodel quote can push a seller to cut price. This photo lets them show the vision and keep the as-is number.',
     before: 'assets/reno_before.jpg',
     after: 'assets/reno_after.jpg',
     daysOnMarket: '15 Days',
@@ -162,50 +188,52 @@ const roomImages = {
     savings: '$65,000 saved vs remodel',
     agentName: 'Robert Sterling',
     agentBrokerage: 'Berkshire Hathaway HomeServices',
-    agentQuote: '"The seller was about to reduce price by $50,000 because of dated 1980s wood paneling. We included the virtually renovated photo in the listing and sold as-is!"'
+    agentQuote: 'A virtual refresh shows what the room could become. The listing still needs to say the work is not done.'
   }
 };
 
 const stylePresets = {
   modern: {
-    title: "Modern Architectural Luxury",
-    desc: "Clean geometric lines, low-profile bouclé and Italian leather, matte black metal accents, warm travertine stone surfaces.",
+    title: "Modern",
+    desc: "A low sofa, a light wood table, one large rug. Fits new construction and condos with big windows.",
     palette: ["#FFFFFF", "#E2E8F0", "#1E293B", "#B89B72"],
-    bestFor: "High-rise condos, contemporary suburban homes, new construction"
+    bestFor: "Condos and new construction"
   },
   scandinavian: {
-    title: "Nordic Minimalist Warmth",
-    desc: "Pale European white oak, organic boucle upholstery, sheer natural linen drapery, and handcrafted minimalist ceramic art.",
+    title: "Scandinavian",
+    desc: "Pale wood, a linen sofa, and not much else. Good when the room is already bright.",
     palette: ["#FAF8F5", "#E8DFD8", "#64748B", "#8C7A6B"],
-    bestFor: "Urban lofts, modern ranches, cozy primary suites"
+    bestFor: "Bright rooms and lofts"
   },
   farmhouse: {
-    title: "Modern Elevated Farmhouse",
-    desc: "Reclaimed rustic timber, brushed oil-rubbed bronze fixtures, cozy waffle textiles, and warm hearth stone textures.",
+    title: "Farmhouse",
+    desc: "Wood table, softer textiles, warmer metal. Useful on older suburban houses.",
     palette: ["#F5F5F0", "#D6C7B2", "#2B2B2A", "#8A5A36"],
-    bestFor: "Suburban family homes, Craftsman residences, country estates"
+    bestFor: "Older suburban houses"
   },
   coastal: {
-    title: "Hamptons & Coastal Chic",
-    desc: "Crisp airy whites, light bleached oak, woven natural jute, and subtle nautical indigo and sea-glass accents.",
+    title: "Coastal",
+    desc: "Lighter wood, a pale sofa, and a bit of blue. For houses that already face water or a lot of sky.",
     palette: ["#FFFFFF", "#EFF6FF", "#93C5FD", "#D4C5B9"],
-    bestFor: "Beachside properties, lake houses, bright Florida/California listings"
+    bestFor: "Houses with a view"
   },
   luxury: {
-    title: "High-End Penthouse Luxury",
-    desc: "Polished Calacatta marble, brushed brass chandeliers, bespoke velvet seating, and museum-grade curated contemporary art.",
+    title: "Darker living room",
+    desc: "A dark sofa, a stone table, brass lamp. For listings where the finish level is already high.",
     palette: ["#111827", "#F8FAFC", "#CA8A04", "#713F12"],
-    bestFor: "Luxury multi-million dollar estates, penthouses, executive homes"
+    bestFor: "Higher-finish listings"
   },
   midcentury: {
-    title: "Mid-Century Modern Classic",
-    desc: "Rich American walnut woodwork, iconic tapered silhouettes, warm amber illumination, and geometric wool accent rugs.",
+    title: "Mid-century",
+    desc: "Walnut, a tapered sofa, a wool rug. Fits houses from the 1950s through the 1970s.",
     palette: ["#4A2E18", "#E69A39", "#2E5244", "#EAE6DF"],
-    bestFor: "1950s–1970s architectural homes, retro urban bungalows, creative studios"
+    bestFor: "Mid-century houses"
   }
 };
 
 let currentRoom = 'living';
+let galleryRoom = 'living';
+let galleryStyle = 'modern';
 let currentStyle = 'modern';
 let currentSliderPct = 50;
 let isDraggingSlider = false;
@@ -233,16 +261,30 @@ function initHamburger() {
   const drawer = document.getElementById('mobileDrawer');
   if (!btn || !drawer) return;
 
+  const closeDrawer = () => {
+    drawer.classList.remove('open');
+    btn.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  };
+
   btn.addEventListener('click', () => {
     const isOpen = drawer.classList.toggle('open');
+    btn.classList.toggle('open', isOpen);
     btn.setAttribute('aria-expanded', isOpen);
   });
 
+  document.addEventListener('click', (e) => {
+    if (!drawer.classList.contains('open')) return;
+    if (drawer.contains(e.target) || btn.contains(e.target)) return;
+    closeDrawer();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDrawer();
+  });
+
   drawer.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      drawer.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
-    });
+    a.addEventListener('click', closeDrawer);
   });
 }
 
@@ -418,6 +460,12 @@ function switchHeroRoom(room, btnEl) {
   const badgeEl = document.getElementById('galleryRoomBadge');
   if (badgeEl) badgeEl.textContent = data.badge;
 
+  const buyerEl = document.getElementById('galleryBuyerLine');
+  if (buyerEl && data.buyerLine) buyerEl.textContent = data.buyerLine;
+
+  const edgeEl = document.getElementById('galleryEdge');
+  if (edgeEl && data.edge) edgeEl.textContent = data.edge;
+
   const domEl = document.getElementById('galleryDom');
   if (domEl) domEl.textContent = data.daysOnMarket;
 
@@ -442,7 +490,8 @@ function switchHeroRoom(room, btnEl) {
   const brokerEl = document.getElementById('galleryAgentBroker');
   if (brokerEl) brokerEl.textContent = data.agentBrokerage;
 
-  currentRoom = room;
+  galleryRoom = room;
+  paintGalleryStyle();
 }
 
 function loadHeroRoom(room) {
@@ -451,8 +500,10 @@ function loadHeroRoom(room) {
 
 // --- GALLERY STYLE PRESET SELECTOR ---
 function selectGalleryStyle(style, btnEl) {
+  galleryStyle = style;
   document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('active'));
-  if (btnEl) btnEl.classList.add('active');
+  const chip = btnEl || document.querySelector(`.style-chip[onclick*="'${style}'"]`);
+  if (chip) chip.classList.add('active');
 
   const preset = stylePresets[style];
   if (!preset) return;
@@ -471,11 +522,18 @@ function selectGalleryStyle(style, btnEl) {
     ).join('');
   }
 
-  // Live update theater slider if currentRoom is living
-  if (currentRoom === 'living' && typeof styleImages !== 'undefined' && styleImages.living && styleImages.living[style]) {
-    const afterEl = document.getElementById('afterImage');
-    if (afterEl) afterEl.style.backgroundImage = `url('${styleImages.living[style]}')`;
-  }
+  paintGalleryStyle();
+}
+
+function paintGalleryStyle() {
+  const afterEl = document.getElementById('afterImage');
+  if (!afterEl) return;
+  const photo = styleImages[galleryRoom] && styleImages[galleryRoom][galleryStyle];
+  const fallback = roomImages[galleryRoom]?.after || 'assets/hero_staged.jpg';
+  afterEl.style.backgroundImage = `url('${photo || fallback}')`;
+  afterEl.classList.remove('style-lux', 'style-mid');
+  if (!photo && galleryStyle === 'luxury') afterEl.classList.add('style-lux');
+  if (!photo && galleryStyle === 'midcentury') afterEl.classList.add('style-mid');
 }
 
 // --- SHOWCASE BENTO GRID INITIALIZER (POINTER DRAG OPTIMIZED) ---
@@ -550,17 +608,17 @@ function stageRoomInStudio(room) {
 
 // --- GALLERY ACTION HANDLERS ---
 function stageThisGalleryRoom() {
+  openStudioRoom(galleryRoom);
+}
+
+function openStudioRoom(room) {
   scrollToSection('demo');
-  const matchingPill = document.querySelector(`.sidebar-pills .pill[data-room="${currentRoom}"]`);
-  if (matchingPill) {
-    loadSample(currentRoom, matchingPill);
-  } else {
-    loadSample(currentRoom, null);
-  }
+  const matchingPill = document.querySelector(`.sidebar-pills .pill[data-room="${room}"]`);
+  loadSample(room, matchingPill || null);
 }
 
 function downloadActiveGallerySample() {
-  const data = roomImages[currentRoom] || roomImages['living'];
+  const data = roomImages[galleryRoom] || roomImages['living'];
   const a = document.createElement('a');
   a.href = data.after;
   a.download = `VirtualStageAI_${currentRoom}_MLS_Compliant.jpg`;
@@ -576,7 +634,9 @@ const styleImages = {
     modern: 'assets/hero_staged.jpg',
     scandinavian: 'assets/hero_scandinavian.jpg',
     farmhouse: 'assets/hero_farmhouse.jpg',
-    coastal: 'assets/hero_coastal.jpg'
+    coastal: 'assets/hero_coastal.jpg',
+    luxury: 'assets/hero_luxury.jpg',
+    midcentury: 'assets/hero_midcentury.jpg'
   },
   bedroom: {
     modern: 'assets/bedroom_staged.jpg',
@@ -696,14 +756,6 @@ function selectStyle(style, btnEl) {
     img.src = getStagedImageForRoom(currentRoom, style);
   }
 
-  // Also update gallery theater slider if living room is active
-  if (currentRoom === 'living') {
-    const afterEl = document.getElementById('afterImage');
-    if (afterEl && styleImages.living && styleImages.living[style]) {
-      afterEl.style.backgroundImage = `url('${styleImages.living[style]}')`;
-    }
-  }
-
   isShowingBefore = false;
   const cb = document.getElementById('studioCompareBtn');
   if (cb) cb.classList.remove('active');
@@ -745,6 +797,8 @@ function toggleStudioCompare() {
 }
 
 // --- STUDIO: STAGING SIMULATION ---
+let stageButtonHtml = '';
+
 function runStagingSimulation() {
   const overlay = document.getElementById('renderOverlay');
   const status = document.getElementById('renderStatus');
@@ -755,8 +809,10 @@ function runStagingSimulation() {
 
   if (!overlay || !status || !fill) return;
 
-  // Disable button
+  const livePromise = requestLiveStage();
+
   if (stageBtn) {
+    if (!stageButtonHtml) stageButtonHtml = stageBtn.innerHTML;
     stageBtn.disabled = true;
     stageBtn.textContent = 'Processing…';
   }
@@ -778,15 +834,24 @@ function runStagingSimulation() {
   let i = 0;
   function next() {
     if (i >= steps.length) {
-      setTimeout(() => {
+      setTimeout(async () => {
+        let stagedUrl = null;
+        try { stagedUrl = await livePromise; } catch (_) {}
+
         overlay.classList.remove('active');
 
-        if (isUserPhoto) {
+        if (stagedUrl && img) {
+          img.src = stagedUrl;
+          if (resultBox) resultBox.className = 'canvas-image-wrap style-filter-none';
+          showToast(`Staging complete — ${styleCapitalized} render ready.`, 'success');
+        } else if (isUserPhoto) {
           if (img && userUploadedPhoto) img.src = userUploadedPhoto;
           if (resultBox) resultBox.className = `canvas-image-wrap style-filter-${currentStyle}`;
+          showToast(`Style preview ready. Furniture rendering needs a Replicate token — your photo is shown with the ${styleCapitalized} treatment.`, 'info', 5000);
         } else {
           if (img) img.src = getStagedImageForRoom(currentRoom, currentStyle);
           if (resultBox) resultBox.className = `canvas-image-wrap style-filter-${currentStyle}`;
+          showToast(`${styleCapitalized} sample ready.`, 'success');
         }
 
         isShowingBefore = false;
@@ -796,9 +861,8 @@ function runStagingSimulation() {
 
         if (stageBtn) {
           stageBtn.disabled = false;
-          stageBtn.textContent = 'Stage this room';
+          stageBtn.innerHTML = stageButtonHtml || 'Stage this room';
         }
-        showToast(`Staging complete — ${styleCapitalized} preview ready!`, 'success');
       }, 250);
       return;
     }
@@ -878,10 +942,11 @@ function handleUpload(file) {
     // Deselect room pills
     document.querySelectorAll('.sidebar-pills .pill').forEach(p => p.classList.remove('active'));
 
-    // Reset compare state
-    isShowingBefore = true;
+    isShowingBefore = false;
     const cb = document.getElementById('studioCompareBtn');
     if (cb) cb.classList.remove('active');
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
 
     const tag = document.getElementById('studioStatusTag');
     if (tag) tag.textContent = 'Uploaded Photo • Ready to Stage';
@@ -897,6 +962,7 @@ function initMLSStamp() {
 }
 
 function toggleMLSStamp(isSilent = false) {
+  if (isSilent && typeof isSilent === 'object') isSilent = false;
   const cb = document.getElementById('mlsComplianceSwitch');
   const stamp = document.getElementById('mlsStamp');
   const checkLabel = cb ? cb.closest('.mls-check') : null;
@@ -921,43 +987,72 @@ function toggleMLSStamp(isSilent = false) {
 // --- FAQ ---
 function toggleFaq(item) {
   const wasOpen = item.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
-  // Toggle clicked
-  if (!wasOpen) item.classList.add('open');
+  document.querySelectorAll('.faq-item').forEach(f => {
+    f.classList.remove('open');
+    const button = f.querySelector('.faq-q');
+    if (button) button.setAttribute('aria-expanded', 'false');
+  });
+  if (!wasOpen) {
+    item.classList.add('open');
+    const button = item.querySelector('.faq-q');
+    if (button) button.setAttribute('aria-expanded', 'true');
+  }
 }
 
 // --- PRICING MODAL ---
 let selectedTier = 'pro';
 const tierPrices = {
-  single: { name: 'Single Photo Unlock', price: 2.99 },
-  pro:    { name: 'Pro Agent Pack (25 Renders)', price: 49.00 }
+  single:  { name: 'Single Photo Unlock', price: 2.99, credits: 1 },
+  starter: { name: 'Starter Pack (10 Renders)', price: 29.00, credits: 10 },
+  pro:     { name: 'Pro Agent Pack (25 Renders)', price: 49.00, credits: 25 }
 };
 
 function openPricingModal(context) {
-  selectedTier = (context === 'unlock') ? 'single' : 'pro';
+  if (context === 'unlock') selectedTier = 'single';
+  else if (context === 'starter') selectedTier = 'starter';
+  else selectedTier = 'pro';
   document.getElementById('checkoutModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+  lockPageScroll(true);
   selectModalTier(selectedTier);
 }
 
 function closePricingModal() {
   document.getElementById('checkoutModal').classList.remove('active');
-  document.body.style.overflow = '';
+  lockPageScroll(false);
 }
 
 function selectModalTier(tier) {
-  selectedTier = tier;
+  selectedTier = tierPrices[tier] ? tier : 'pro';
   const singleR = document.getElementById('optSingle');
+  const starterR = document.getElementById('optStarter');
   const proR = document.getElementById('optPro');
-  if (singleR) singleR.checked = (tier === 'single');
-  if (proR) proR.checked = (tier === 'pro');
+  if (singleR) singleR.checked = (selectedTier === 'single');
+  if (starterR) starterR.checked = (selectedTier === 'starter');
+  if (proR) proR.checked = (selectedTier === 'pro');
 
   document.querySelectorAll('.modal-opt').forEach(el => el.classList.remove('selected'));
-  const activeInput = tier === 'single' ? singleR : proR;
+  const activeInput = selectedTier === 'single' ? singleR : selectedTier === 'starter' ? starterR : proR;
   if (activeInput) activeInput.closest('.modal-opt')?.classList.add('selected');
 
+  const planName = document.getElementById('modalPlanName');
+  if (planName) planName.value = tierPrices[selectedTier].name;
+
+  const title = document.getElementById('checkoutModalTitle');
+  if (title) {
+    title.textContent = selectedTier === 'single'
+      ? 'Unlock 4K download'
+      : tierPrices[selectedTier].name;
+  }
+
   updateModalTotal();
+}
+
+function initCheckoutRadios() {
+  document.querySelectorAll('input[name="modalOption"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (radio.checked) selectModalTier(radio.value);
+    });
+  });
 }
 
 function updateModalTotal() {
@@ -968,53 +1063,125 @@ function updateModalTotal() {
   if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
 }
 
-function completeDemoOrder() {
+async function completeDemoOrder() {
   const total = document.getElementById('modalTotalAmount')?.textContent || '$49.00';
+  const bump = Boolean(document.getElementById('bumpCheckbox')?.checked);
+  const plan = selectedTier;
+  const credits = tierPrices[plan]?.credits || 1;
+
+  let liveUrl = '';
+  try {
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, include_twilight: bump })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.mode === 'live' && data.checkout_url) liveUrl = data.checkout_url;
+    }
+  } catch (_) {}
+
+  if (liveUrl) {
+    sessionStorage.setItem('vs_pending_credits', String(credits));
+    window.location.href = liveUrl;
+    return;
+  }
+
+  addCredits(credits);
   closePricingModal();
 
   const watermark = document.getElementById('watermark');
   if (watermark) watermark.style.display = 'none';
+  refreshDownloadButton();
 
-  showToast(`Order placed — ${total}. 4K renders ready for download.`, 'success', 5000);
+  showToast(`${total} demo order saved on this browser — ${credits} credit${credits === 1 ? '' : 's'} added. Connect Stripe to charge a card.`, 'success', 5500);
+}
+
+function requestStudioDownload() {
+  const credits = getCredits();
+  if (credits < 1) {
+    openPricingModal('unlock');
+    showToast('Add a credit to download this render.', 'info');
+    return;
+  }
+  const img = document.getElementById('stagedImageDisplay');
+  if (!img?.src) return;
+  const a = document.createElement('a');
+  a.href = img.src;
+  a.download = `VirtualStageAI_${currentRoom}_${currentStyle}.jpg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  addCredits(-1);
+  refreshDownloadButton();
+  showToast(`Download started. ${getCredits()} credit${getCredits() === 1 ? '' : 's'} left.`, 'success');
+}
+
+async function requestLiveStage() {
+  const prompt = document.getElementById('customPrompt')?.value.trim() || '';
+  const payload = {
+    room_type: currentRoom,
+    style: currentStyle,
+    prompt
+  };
+  if (isUserPhoto && userUploadedPhoto && userUploadedPhoto.length < 1500000) {
+    payload.image_data = userUploadedPhoto;
+  }
+  try {
+    const res = await fetch('/api/stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.staged_url || null;
+  } catch (_) {
+    return null;
+  }
 }
 
 // --- PERSONA QUICK-SELECTOR ENGINE ---
 const personaProfiles = {
   solo: {
-    title: "Save $2,500+ and 48 hours per listing",
-    text: "Stage entire homes in under 60 seconds from your phone. Eliminate BoxBrownie wait times and keep 100% of your seller's momentum.",
-    rec: "Recommended: Virtual Twilight & Living Room",
-    room: "twilight"
+    title: "Stage the vacant rooms before the listing appointment ends",
+    text: "Living room and primary suite are the two photos buyers linger on. Do those first. Twilight is the add-on when the exterior was shot at noon.",
+    rec: "Start with the living room",
+    room: "living"
   },
   fsbo: {
-    title: "Sell your home 30 days faster with zero MLS risk",
-    text: "Eliminate lowball buyer offers on empty rooms. Guaranteed 100% legal under NAR Standard 12-10 with our built-in compliance watermark.",
-    rec: "Recommended: Open-Concept Living Room",
+    title: "An empty house is hard to judge from a phone",
+    text: "Add a sofa and a bed so the photos show the size. The download carries a virtually-staged note, which most boards require.",
+    rec: "Start with the living room",
     room: "living"
   },
   luxury: {
-    title: "Architectural 4K prestige for multi-million dollar listings",
-    text: "Curated with Italian bouclé, European white oak, and Calacatta marble. Passes the discerning architectural digest standard.",
-    rec: "Recommended: Primary Master Suite & Dining Room",
+    title: "Match the furniture to the finish already in the house",
+    text: "A darker sofa and a stone table read closer to a finished listing than a bright catalog set. The architecture still has to be the real one.",
+    rec: "Look at the primary suite",
     room: "bedroom"
   },
   investor: {
-    title: "Erase tenant mess & visualize $50,000+ remodel potential",
-    text: "Remove hoarder boxes, tenant clutter, and 1980s wood paneling in 15 seconds. Avoid costly price drops on fixer-uppers.",
-    rec: "Recommended: Virtual Remodel & Item Removal",
+    title: "Show the room after the mess, and after a refresh",
+    text: "Item removal clears boxes. A virtual remodel shows paint and floors that are not installed yet, so the caption has to say so.",
+    rec: "Look at the remodel",
     room: "renovation"
   },
   team: {
-    title: "Automated team compliance, centralized billing & seats",
-    text: "Protect your brokerage license with automatic compliance watermarking across all 5 to 50+ agent accounts. Unlimited 4K renders.",
-    rec: "Recommended: Executive Home Office & Twilight",
+    title: "One bill, up to five people",
+    text: "The brokerage plan is $99 a month, twilight included. Each download can carry the same disclosure stamp.",
+    rec: "Look at the office",
     room: "office"
   }
 };
 
 function selectPersona(role, btnEl) {
-  document.querySelectorAll('.persona-tab').forEach(b => b.classList.remove('active'));
-  if (btnEl) btnEl.classList.add('active');
+  document.querySelectorAll('.persona-tab').forEach(b => {
+    const on = b === btnEl;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
 
   const p = personaProfiles[role];
   if (!p) return;
@@ -1037,12 +1204,16 @@ let selectedTeamSeats = 5;
 
 function openBrokerageModal() {
   const modal = document.getElementById('brokerageModal');
-  if (modal) modal.style.display = 'flex';
+  if (!modal) return;
+  modal.classList.add('active');
+  lockPageScroll(true);
 }
 
 function closeBrokerageModal() {
   const modal = document.getElementById('brokerageModal');
-  if (modal) modal.style.display = 'none';
+  if (!modal) return;
+  modal.classList.remove('active');
+  lockPageScroll(false);
 }
 
 function setTeamSeats(seats, btnEl) {
@@ -1055,8 +1226,8 @@ function submitBrokerageTrial() {
   const name = document.getElementById('brokerTeamName')?.value.trim();
   const email = document.getElementById('brokerEmail')?.value.trim();
 
-  if (!name || !email) {
-    showToast('Please enter your brokerage name and email.', 'error');
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Enter your brokerage name and a valid email.', 'error');
     return;
   }
 
@@ -1065,13 +1236,9 @@ function submitBrokerageTrial() {
 }
 
 function checkout(plan) {
-  if (plan === 'starter') {
-    openPricingModal('unlock');
-  } else if (plan === 'pro') {
-    openPricingModal('pro');
-  } else if (plan === 'broker') {
-    openBrokerageModal();
-  }
+  if (plan === 'starter') openPricingModal('starter');
+  else if (plan === 'pro') openPricingModal('pro');
+  else if (plan === 'broker') openBrokerageModal();
 }
 
 // --- MODAL CLICK-OUTSIDE ---
@@ -1088,6 +1255,12 @@ function initModalClickOutside() {
       if (e.target === brokerBackdrop) closeBrokerageModal();
     });
   }
+  const loginBackdrop = document.getElementById('loginModal');
+  if (loginBackdrop) {
+    loginBackdrop.addEventListener('click', (e) => {
+      if (e.target === loginBackdrop) closeLoginModal();
+    });
+  }
 }
 
 // --- SMOOTH SCROLL ---
@@ -1096,8 +1269,113 @@ function scrollToSection(id) {
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const drawer = document.getElementById('mobileDrawer');
+    const burger = document.getElementById('hamburger');
     if (drawer) drawer.classList.remove('open');
+    if (burger) {
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+    }
   }
+}
+
+function lockPageScroll(locked) {
+  if (!locked && document.querySelector('.modal-overlay.active')) return;
+  document.body.classList.toggle('modal-open', Boolean(locked));
+  document.body.style.overflow = locked ? 'hidden' : '';
+}
+
+function getCredits() {
+  return parseInt(localStorage.getItem('vs_credits') || '0', 10) || 0;
+}
+
+function addCredits(amount) {
+  const next = Math.max(0, getCredits() + amount);
+  localStorage.setItem('vs_credits', String(next));
+  renderAccount();
+  return next;
+}
+
+function refreshDownloadButton() {
+  const label = document.getElementById('downloadBtnLabel');
+  if (!label) return;
+  const credits = getCredits();
+  label.textContent = credits > 0
+    ? `Download 4K · ${credits} credit${credits === 1 ? '' : 's'}`
+    : 'Download 4K — $2.99';
+}
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('vs_session') || 'null'); }
+  catch (_) { return null; }
+}
+
+function initAccount() {
+  renderAccount();
+}
+
+function renderAccount() {
+  const session = getSession();
+  document.querySelectorAll('.nav-login, .drawer-login').forEach(el => {
+    el.textContent = session ? (session.name || 'Account') : 'Log in';
+  });
+  const creditsEl = document.getElementById('accountCredits');
+  if (creditsEl) {
+    const credits = getCredits();
+    creditsEl.textContent = `${credits} credit${credits === 1 ? '' : 's'} saved on this browser`;
+  }
+}
+
+function openLoginModal() {
+  const modal = document.getElementById('loginModal');
+  if (!modal) return;
+  const session = getSession();
+  const form = document.getElementById('loginForm');
+  const panel = document.getElementById('accountPanel');
+  const title = document.getElementById('loginModalTitle');
+  if (form) form.hidden = Boolean(session);
+  if (panel) panel.hidden = !session;
+  if (title) title.textContent = session ? 'Your account' : 'Log in';
+  renderAccount();
+  modal.classList.add('active');
+  lockPageScroll(true);
+}
+
+function closeLoginModal() {
+  const modal = document.getElementById('loginModal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  lockPageScroll(false);
+}
+
+function submitLogin() {
+  const name = document.getElementById('loginName')?.value.trim();
+  const email = document.getElementById('loginEmail')?.value.trim();
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '')) {
+    showToast('Enter your name and a valid email.', 'error');
+    return;
+  }
+  localStorage.setItem('vs_session', JSON.stringify({ name, email }));
+  closeLoginModal();
+  renderAccount();
+  showToast(`Welcome, ${name}.`, 'success');
+}
+
+function logout() {
+  localStorage.removeItem('vs_session');
+  closeLoginModal();
+  renderAccount();
+  showToast('Logged out on this browser.', 'info');
+}
+
+function initConcierge() {
+  const pill = document.getElementById('floatingConcierge');
+  if (!pill) return;
+  pill.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openLegalModal('mls');
+    }
+  });
 }
 
 // --- TOAST ---
@@ -1133,7 +1411,7 @@ function openLegalModal(tab = 'mls') {
   const modal = document.getElementById('legalModal');
   if (!modal) return;
   modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
+  lockPageScroll(true);
   switchLegalTab(tab);
 }
 
@@ -1141,12 +1419,14 @@ function closeLegalModal() {
   const modal = document.getElementById('legalModal');
   if (!modal) return;
   modal.classList.remove('active');
-  document.body.style.overflow = '';
+  lockPageScroll(false);
 }
 
 function switchLegalTab(tabKey) {
   document.querySelectorAll('.legal-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey);
+    const on = btn.getAttribute('data-tab') === tabKey;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
   });
 
   document.querySelectorAll('.legal-tab-pane').forEach(pane => {
@@ -1174,6 +1454,8 @@ function initLegalModal() {
     if (e.key === 'Escape') {
       closeLegalModal();
       closePricingModal();
+      closeBrokerageModal();
+      closeLoginModal();
     }
   });
 

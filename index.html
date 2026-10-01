@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VirtualStage AI — Stage Any Room in 15 Seconds | From $1.96/image</title>
-  <meta name="description" content="Upload an empty room photo and get photorealistic virtual staging in 15 seconds. Trusted by 45,000+ agents. MLS compliant. From $1.96/image. No subscription required.">
-  <meta property="og:title" content="VirtualStage AI — AI-Powered Virtual Staging for Real Estate">
-  <meta property="og:description" content="The fastest, most affordable virtual staging platform. Stage any room in 15 seconds from $1.96/image. MLS compliant, 30-day guarantee.">
+  <title>VirtualStage — Furniture for empty listing photos</title>
+  <meta name="description" content="Add furniture to an empty listing photo in about 15 seconds. From $1.96 a picture. Walls, windows, and floors stay as photographed. MLS disclosure on the file.">
+  <meta property="og:title" content="VirtualStage — Furniture for empty listing photos">
+  <meta property="og:description" content="Stage a vacant room from the photo you already have. About 15 seconds. From $1.96 a picture. Architecture stays unchanged.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="assets/hero_staged.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.7">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body>
 
@@ -37,7 +37,7 @@
       </div>
 
       <div class="nav-actions">
-        <a href="#" class="nav-login">Log in</a>
+        <a href="#account" class="nav-login" onclick="openLoginModal(); return false;">Log in</a>
         <a href="#demo" class="btn btn-primary btn-nav" onclick="scrollToSection('demo'); return false;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload Free
@@ -56,7 +56,7 @@
     <a href="#comparison">vs. BoxBrownie</a>
     <a href="#calculator">ROI Calculator</a>
     <a href="#pricing">Pricing</a>
-    <a href="#">Log in</a>
+    <a href="#account" class="drawer-login" onclick="openLoginModal(); return false;">Log in</a>
     <a href="#demo" class="btn btn-primary" onclick="scrollToSection('demo'); return false;">Upload Image for Free</a>
   </div>
 
@@ -67,19 +67,18 @@
       <!-- Left: Copy -->
       <div class="hero-copy">
         <div class="hero-eyebrow">
-          <span class="eyebrow-dot"></span>
-          15-second turnaround · Trusted by 45,000+ agents
+          Virtual staging for listing photos
         </div>
 
         <h1 class="hero-title">
-          Stage Any<br>
-          Empty Room<br>
-          <span class="hero-title-highlight">in 15 Seconds</span>
+          Empty rooms<br>
+          photograph small.<br>
+          <span class="hero-title-highlight">Put the furniture in.</span>
         </h1>
 
         <p class="hero-desc">
-          Upload a photo. Our AI adds photorealistic furniture, lighting, and decor — instantly. 
-          <strong>From $1.96/image.</strong> No subscription. No waiting.
+          Upload the photo you already shot. We add a sofa, a bed, or a table in about 15 seconds.
+          <strong>From $1.96 a picture</strong> on the Pro pack. The walls, windows, and floors stay as they are.
         </p>
 
         <div class="hero-cta-row">
@@ -94,30 +93,13 @@
 
         <div class="hero-trust-row">
           <div class="trust-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>No credit card required</span>
+            <span>Preview before you pay</span>
           </div>
           <div class="trust-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>MLS & NAR compliant</span>
+            <span>Disclosure stamped on the file</span>
           </div>
           <div class="trust-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>30-day money-back</span>
-          </div>
-        </div>
-
-        <!-- Star rating proof -->
-        <div class="hero-proof">
-          <div class="proof-avatars">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=80" alt="Agent" loading="lazy" width="32" height="32">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=80" alt="Agent" loading="lazy" width="32" height="32">
-            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=96&q=80" alt="Agent" loading="lazy" width="32" height="32">
-            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=96&q=80" alt="Agent" loading="lazy" width="32" height="32">
-          </div>
-          <div class="proof-text">
-            <span class="proof-stars">★★★★★</span>
-            <span>4.9/5 from <strong>4,200+</strong> realtors</span>
+            <span>30-day refund on unused credits</span>
           </div>
         </div>
       </div>
@@ -125,14 +107,12 @@
       <!-- Right: Visual -->
       <div class="hero-visual">
         <div class="hero-image-card">
-          <img src="assets/hero_staged.jpg" alt="AI-staged living room with modern furniture — photorealistic result" loading="eager" fetchpriority="high" width="700" height="440">
+          <img src="assets/hero_staged.jpg" alt="The same living room after furniture is added" loading="eager" fetchpriority="high" width="700" height="440">
           <div class="hero-badge hero-badge-time">
-            <span class="badge-dot"></span>
-            Staged in 12 seconds
+            About 15 seconds
           </div>
           <div class="hero-badge hero-badge-mls">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            MLS Compliant
+            Virtually staged
           </div>
         </div>
 
@@ -145,66 +125,22 @@
           <div class="mini-arrow">→</div>
           <div class="mini-card mini-card-after">
             <img src="assets/hero_staged.jpg" alt="Room after AI staging" loading="lazy" width="160" height="100">
-            <span class="mini-label mini-label-after">After · 12s</span>
+            <span class="mini-label mini-label-after">After · 15s</span>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- ===== PRESS / AS SEEN IN ===== -->
   <section class="press-bar">
     <div class="container">
-      <p class="press-label">As featured in</p>
+      <p class="press-label">What stays true</p>
       <div class="press-logos">
-        <span class="press-logo">Inman News</span>
+        <span class="press-logo">Same walls and windows</span>
         <span class="press-sep">·</span>
-        <span class="press-logo">Realtor Magazine</span>
+        <span class="press-logo">Furniture is added</span>
         <span class="press-sep">·</span>
-        <span class="press-logo">TechCrunch</span>
-        <span class="press-sep">·</span>
-        <span class="press-logo">Forbes</span>
-        <span class="press-sep">·</span>
-        <span class="press-logo">The Real Deal</span>
-        <span class="press-sep">·</span>
-        <span class="press-logo">NAR Today</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== BROKERAGE TRUST BAR ===== -->
-  <section class="brokerage-bar">
-    <div class="container">
-      <p class="brokerage-label">Trusted by top-producing agents &amp; brokerages nationwide</p>
-      <div class="brokerage-grid">
-        <div class="brokerage-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h1M14 10h1M9 14h1M14 14h1M9 18h1M14 18h1"/></svg>
-          <span>Sotheby's International Realty</span>
-        </div>
-        <div class="brokerage-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          <span>Keller Williams</span>
-        </div>
-        <div class="brokerage-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polygon points="12 3 15 9 21 12 15 15 12 21 9 15 3 12 9 9 12 3"/></svg>
-          <span>Compass</span>
-        </div>
-        <div class="brokerage-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
-          <span>Coldwell Banker</span>
-        </div>
-        <div class="brokerage-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-          <span>RE/MAX</span>
-        </div>
-        <div class="brokerage-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          <span>Berkshire Hathaway HS</span>
-        </div>
-        <div class="brokerage-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>
-          <span>eXp Realty</span>
-        </div>
+        <span class="press-logo">File says virtually staged</span>
       </div>
     </div>
   </section>
@@ -213,20 +149,20 @@
   <section class="metrics-bar" id="metrics">
     <div class="container metrics-grid">
       <div class="metric">
-        <span class="metric-val" data-count="15" data-suffix=" sec">15 sec</span>
-        <span class="metric-label">Average turnaround</span>
+        <span class="metric-val">15 sec</span>
+        <span class="metric-label">Typical render</span>
       </div>
       <div class="metric">
-        <span class="metric-val" data-prefix="$" data-count="1.96">$1.96</span>
-        <span class="metric-label">Starting price per image</span>
+        <span class="metric-val">$1.96</span>
+        <span class="metric-label">Per photo on Pro</span>
       </div>
       <div class="metric">
-        <span class="metric-val" data-count="45" data-suffix="K+">45K+</span>
-        <span class="metric-label">Rooms staged this month</span>
+        <span class="metric-val">6</span>
+        <span class="metric-label">Furniture styles</span>
       </div>
       <div class="metric">
-        <span class="metric-val" data-count="98" data-suffix="%">98%</span>
-        <span class="metric-label">MLS acceptance rate</span>
+        <span class="metric-val">$2.99</span>
+        <span class="metric-label">One photo, no pack</span>
       </div>
     </div>
   </section>
@@ -235,36 +171,37 @@
   <section class="gallery-section" id="gallery">
     <div class="container">
       <div class="gallery-header reveal">
-        <div class="section-eyebrow">Interactive Portfolio &amp; Case Studies</div>
-        <h2 class="section-title">Photorealistic transformations<br>that turn listings into offers</h2>
+        <div class="section-eyebrow">What buyers see on the listing</div>
+        <h2 class="section-title">The first photo decides<br>whether they book a showing</h2>
+        <p class="section-subtitle">Drag the slider. The walls stay. Furniture is there so a buyer can judge the size. About 15 seconds, $1.96 a photo on the Pro pack.</p>
       </div>
 
       <!-- Tailored Persona Quick-Selector (5 Consumer Roles) -->
       <div class="persona-selector-wrap reveal">
-        <span class="persona-selector-label">Tailored for your specific workflow:</span>
-        <div class="persona-tabs" role="tablist" aria-label="Target audience roles">
+        <span class="persona-selector-label">Who is photographing the house</span>
+        <div class="persona-tabs" role="tablist" aria-label="Who is photographing the house">
           <button class="persona-tab active" onclick="selectPersona('solo', this)" role="tab" id="p_solo">
-            <span class="persona-icon">🏢</span> Solo Listing Agent
+            Listing agent
           </button>
           <button class="persona-tab" onclick="selectPersona('fsbo', this)" role="tab" id="p_fsbo">
-            <span class="persona-icon">🏡</span> Homeowner / FSBO
+            Homeowner
           </button>
           <button class="persona-tab" onclick="selectPersona('luxury', this)" role="tab" id="p_luxury">
-            <span class="persona-icon">💎</span> Luxury Estate Broker
+            Higher-end listing
           </button>
           <button class="persona-tab" onclick="selectPersona('investor', this)" role="tab" id="p_investor">
-            <span class="persona-icon">🔨</span> Flipper &amp; Investor
+            Fixer
           </button>
           <button class="persona-tab" onclick="selectPersona('team', this)" role="tab" id="p_team">
-            <span class="persona-icon">👥</span> Brokerage &amp; Team
+            Team
           </button>
         </div>
         <div class="persona-benefit-card" id="personaBenefitCard">
           <div class="persona-benefit-highlight">
-            <strong id="personaBenefitTitle">Save $2,500+ and 48 hours per listing</strong>
-            <span id="personaBenefitText">Stage entire homes in under 60 seconds from your phone. Eliminate BoxBrownie wait times and keep 100% of your seller's momentum.</span>
+            <strong id="personaBenefitTitle">Stage the vacant rooms before the listing appointment ends</strong>
+            <span id="personaBenefitText">Living room and primary suite are the two photos buyers linger on. Do those first. Twilight is the add-on when the exterior was shot at noon.</span>
           </div>
-          <span class="persona-rec-pill" id="personaRecPill">Recommended: Virtual Twilight &amp; Living Room</span>
+          <span class="persona-rec-pill" id="personaRecPill">Start with the living room</span>
         </div>
       </div>
 
@@ -347,13 +284,13 @@
           </div>
 
           <!-- Hold Compare Button (Toggle Mode) -->
-          <button class="btn-hold-compare" id="holdCompareBtn" onmousedown="setHoldState(true)" onmouseup="setHoldState(false)" ontouchstart="setHoldState(true)" ontouchend="setHoldState(false)">
+          <button class="btn-hold-compare" id="holdCompareBtn" type="button" onpointerdown="setHoldState(true)" onpointerup="setHoldState(false)" onpointercancel="setHoldState(false)" onpointerleave="setHoldState(false)">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <span id="holdBtnLabel">Hold to View Vacant Room</span>
           </button>
 
-          <span class="slider-label slider-label-before">Before (Vacant / Original)</span>
-          <span class="slider-label slider-label-after">After (VirtualStage AI · 4K HDR)</span>
+          <span class="slider-label slider-label-before">Before · hard to judge scale</span>
+          <span class="slider-label slider-label-after">After · the photo buyers keep</span>
 
           <div class="slider-handle" id="sliderHandle" role="slider" tabindex="0" aria-label="Comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
             <div class="handle-pill">
@@ -368,42 +305,42 @@
           <div class="gallery-thumb-card active" data-room="living" onclick="switchHeroRoom('living', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/hero_staged.jpg');"></div>
             <div class="gallery-thumb-name">Living Room</div>
-            <div class="gallery-thumb-badge">9 Days Sold</div>
+            <div class="gallery-thumb-badge">Buyer sees the scale</div>
           </div>
           <div class="gallery-thumb-card" data-room="bedroom" onclick="switchHeroRoom('bedroom', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/bedroom_staged.jpg');"></div>
             <div class="gallery-thumb-name">Primary Suite</div>
-            <div class="gallery-thumb-badge">NAR #2 Driver</div>
+            <div class="gallery-thumb-badge">Suite feels livable</div>
           </div>
           <div class="gallery-thumb-card" data-room="dining" onclick="switchHeroRoom('dining', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/dining_staged.jpg');"></div>
             <div class="gallery-thumb-name">Dining Room</div>
-            <div class="gallery-thumb-badge">+$27k Over Ask</div>
+            <div class="gallery-thumb-badge">Table proves it fits</div>
           </div>
           <div class="gallery-thumb-card" data-room="office" onclick="switchHeroRoom('office', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/office_staged.jpg');"></div>
             <div class="gallery-thumb-name">Home Office</div>
-            <div class="gallery-thumb-badge">#1 Filter</div>
+            <div class="gallery-thumb-badge">Top buyer filter</div>
           </div>
           <div class="gallery-thumb-card" data-room="twilight" onclick="switchHeroRoom('twilight', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/twilight_dusk.jpg');"></div>
             <div class="gallery-thumb-name">Virtual Twilight</div>
-            <div class="gallery-thumb-badge">+400% Clicks</div>
+            <div class="gallery-thumb-badge">Stronger hero photo</div>
           </div>
           <div class="gallery-thumb-card" data-room="declutter" onclick="switchHeroRoom('declutter', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/declutter_after.jpg');"></div>
             <div class="gallery-thumb-name">Item Removal</div>
-            <div class="gallery-thumb-badge">Save $1.5k Delay</div>
+            <div class="gallery-thumb-badge">Clutter gone, room stays</div>
           </div>
           <div class="gallery-thumb-card" data-room="patio" onclick="switchHeroRoom('patio', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/patio_staged.jpg');"></div>
             <div class="gallery-thumb-name">Outdoor Patio</div>
-            <div class="gallery-thumb-badge">+$35k Equity</div>
+            <div class="gallery-thumb-badge">Outdoor lifestyle</div>
           </div>
           <div class="gallery-thumb-card" data-room="renovation" onclick="switchHeroRoom('renovation', this)" role="tab" tabindex="0">
             <div class="gallery-thumb-img" style="background-image: url('assets/reno_after.jpg');"></div>
             <div class="gallery-thumb-name">Virtual Remodel</div>
-            <div class="gallery-thumb-badge">Avoid Price Cut</div>
+            <div class="gallery-thumb-badge">Potential, no remodel</div>
           </div>
         </div>
 
@@ -412,27 +349,46 @@
           <div class="gallery-impact-top">
             <div class="gallery-impact-titles">
               <h3 class="gallery-impact-title" id="galleryRoomTitle">Open-Concept Modern Living Room</h3>
+              <p class="gallery-buyer-line" id="galleryBuyerLine">An empty living room photographs smaller than it is. Furniture shows a buyer the sofa fits and the view is the point of the room.</p>
             </div>
             <div class="gallery-impact-badge" id="galleryRoomBadge">Open-Concept Living</div>
           </div>
-          <div class="gallery-metrics-grid">
-            <div class="gallery-metric-item">
-              <span class="metric-num-val" id="galleryDom">9 Days</span>
-              <span class="metric-num-lbl">Days on Market <small id="galleryDomBench">vs 46 MLS avg</small></span>
-            </div>
-            <div class="gallery-metric-item">
-              <span class="metric-num-val text-green" id="galleryOverAsk">+$22,500</span>
-              <span class="metric-num-lbl">Over-Asking Spread <small>Average boost</small></span>
-            </div>
-            <div class="gallery-metric-item">
-              <span class="metric-num-val" id="galleryRoi">1,148x ROI</span>
-              <span class="metric-num-lbl">Staging Return <small id="gallerySavings">$2,800 saved vs physical</small></span>
-            </div>
-            <div class="gallery-metric-item">
-              <span class="metric-num-val text-accent">15 Seconds</span>
-              <span class="metric-num-lbl">Render Speed <small>Instant 4K export</small></span>
-            </div>
+          <div class="compete-row" aria-label="Listing value compared with other staging options">
+            <article class="compete-card compete-card-us">
+              <span class="compete-tag">This listing photo</span>
+              <strong>VirtualStage AI</strong>
+              <div class="compete-price">$1.96 <span>per image</span></div>
+              <ul>
+                <li>Ready in 15 seconds</li>
+                <li>Walls, windows, and floor unchanged</li>
+                <li>Switch style in one click</li>
+                <li>MLS disclosure on the photo</li>
+              </ul>
+            </article>
+            <article class="compete-card">
+              <span class="compete-tag">Manual retoucher</span>
+              <strong>BoxBrownie</strong>
+              <div class="compete-price">$24–$32 <span>per image</span></div>
+              <ul>
+                <li>24–48 hour queue</li>
+                <li>About $15 to change the style</li>
+                <li>Seller waits through the weekend</li>
+                <li>Same photo, twelve times the price</li>
+              </ul>
+            </article>
+            <article class="compete-card">
+              <span class="compete-tag">Furniture rental</span>
+              <strong>Physical staging</strong>
+              <div class="compete-price">$2,500+ <span>per home</span></div>
+              <ul>
+                <li>5–7 days to install</li>
+                <li>Truck, rental, and pickup</li>
+                <li>One look, then it leaves</li>
+                <li>You still need the photographer</li>
+              </ul>
+            </article>
           </div>
+          <p class="compete-edge" id="galleryEdge">One living-room photo at $1.96 replaces a staging visit that usually starts around $2,500.</p>
         </div>
 
         <!-- Aesthetic Preset Studio Panel -->
@@ -448,7 +404,7 @@
           </div>
           <div class="style-preset-card">
             <div class="style-preset-top">
-              <span class="style-preset-title" id="stylePresetTitle">Modern Architectural Luxury</span>
+              <span class="style-preset-title" id="stylePresetTitle">Modern</span>
               <div class="palette-swatches" id="stylePresetPalette">
                 <span class="palette-swatch" style="background-color: #FFFFFF;" title="#FFFFFF"></span>
                 <span class="palette-swatch" style="background-color: #E2E8F0;" title="#E2E8F0"></span>
@@ -456,15 +412,15 @@
                 <span class="palette-swatch" style="background-color: #B89B72;" title="#B89B72"></span>
               </div>
             </div>
-            <p class="style-preset-desc" id="stylePresetDesc">Clean geometric lines, low-profile bouclé and Italian leather, matte black metal accents, warm travertine stone surfaces.</p>
-            <span class="style-preset-best" id="stylePresetBest">Best for: High-rise condos, contemporary suburban homes, new construction</span>
+            <p class="style-preset-desc" id="stylePresetDesc">A low sofa, a light wood table, one large rug. Fits new construction and condos with big windows.</p>
+            <span class="style-preset-best" id="stylePresetBest">Condos and new construction</span>
           </div>
         </div>
 
         <!-- Realtor Social Proof Case Note -->
         <div class="gallery-quote-card">
           <div class="gallery-quote-mark">“</div>
-          <p class="gallery-quote-text" id="galleryQuoteText">"We virtually staged the vacant living area on Thursday morning and received 3 written offers over asking by Sunday afternoon. The 15-second speed is unmatched."</p>
+          <p class="gallery-quote-text" id="galleryQuoteText">Photograph the empty room, then stage that same frame. The windows should line up when a buyer drags across the photo.</p>
           <div class="gallery-agent-bar">
             <div class="agent-avatar-circle">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -475,7 +431,7 @@
             </div>
             <div class="agent-mls-verified">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Verified MLS Closed Sale</span>
+              <span id="galleryTrustNote">Architecture unchanged · furnishing only</span>
             </div>
           </div>
         </div>
@@ -485,7 +441,7 @@
           <div class="action-btn-group">
             <button class="btn btn-primary btn-gallery-stage" onclick="stageThisGalleryRoom()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Stage a room like this in 15s →
+              Stage a photo like this
             </button>
             <button class="btn btn-secondary btn-gallery-download" onclick="downloadActiveGallerySample()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -506,7 +462,7 @@
           <div class="showcase-header">
             <div class="showcase-eyebrow">Complete Portfolio Catalog</div>
             <h3 class="showcase-title">Inspect all 8 room transformations</h3>
-            <p class="showcase-subtitle">Drag or slide each card below to examine photorealistic detail across every room type.</p>
+            <p class="showcase-subtitle">Same rooms, with furniture added. Drag a card to compare.</p>
           </div>
 
           <div class="gallery-showcase-grid">
@@ -525,7 +481,7 @@
                     <h4 class="showcase-name">Open-Concept Living</h4>
                     <span class="showcase-loc">Beverly Hills, CA</span>
                   </div>
-                  <span class="showcase-outcome">9 Days Sold</span>
+                  <span class="showcase-outcome">Buyer sees scale</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('living')">Inspect ↑</button>
@@ -548,7 +504,7 @@
                     <h4 class="showcase-name">Primary Bedroom Suite</h4>
                     <span class="showcase-loc">Bellevue, WA</span>
                   </div>
-                  <span class="showcase-outcome">NAR #2 Driver</span>
+                  <span class="showcase-outcome">Suite feels livable</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('bedroom')">Inspect ↑</button>
@@ -571,7 +527,7 @@
                     <h4 class="showcase-name">Executive Dining Room</h4>
                     <span class="showcase-loc">Scottsdale, AZ</span>
                   </div>
-                  <span class="showcase-outcome">+$27k Over Ask</span>
+                  <span class="showcase-outcome">Table proves it fits</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('dining')">Inspect ↑</button>
@@ -594,7 +550,7 @@
                     <h4 class="showcase-name">Executive Study / Den</h4>
                     <span class="showcase-loc">Austin, TX</span>
                   </div>
-                  <span class="showcase-outcome">#1 Search Filter</span>
+                  <span class="showcase-outcome">Top buyer filter</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('office')">Inspect ↑</button>
@@ -617,7 +573,7 @@
                     <h4 class="showcase-name">Day-to-Dusk Exterior</h4>
                     <span class="showcase-loc">Miami Beach, FL</span>
                   </div>
-                  <span class="showcase-outcome">+400% Clicks</span>
+                  <span class="showcase-outcome">Stronger hero photo</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('twilight')">Inspect ↑</button>
@@ -640,7 +596,7 @@
                     <h4 class="showcase-name">Tenant Decluttering</h4>
                     <span class="showcase-loc">Denver, CO</span>
                   </div>
-                  <span class="showcase-outcome">Saved $1.5k Delay</span>
+                  <span class="showcase-outcome">Clutter removed</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('declutter')">Inspect ↑</button>
@@ -663,7 +619,7 @@
                     <h4 class="showcase-name">Patio &amp; Fire Pit</h4>
                     <span class="showcase-loc">Nashville, TN</span>
                   </div>
-                  <span class="showcase-outcome">+$35k Equity</span>
+                  <span class="showcase-outcome">Outdoor lifestyle</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('patio')">Inspect ↑</button>
@@ -686,7 +642,7 @@
                     <h4 class="showcase-name">Dated Remodel Vision</h4>
                     <span class="showcase-loc">Chicago, IL</span>
                   </div>
-                  <span class="showcase-outcome">Avoided $50k Cut</span>
+                  <span class="showcase-outcome">Shows the potential</span>
                 </div>
                 <div class="showcase-actions">
                   <button class="showcase-btn showcase-btn-ghost" onclick="inspectRoomInTheater('renovation')">Inspect ↑</button>
@@ -707,7 +663,7 @@
     <div class="container">
       <div class="section-eyebrow reveal">How it works</div>
       <h2 class="section-title reveal">Stage a room in 3 clicks</h2>
-      <p class="section-subtitle reveal reveal-delay-1">No apps to download. No designers to wait on. Stage from any browser in under a minute.</p>
+      <p class="section-subtitle reveal reveal-delay-1">A photo, a furniture style, then the file.</p>
 
       <div class="steps-grid reveal reveal-delay-2">
         <div class="step-card">
@@ -752,8 +708,8 @@
   <!-- ===== INTERACTIVE STUDIO ===== -->
   <section class="studio-section" id="demo">
     <div class="container">
-      <div class="section-eyebrow reveal">Live Studio</div>
-      <h2 class="section-title reveal">Try it now — it's free</h2>
+      <div class="section-eyebrow reveal">Studio</div>
+      <h2 class="section-title reveal">Upload a listing photo</h2>
       <p class="section-subtitle reveal reveal-delay-1">Pick a sample room or upload your own listing photo. No account needed.</p>
 
       <div class="studio-layout reveal reveal-delay-2">
@@ -791,7 +747,20 @@
                 <strong>Coastal</strong>
                 <span>White, linen, sea tones</span>
               </button>
+              <button class="style-option" onclick="selectStyle('luxury', this)">
+                <strong>Luxury</strong>
+                <span>Marble, brass, velvet</span>
+              </button>
+              <button class="style-option" onclick="selectStyle('midcentury', this)">
+                <strong>Mid-Century</strong>
+                <span>Walnut, tapered legs</span>
+              </button>
             </div>
+          </div>
+
+          <div class="sidebar-group">
+            <label class="sidebar-label" for="customPrompt">Custom prompt <span class="sidebar-optional">optional</span></label>
+            <textarea id="customPrompt" class="sidebar-textarea" maxlength="400" placeholder="e.g. walnut desk, linen sofa, keep the window view"></textarea>
           </div>
 
           <div class="sidebar-group">
@@ -836,9 +805,9 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
                 Before / After
               </button>
-              <button class="toolbar-btn btn-unlock-cta" onclick="openPricingModal('unlock')" aria-label="Download full 4K image for $2.99">
+              <button class="toolbar-btn btn-unlock-cta" onclick="requestStudioDownload()" aria-label="Download full 4K image">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download 4K — $2.99
+                <span id="downloadBtnLabel">Download 4K — $2.99</span>
               </button>
             </div>
           </div>
@@ -850,9 +819,9 @@
   <!-- ===== WHY CHOOSE US ===== -->
   <section class="features-section" id="features">
     <div class="container">
-      <div class="section-eyebrow reveal">Why us?</div>
-      <h2 class="section-title reveal">Everything you need.<br>Nothing you don't.</h2>
-      <p class="section-subtitle reveal reveal-delay-1">Built specifically for real estate professionals who need results fast, at scale, and MLS-ready.</p>
+      <div class="section-eyebrow reveal">The work</div>
+      <h2 class="section-title reveal">Furniture, dusk, and a clean room</h2>
+      <p class="section-subtitle reveal reveal-delay-1">Three jobs listing photos usually need, from the file you already have.</p>
 
       <div class="features-grid reveal reveal-delay-2">
         <div class="feature">
@@ -861,7 +830,7 @@
           </div>
           <div class="feature-body">
             <h3>Results in 15 seconds</h3>
-            <p>No 24–48hr wait for manual editors. Get photorealistic staging in under 15 seconds — stage a full 5-bedroom during a listing appointment.</p>
+            <p>A living room usually finishes in about 15 seconds. A five-photo listing can be done while you are still at the house.</p>
           </div>
         </div>
         <div class="feature">
@@ -879,7 +848,7 @@
           </div>
           <div class="feature-body">
             <h3>True-to-scale furniture</h3>
-            <p>Our AI uses depth analysis to place furniture with correct proportions. No floating sofas, warped perspectives, or plastic-looking renders.</p>
+            <p>Furniture is placed to the scale of the room in the photo. If a sofa looks wrong, switch the style and render again.</p>
           </div>
         </div>
         <div class="feature">
@@ -934,9 +903,9 @@
   <!-- ===== COMPARISON TABLE ===== -->
   <section class="comparison-section" id="comparison">
     <div class="container">
-      <div class="section-eyebrow reveal">Competitor comparison</div>
-      <h2 class="section-title reveal">Why agents are switching<br>from BoxBrownie &amp; manual staging</h2>
-      <p class="section-subtitle reveal reveal-delay-1">One platform. A fraction of the price. None of the wait time.</p>
+      <div class="section-eyebrow reveal">Price and time</div>
+      <h2 class="section-title reveal">The same photo, three ways to stage it</h2>
+      <p class="section-subtitle reveal reveal-delay-1">A manual editor, a furniture truck, or this. The room in the photo is the same.</p>
 
       <div class="comparison-table-wrapper reveal reveal-delay-2">
         <table class="comparison-table">
@@ -944,8 +913,7 @@
             <tr>
               <th>Features &amp; Benchmarks</th>
               <th class="col-highlight">
-                VirtualStage AI
-                <span class="pill-leader">✓ Market Leader</span>
+                VirtualStage
               </th>
               <th>BoxBrownie</th>
               <th>Physical Staging</th>
@@ -1005,7 +973,7 @@
       </div>
 
       <div class="comparison-cta">
-        <a href="#demo" class="btn btn-primary btn-lg" onclick="scrollToSection('demo'); return false;">Switch to VirtualStage AI — Free →</a>
+        <a href="#demo" class="btn btn-primary btn-lg" onclick="scrollToSection('demo'); return false;">Upload a photo</a>
       </div>
     </div>
   </section>
@@ -1013,9 +981,9 @@
   <!-- ===== ROI CALCULATOR ===== -->
   <section class="roi-section" id="calculator">
     <div class="container">
-      <div class="section-eyebrow reveal">ROI Calculator</div>
-      <h2 class="section-title reveal">How much are you overspending<br>on staging right now?</h2>
-      <p class="section-subtitle reveal reveal-delay-1">Move the sliders to calculate your exact annual savings.</p>
+      <div class="section-eyebrow reveal">Cost</div>
+      <h2 class="section-title reveal">What a year of staging costs</h2>
+      <p class="section-subtitle reveal reveal-delay-1">Set how many listings you shoot and what you pay now.</p>
 
       <div class="roi-container-card reveal reveal-delay-2">
         <div class="roi-slider-group">
@@ -1167,101 +1135,24 @@
     </div>
   </section>
 
-  <!-- ===== TESTIMONIALS ===== -->
   <section class="testimonials-section" id="testimonials">
     <div class="container">
-      <div class="section-eyebrow reveal">Agent testimonials</div>
-      <h2 class="section-title reveal">Real results from<br>real estate professionals</h2>
-      <p class="section-subtitle reveal reveal-delay-1">Over 45,000 agents trust VirtualStage AI. Here's what they say.</p>
+      <div class="section-eyebrow reveal">On a listing</div>
+      <h2 class="section-title reveal">Three photos that usually need help</h2>
+      <p class="section-subtitle reveal reveal-delay-1">These are the jobs. The result is a photo, not a promise about the sale.</p>
 
       <div class="testimonials-grid reveal reveal-delay-2">
         <div class="testimonial">
-          <div class="test-header">
-            <div class="test-stars" aria-label="5 star rating">★★★★★</div>
-            <div class="test-verified">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Verified buyer
-            </div>
-          </div>
-          <blockquote>
-            "We had a vacant condo that sat on Zillow for 41 days. I staged the living room and bedroom in 2 minutes. Had 3 offers by Sunday at $18K over ask."
-          </blockquote>
-          <div class="test-author">
-            <div class="test-initials">MB</div>
-            <div>
-              <strong>Marcus Bennett</strong>
-              <span>Sotheby's International Realty · Dallas, TX</span>
-            </div>
-          </div>
-          <div class="test-result-tag">$18K over asking price</div>
+          <h3>Vacant living room</h3>
+          <p>An empty room reads smaller on a phone. A sofa and a rug give the buyer a size. The windows in the original photo stay where they are.</p>
         </div>
-
         <div class="testimonial">
-          <div class="test-header">
-            <div class="test-stars" aria-label="5 star rating">★★★★★</div>
-            <div class="test-verified">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Verified buyer
-            </div>
-          </div>
-          <blockquote>
-            "I used to spend $3,000 per listing on furniture rentals. VirtualStage gave me 4K photos in seconds for $1.96 each. Saved over $35K this year alone."
-          </blockquote>
-          <div class="test-author">
-            <div class="test-initials">SL</div>
-            <div>
-              <strong>Sarah Lindqvist</strong>
-              <span>Keller Williams Premier · Seattle, WA</span>
-            </div>
-          </div>
-          <div class="test-result-tag">$35,000+ saved annually</div>
+          <h3>Occupied house</h3>
+          <p>Boxes and laundry make buyers price in a project. Item removal clears the mess and keeps the real sofa and the real floor.</p>
         </div>
-
         <div class="testimonial">
-          <div class="test-header">
-            <div class="test-stars" aria-label="5 star rating">★★★★★</div>
-            <div class="test-verified">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Verified buyer
-            </div>
-          </div>
-          <blockquote>
-            "The twilight feature is jaw-dropping. Converting our daytime photos to golden-hour doubled click-through rates on Zillow. My sellers think I'm a genius."
-          </blockquote>
-          <div class="test-author">
-            <div class="test-initials">DC</div>
-            <div>
-              <strong>David Chen</strong>
-              <span>Compass Real Estate · San Francisco, CA</span>
-            </div>
-          </div>
-          <div class="test-result-tag">2× Zillow CTR increase</div>
-        </div>
-      </div>
-
-      <!-- Rating summary -->
-      <div class="rating-summary reveal reveal-delay-3">
-        <div class="rating-number">4.9</div>
-        <div class="rating-details">
-          <div class="rating-stars">★★★★★</div>
-          <p>Based on <strong>4,200+ verified reviews</strong> from Trustpilot &amp; Google</p>
-        </div>
-        <div class="rating-breakdown">
-          <div class="rating-bar-row">
-            <span>5★</span>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width:87%"></div></div>
-            <span>87%</span>
-          </div>
-          <div class="rating-bar-row">
-            <span>4★</span>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width:9%"></div></div>
-            <span>9%</span>
-          </div>
-          <div class="rating-bar-row">
-            <span>3★</span>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width:4%"></div></div>
-            <span>4%</span>
-          </div>
+          <h3>Noon exterior</h3>
+          <p>If the hero shot was taken at midday, a dusk version is a $14 add-on. Brokerage plans include it. It is still the same house.</p>
         </div>
       </div>
     </div>
@@ -1273,9 +1164,9 @@
       <div class="faq-layout">
         <div class="faq-left">
           <div class="section-eyebrow">FAQ</div>
-          <h2 class="faq-title">Questions?<br>We have answers.</h2>
-          <p>Still not sure? Email us at <a href="mailto:support@virtualstage.ai" class="faq-email-link">support@virtualstage.ai</a> — we reply within 2 hours.</p>
-          <a href="#pricing" class="btn btn-primary" onclick="scrollToSection('pricing'); return false;" style="margin-top: 24px; display: inline-flex;">Get started today →</a>
+          <h2 class="faq-title">Common questions</h2>
+          <p>Email <a href="mailto:support@virtualstage.ai" class="faq-email-link">support@virtualstage.ai</a> if something here does not cover it.</p>
+          <a href="#pricing" class="btn btn-primary" onclick="scrollToSection('pricing'); return false;" style="margin-top: 24px; display: inline-flex;">See pricing</a>
         </div>
         <div class="faq-list" id="faqList">
           <div class="faq-item open" onclick="toggleFaq(this)">
@@ -1329,9 +1220,9 @@
   <section class="final-cta">
     <div class="container">
       <div class="final-cta-inner">
-        <div class="section-eyebrow" style="color: rgba(255,255,255,0.7)">Get started today</div>
-        <h2 class="reveal">Stage your first listing<br>in the next 15 seconds</h2>
-        <p class="reveal reveal-delay-1">Upload for free. No credit card. No account setup. Results you can put on MLS today.</p>
+        <div class="section-eyebrow" style="color: rgba(255,255,255,0.7)">Next listing</div>
+        <h2 class="reveal">Try it on the next<br>vacant room</h2>
+        <p class="reveal reveal-delay-1">The preview is free. A download uses a credit, from $2.99 for one photo.</p>
         <div class="final-cta-buttons reveal reveal-delay-2">
           <a href="#demo" class="btn btn-white btn-lg" onclick="scrollToSection('demo'); return false;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1340,13 +1231,13 @@
           <a href="#pricing" class="btn btn-white-outline btn-lg" onclick="scrollToSection('pricing'); return false;">View pricing →</a>
         </div>
         <div class="final-trust">
-          <span>⚡ 15-second results</span>
+          <span>About 15 seconds</span>
           <span>·</span>
-          <span>$1.96/image</span>
+          <span>$1.96 on Pro</span>
           <span>·</span>
-          <span>30-day guarantee</span>
+          <span>30-day refund</span>
           <span>·</span>
-          <span>MLS compliant</span>
+          <span>Disclosure on the file</span>
         </div>
       </div>
     </div>
@@ -1360,14 +1251,14 @@
           <svg class="brand-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span class="brand-name">VirtualStage<span class="brand-ai">AI</span></span>
         </a>
-        <p>AI-powered virtual staging for real estate professionals. MLS compliant. Trusted by 45,000+ agents.</p>
+        <p>Furniture for empty listing photos. The architecture in the picture stays as shot.</p>
         <p class="footer-contact">support@virtualstage.ai</p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
         <a href="#demo">Virtual Staging</a>
-        <a href="#demo">Item Removal</a>
-        <a href="#demo">Day to Dusk</a>
+        <a href="#demo" onclick="openStudioRoom('declutter'); return false;">Item Removal</a>
+        <a href="#demo" onclick="openStudioRoom('twilight'); return false;">Day to Dusk</a>
         <a href="#pricing">Pricing</a>
       </div>
       <div class="footer-col">
@@ -1400,8 +1291,8 @@
   <div class="sticky-cta" id="stickyCta" aria-label="Sticky call to action">
     <div class="sticky-cta-inner">
       <div class="sticky-cta-copy">
-        <strong>Stage any room in 15 seconds</strong>
-        <span>From $1.96 · No subscription</span>
+        <strong>Furniture for the empty photo</strong>
+        <span>From $1.96 on Pro</span>
       </div>
       <a href="#demo" class="btn btn-primary btn-sm" onclick="scrollToSection('demo'); return false;">Upload Free</a>
     </div>
@@ -1418,15 +1309,23 @@
 
       <div class="modal-options">
         <label class="modal-opt" id="tierSingle" onclick="selectModalTier('single')">
-          <input type="radio" name="modalOption" id="optSingle" aria-label="Single photo unlock for $2.99">
+          <input type="radio" name="modalOption" id="optSingle" value="single" aria-label="Single photo unlock for $2.99">
           <div class="modal-opt-body">
             <strong>Single photo</strong>
             <span>One-time unlock — use right now</span>
           </div>
           <span class="modal-opt-price">$2.99</span>
         </label>
+        <label class="modal-opt" id="tierStarter" onclick="selectModalTier('starter')">
+          <input type="radio" name="modalOption" id="optStarter" value="starter" aria-label="Starter pack 10 images for $29">
+          <div class="modal-opt-body">
+            <strong>Starter pack — 10 images</strong>
+            <span>$2.90/image · credits stay on this device</span>
+          </div>
+          <span class="modal-opt-price">$29</span>
+        </label>
         <label class="modal-opt selected" id="tierPro" onclick="selectModalTier('pro')">
-          <input type="radio" name="modalOption" id="optPro" checked aria-label="Pro pack 25 images for $49">
+          <input type="radio" name="modalOption" id="optPro" value="pro" checked aria-label="Pro pack 25 images for $49">
           <div class="modal-opt-body">
             <strong>Pro pack — 25 images <span class="val-badge">Best value</span></strong>
             <span>$1.96/image + item removal included</span>
@@ -1453,7 +1352,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Complete secure purchase
       </button>
-      <p class="modal-trust">Secured by Stripe · Instant delivery · 30-day refund guarantee</p>
+      <p class="modal-trust">Credits stay on this device · Stripe charges only when a live key is connected · 30-day refund policy</p>
     </div>
   </div>
 
@@ -1499,7 +1398,7 @@
             <div class="legal-note note-blue"><strong>You own your photos.</strong> We grant you an irrevocable, perpetual, worldwide commercial license to all rendered images.</div>
             <h3>License &amp; ownership</h3><p>You retain 100% copyright of uploaded photos. Rendered images are licensed to you for unrestricted commercial use across MLS, Zillow, Redfin, social media, and print.</p>
             <h3>Permitted use</h3><p>Real estate marketing, architectural visualization, and property presentation only. Do not use to conceal structural damage or violate Fair Housing laws.</p>
-            <h3>Pricing</h3><p>Single unlocks: $2.99. Pro Pack: $49/25 images. Brokerage: $99/month unlimited. Payments via Stripe. Pro Pack credits never expire.</p>
+            <h3>Pricing</h3><p>Single unlocks: $2.99. Starter: $29/10 images. Pro Pack: $49/25 images. Brokerage: $99/month unlimited. Payments via Stripe when connected. Pack credits never expire.</p>
             <h3>Guarantee</h3><p>30-day unconditional money-back guarantee on all purchases.</p>
             <h3>Liability</h3><p>Limited to fees paid in the preceding 12 months. Disputes under Delaware law via AAA arbitration.</p>
           </div>
@@ -1534,7 +1433,7 @@
   </div>
 
   <!-- ===== BROKERAGE & TEAM ONBOARDING MODAL ===== -->
-  <div class="modal-overlay" id="brokerageModal" role="dialog" aria-modal="true" aria-labelledby="brokerageModalTitle" style="display: none;">
+  <div class="modal-overlay" id="brokerageModal" role="dialog" aria-modal="true" aria-labelledby="brokerageModalTitle">
     <div class="modal-box">
       <div class="modal-head">
         <div>
@@ -1588,9 +1487,35 @@
   <!-- ===== FLOATING MLS CONCIERGE HELP WIDGET ===== -->
   <div class="floating-concierge-pill" id="floatingConcierge" onclick="openLegalModal('mls')" role="button" tabindex="0" aria-label="Open MLS compliance help">
     <span class="concierge-pulse-dot"></span>
-    <span>🛡️ MLS Concierge Live · 50-State Approved</span>
+    <span>MLS photo rules</span>
   </div>
 
-  <script src="app.js?v=3.7"></script>
+  <!-- ===== ACCOUNT ===== -->
+  <div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+    <div class="modal-box">
+      <button class="modal-x" onclick="closeLoginModal()" aria-label="Close account">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h2 id="loginModalTitle">Log in</h2>
+      <p class="modal-sub" id="loginModalSub">Save credits on this browser. No password — this demo keeps your session locally.</p>
+      <div id="loginForm">
+        <div class="form-field-group">
+          <label class="form-field-label" for="loginName">Name</label>
+          <input type="text" class="form-field-input" id="loginName" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="form-field-group">
+          <label class="form-field-label" for="loginEmail">Email</label>
+          <input type="email" class="form-field-input" id="loginEmail" placeholder="you@brokerage.com" autocomplete="email">
+        </div>
+        <button class="btn btn-primary full-w" type="button" onclick="submitLogin()">Continue</button>
+      </div>
+      <div id="accountPanel" hidden>
+        <p class="account-credits" id="accountCredits">0 credits</p>
+        <button class="btn btn-outline full-w" type="button" onclick="logout()">Log out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=4.0"></script>
 </body>
 </html>

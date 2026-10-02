@@ -1,19 +1,21 @@
 /**
  * VirtualStage app server.
- * Accounts, credits, studio jobs, and payments live in MongoDB.
- * Set MONGODB_URI to a real database. Without it, a local in-memory
- * MongoDB starts so the app can run on this machine.
+ * Users, credits, studio jobs, and purchases live in MongoDB.
+ * Listing photos and staged results are stored on Cloudinary.
  */
-const fs = require('fs');
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { MongoClient, ObjectId } = require('mongodb');
+const multer = require('multer');
+const { ObjectId } = require('mongodb');
+const { connect, getDb } = require('./db');
+const storage = require('./storage');
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const ROOT = path.join(__dirname, '..');
-const UPLOADS = path.join(ROOT, 'uploads');
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN || '';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 
@@ -29,8 +31,8 @@ const CATALOG = {
 };
 
 const SAMPLE = {
-  living: ['assets/hero_empty.jpg', 'assets/hero_staged.jpg'],
-  bedroom: ['assets/bedroom_empty.jpg', 'assets/bedroom_staged.jpg'],
+  living: ['assets/hero_empty.jpg', 'assets/hero_coastal.jpg'],
+  bedroom: ['assets/bedroom_empty.jpg', 'assets/bedroom_scandinavian.jpg'],
   dining: ['assets/dining_empty.jpg', 'assets/dining_staged.jpg'],
   office: ['assets/office_empty.jpg', 'assets/office_staged.jpg'],
   twilight: ['assets/twilight_day.jpg', 'assets/twilight_dusk.jpg'],
@@ -39,7 +41,26 @@ const SAMPLE = {
   renovation: ['assets/reno_before.jpg', 'assets/reno_after.jpg']
 };
 
-let db;
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: storage.MAX_BYTES },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      const err = new Error('Upload a JPG, PNG, or WEBP photo.');
+      err.status = 400;
+      return cb(err);
+    }
+    cb(null, true);
+  }
+});
+
+function acceptImage(req, res, next) {
+  const type = req.headers['content-type'] || '';
+  if (type.includes('multipart/form-data')) {
+    return upload.single('image')(req, res, next);
+  }
+  next();
+}
 
 function publicUser(user) {
   if (!user) return null;
@@ -54,11 +75,33 @@ function publicUser(user) {
   };
 }
 
-function authUser(req) {
+function publicJob(job) {
+  return {
+    id: String(job._id),
+    room_type: job.room_type,
+    style: job.style,
+    image_url: job.image_url,
+    before_url: job.before_url,
+    prompt: job.prompt || '',
+    status: job.status,
+    created_at: job.created_at
+  };
+}
+
+function db() {
+  return getDb();
+}
+
+function tokenFrom(req) {
   const header = req.get('authorization') || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : (req.get('x-session-token') || '');
+  if (header.startsWith('Bearer ')) return header.slice(7).trim();
+  return (req.get('x-session-token') || '').trim();
+}
+
+function authUser(req) {
+  const token = tokenFrom(req);
   if (!token) return null;
-  return db.collection('users').findOne({ session_token: token });
+  return db().collection('users').findOne({ session_token: token });
 }
 
 async function requireUser(req, res) {
@@ -70,25 +113,12 @@ async function requireUser(req, res) {
   return user;
 }
 
-function storeUpload(userId, dataUrl) {
-  if (!dataUrl || !String(dataUrl).startsWith('data:image/')) return '';
-  const match = String(dataUrl).match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.+)$/);
-  if (!match) return '';
-  const ext = match[1].includes('png') ? 'png' : match[1].includes('webp') ? 'webp' : 'jpg';
-  const buf = Buffer.from(match[2], 'base64');
-  if (buf.length > 12 * 1024 * 1024) {
-    const err = new Error('Photo is larger than 12 MB.');
-    err.status = 400;
-    throw err;
-  }
-  fs.mkdirSync(UPLOADS, { recursive: true });
-  const name = `${userId}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
-  fs.writeFileSync(path.join(UPLOADS, name), buf);
-  return `/uploads/${name}`;
-}
-
 function sampleFor(room) {
   return SAMPLE[room] || SAMPLE.living;
+}
+
+function userFolder(userId, kind) {
+  return `virtualstage/${userId}/${kind || 'uploads'}`;
 }
 
 async function callReplicate(imageUrl, style, room, prompt) {
@@ -122,7 +152,7 @@ async function callReplicate(imageUrl, style, room, prompt) {
 }
 
 async function seed() {
-  const users = db.collection('users');
+  const users = db().collection('users');
   const existing = await users.findOne({ email: 'demo@virtualstage.ai' });
   if (existing) return;
   const now = new Date();
@@ -138,58 +168,98 @@ async function seed() {
     created_at: now
   });
   const id = inserted.insertedId;
-  await db.collection('jobs').insertMany([
-    { user_id: id, room_type: 'living', style: 'modern', prompt: '', before_url: 'assets/hero_empty.jpg', image_url: 'assets/hero_staged.jpg', status: 'downloaded', created_at: now },
-    { user_id: id, room_type: 'bedroom', style: 'modern', prompt: '', before_url: 'assets/bedroom_empty.jpg', image_url: 'assets/bedroom_staged.jpg', status: 'preview', created_at: now }
+  await db().collection('jobs').insertMany([
+    { user_id: id, room_type: 'living', style: 'modern', prompt: '', before_url: 'assets/hero_empty.jpg', image_url: 'assets/hero_coastal.jpg', status: 'downloaded', created_at: now },
+    { user_id: id, room_type: 'bedroom', style: 'modern', prompt: '', before_url: 'assets/bedroom_empty.jpg', image_url: 'assets/bedroom_scandinavian.jpg', status: 'preview', created_at: now }
   ]);
-  await db.collection('transactions').insertOne({
+  await db().collection('transactions').insertOne({
     user_id: id, plan: 'starter', amount: 29, credits_added: 10, status: 'completed', stripe_session_id: '', created_at: now
   });
-  await db.collection('events').insertOne({
+  await db().collection('events').insertOne({
     user_id: id, event_type: 'download', property_address: '', metadata: { room: 'living' }, created_at: now
   });
-}
-
-async function connect() {
-  let uri = process.env.MONGODB_URI;
-  if (!uri) {
-    const { MongoMemoryServer } = require('mongodb-memory-server');
-    const memory = await MongoMemoryServer.create();
-    uri = memory.getUri();
-    console.log('MongoDB: in-memory instance (set MONGODB_URI for a permanent database).');
-  } else {
-    console.log('MongoDB: using MONGODB_URI.');
-  }
-  const client = new MongoClient(uri);
-  await client.connect();
-  db = client.db('virtualstage');
-  await db.collection('users').createIndex({ email: 1 }, { unique: true });
-  await db.collection('users').createIndex({ session_token: 1 });
-  await db.collection('jobs').createIndex({ user_id: 1, created_at: -1 });
-  await seed();
 }
 
 function asyncRoute(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 
+async function resolveBeforeImage(req, user) {
+  if (req.file) {
+    return storage.uploadBuffer(req.file.buffer, {
+      folder: userFolder(user._id, 'before'),
+      mime: req.file.mimetype
+    });
+  }
+
+  const imageUrl = String(req.body.image_url || '').trim();
+  if (imageUrl && (imageUrl.startsWith('https://') || imageUrl.startsWith('/uploads/'))) {
+    return { url: imageUrl, public_id: '', provider: 'existing' };
+  }
+
+  const uploaded = await storage.uploadDataUrl(req.body.image_data || '', {
+    folder: userFolder(user._id, 'before')
+  });
+  if (uploaded) return uploaded;
+
+  if (req.body.source_job_id) {
+    try {
+      const prior = await db().collection('jobs').findOne({
+        _id: new ObjectId(req.body.source_job_id),
+        user_id: user._id
+      });
+      if (prior && prior.before_url) {
+        return { url: prior.before_url, public_id: prior.before_public_id || '', provider: 'job' };
+      }
+    } catch (_) {}
+  }
+
+  const [sampleBefore] = sampleFor(String(req.body.room_type || 'living'));
+  return { url: sampleBefore, public_id: '', provider: 'sample' };
+}
+
+function publicImageUrl(req, url) {
+  if (!url) return '';
+  if (url.startsWith('/uploads/')) {
+    return `${req.protocol}://${req.get('host')}${url}`;
+  }
+  return url;
+}
+
 async function main() {
   await connect();
+  await seed();
+  storage.init();
+
   const app = express();
   app.use(express.json({ limit: '16mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '16mb' }));
   app.use((req, res, next) => {
     const blocked = req.path.startsWith('/server')
       || req.path.startsWith('/node_modules')
       || req.path === '/package.json'
-      || req.path === '/package-lock.json';
+      || req.path === '/package-lock.json'
+      || req.path === '/.env'
+      || req.path === '/.env.example';
     if (blocked) return res.status(404).end();
     next();
   });
-  app.use('/uploads', express.static(UPLOADS));
-  app.get('/dashboard', (req, res) => {
+  app.use('/uploads', express.static(storage.UPLOADS));
+  app.get('/dashboard', (_req, res) => {
     res.sendFile(path.join(ROOT, 'dashboard.html'));
   });
+  app.get('/dashboard/', (_req, res) => res.redirect('/dashboard'));
   app.use(express.static(ROOT, { index: 'index.html', etag: false, maxAge: 0 }));
+
+  app.get('/api/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      mongo: true,
+      images: storage.configured() ? 'cloudinary' : 'local',
+      render: REPLICATE_API_TOKEN ? 'replicate' : 'sample',
+      checkout: STRIPE_SECRET_KEY ? 'stripe' : 'demo'
+    });
+  });
 
   app.get('/api/auth/me', asyncRoute(async (req, res) => {
     const user = await requireUser(req, res);
@@ -219,7 +289,7 @@ async function main() {
       created_at: new Date()
     };
     try {
-      const result = await db.collection('users').insertOne(doc);
+      const result = await db().collection('users').insertOne(doc);
       doc._id = result.insertedId;
     } catch (err) {
       if (err.code === 11000) {
@@ -227,7 +297,7 @@ async function main() {
       }
       throw err;
     }
-    await db.collection('events').insertOne({
+    await db().collection('events').insertOne({
       user_id: doc._id, event_type: 'signup', property_address: '', metadata: { plan: 'free_trial' }, created_at: new Date()
     });
     res.json({
@@ -241,12 +311,12 @@ async function main() {
   app.post('/api/auth/login', asyncRoute(async (req, res) => {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
-    const user = await db.collection('users').findOne({ email });
+    const user = await db().collection('users').findOne({ email });
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
       return res.status(401).json({ status: 'error', message: 'Email or password does not match.' });
     }
     const token = crypto.randomBytes(32).toString('hex');
-    await db.collection('users').updateOne({ _id: user._id }, { $set: { session_token: token } });
+    await db().collection('users').updateOne({ _id: user._id }, { $set: { session_token: token } });
     user.session_token = token;
     res.json({
       status: 'success',
@@ -259,7 +329,7 @@ async function main() {
   app.post('/api/auth/logout', asyncRoute(async (req, res) => {
     const user = await authUser(req);
     if (user) {
-      await db.collection('users').updateOne({ _id: user._id }, { $set: { session_token: '' } });
+      await db().collection('users').updateOne({ _id: user._id }, { $set: { session_token: '' } });
     }
     res.json({ status: 'success', message: 'Logged out.' });
   }));
@@ -267,30 +337,21 @@ async function main() {
   app.get('/api/user/dashboard', asyncRoute(async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    const jobs = await db.collection('jobs').find({ user_id: user._id }).sort({ created_at: -1 }).limit(48).toArray();
-    const transactions = await db.collection('transactions').find({ user_id: user._id }).sort({ created_at: -1 }).limit(8).toArray();
-    const downloads = await db.collection('events').countDocuments({ user_id: user._id, event_type: 'download' });
+    const jobs = await db().collection('jobs').find({ user_id: user._id }).sort({ created_at: -1 }).limit(48).toArray();
+    const transactions = await db().collection('transactions').find({ user_id: user._id }).sort({ created_at: -1 }).limit(8).toArray();
+    const downloads = await db().collection('events').countDocuments({ user_id: user._id, event_type: 'download' });
     res.json({
       status: 'success',
       dashboard: {
         user: publicUser(user),
         stats: {
-          total_renders: await db.collection('jobs').countDocuments({ user_id: user._id }),
+          total_renders: await db().collection('jobs').countDocuments({ user_id: user._id }),
           credits_balance: user.credits_balance,
           downloads_4k: downloads,
-          certs_generated: await db.collection('events').countDocuments({ user_id: user._id, event_type: 'cert_generate' }),
-          zillow_snipes: await db.collection('events').countDocuments({ user_id: user._id, event_type: 'zillow_snipe' })
+          certs_generated: await db().collection('events').countDocuments({ user_id: user._id, event_type: 'cert_generate' }),
+          zillow_snipes: await db().collection('events').countDocuments({ user_id: user._id, event_type: 'zillow_snipe' })
         },
-        recent_renders: jobs.map(job => ({
-          id: String(job._id),
-          room_type: job.room_type,
-          style: job.style,
-          image_url: job.image_url,
-          before_url: job.before_url,
-          prompt: job.prompt || '',
-          status: job.status,
-          created_at: job.created_at
-        })),
+        recent_renders: jobs.map(publicJob),
         recent_transactions: transactions.map(tx => ({
           id: String(tx._id),
           plan: tx.plan,
@@ -306,20 +367,12 @@ async function main() {
   app.get('/api/studio/jobs', asyncRoute(async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    const jobs = await db.collection('jobs').find({ user_id: user._id }).sort({ created_at: -1 }).limit(48).toArray();
+    const jobs = await db().collection('jobs').find({ user_id: user._id }).sort({ created_at: -1 }).limit(48).toArray();
     res.json({
       status: 'success',
       credits_balance: user.credits_balance,
-      jobs: jobs.map(job => ({
-        id: String(job._id),
-        room_type: job.room_type,
-        style: job.style,
-        image_url: job.image_url,
-        before_url: job.before_url,
-        prompt: job.prompt || '',
-        status: job.status,
-        created_at: job.created_at
-      }))
+      user: publicUser(user),
+      jobs: jobs.map(publicJob)
     });
   }));
 
@@ -329,42 +382,59 @@ async function main() {
     const name = String(req.body.name || '').trim();
     const brokerage = String(req.body.brokerage || '').trim();
     if (!name) return res.status(400).json({ status: 'error', message: 'Name is required.' });
-    await db.collection('users').updateOne(
-      { _id: user._id },
-      { $set: { name, brokerage } }
-    );
-    const fresh = await db.collection('users').findOne({ _id: user._id });
+    await db().collection('users').updateOne({ _id: user._id }, { $set: { name, brokerage } });
+    const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({ status: 'success', user: publicUser(fresh), message: 'Account details saved.' });
   }));
 
-  app.post('/api/stage', asyncRoute(async (req, res) => {
+  app.post('/api/upload', acceptImage, asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    let stored = null;
+    if (req.file) {
+      stored = await storage.uploadBuffer(req.file.buffer, {
+        folder: userFolder(user._id, 'before'),
+        mime: req.file.mimetype
+      });
+    } else {
+      stored = await storage.uploadDataUrl(req.body.image_data || '', {
+        folder: userFolder(user._id, 'before')
+      });
+    }
+    if (!stored) {
+      return res.status(400).json({ status: 'error', message: 'Choose a photo to upload.' });
+    }
+    res.json({
+      status: 'success',
+      url: stored.url,
+      public_id: stored.public_id,
+      provider: stored.provider,
+      message: stored.provider === 'cloudinary' ? 'Photo saved to your library.' : 'Photo saved on this server.'
+    });
+  }));
+
+  app.post('/api/stage', acceptImage, asyncRoute(async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
     const room = String(req.body.room_type || 'living');
     const style = String(req.body.style || 'modern');
     const prompt = String(req.body.prompt || '').slice(0, 500);
-    const [sampleBefore, sampleAfter] = sampleFor(room);
-    let beforeUrl = sampleBefore;
-    if (req.body.source_job_id) {
-      try {
-        const prior = await db.collection('jobs').findOne({
-          _id: new ObjectId(req.body.source_job_id),
-          user_id: user._id
-        });
-        if (prior && prior.before_url) beforeUrl = prior.before_url;
-      } catch (_) {}
-    }
-    const uploaded = req.body.image_data || '';
-    if (uploaded) beforeUrl = storeUpload(user._id, uploaded) || beforeUrl;
+    const [, sampleAfter] = sampleFor(room);
+    const before = await resolveBeforeImage(req, user);
+    const beforeUrl = before.url;
 
     let imageUrl = sampleAfter;
+    let imagePublicId = '';
     let source = 'sample';
-    if (REPLICATE_API_TOKEN && beforeUrl.startsWith('/uploads/')) {
+    const canRender = Boolean(REPLICATE_API_TOKEN && (beforeUrl.startsWith('http') || beforeUrl.startsWith('/uploads/')));
+    if (canRender) {
       try {
-        const absolute = `${req.protocol}://${req.get('host')}${beforeUrl}`;
-        imageUrl = await callReplicate(absolute, style, room, prompt);
+        const staged = await callReplicate(publicImageUrl(req, beforeUrl), style, room, prompt);
+        const persisted = await storage.persistRemote(staged, { folder: userFolder(user._id, 'staged') });
+        imageUrl = persisted.url;
+        imagePublicId = persisted.public_id || '';
         source = 'replicate';
-      } catch (err) {
+      } catch (_) {
         source = 'sample';
         imageUrl = sampleAfter;
       }
@@ -376,20 +446,22 @@ async function main() {
       style,
       prompt,
       before_url: beforeUrl,
+      before_public_id: before.public_id || '',
       image_url: imageUrl,
+      image_public_id: imagePublicId,
       status: 'preview',
       source,
       created_at: new Date()
     };
-    const result = await db.collection('jobs').insertOne(job);
-    await db.collection('events').insertOne({
+    const result = await db().collection('jobs').insertOne(job);
+    await db().collection('events').insertOne({
       user_id: user._id,
       event_type: 'stage_preview',
       property_address: '',
-      metadata: { room, style, job_id: String(result.insertedId) },
+      metadata: { room, style, job_id: String(result.insertedId), source },
       created_at: new Date()
     });
-    const fresh = await db.collection('users').findOne({ _id: user._id });
+    const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({
       status: 'success',
       staged_url: imageUrl,
@@ -411,25 +483,28 @@ async function main() {
     try { jobId = new ObjectId(req.body.job_id); } catch (_) {
       return res.status(400).json({ status: 'error', message: 'Stage a room before downloading it.' });
     }
-    const job = await db.collection('jobs').findOne({ _id: jobId, user_id: user._id });
+    const job = await db().collection('jobs').findOne({ _id: jobId, user_id: user._id });
     if (!job) return res.status(404).json({ status: 'error', message: 'That render is not on this account.' });
 
-    let credits = user.credits_balance;
     if (job.status !== 'downloaded') {
-      if (credits < 1) {
-        return res.status(402).json({ status: 'error', message: 'Add a credit to download this render.', credits_balance: credits });
+      if (user.credits_balance < 1) {
+        return res.status(402).json({
+          status: 'error',
+          message: 'Add a credit to download this render.',
+          credits_balance: user.credits_balance,
+          user: publicUser(user)
+        });
       }
-      credits -= 1;
-      await db.collection('users').updateOne({ _id: user._id }, { $inc: { credits_balance: -1 } });
-      await db.collection('jobs').updateOne({ _id: job._id }, { $set: { status: 'downloaded', downloaded_at: new Date() } });
-      await db.collection('events').insertOne({
+      await db().collection('users').updateOne({ _id: user._id }, { $inc: { credits_balance: -1 } });
+      await db().collection('jobs').updateOne({ _id: job._id }, { $set: { status: 'downloaded', downloaded_at: new Date() } });
+      await db().collection('events').insertOne({
         user_id: user._id, event_type: 'download', property_address: '', metadata: { job_id: String(job._id) }, created_at: new Date()
       });
     }
-    const fresh = await db.collection('users').findOne({ _id: user._id });
+    const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({
       status: 'success',
-      download_url: job.image_url,
+      download_url: storage.downloadUrl(job.image_url, `VirtualStage_${job.room_type}_${job.style}`),
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh)
     });
@@ -438,7 +513,7 @@ async function main() {
   app.post('/api/user/track-event', asyncRoute(async (req, res) => {
     const user = await authUser(req);
     if (!user) return res.json({ status: 'success' });
-    await db.collection('events').insertOne({
+    await db().collection('events').insertOne({
       user_id: user._id,
       event_type: String(req.body.event_type || 'activity').slice(0, 40),
       property_address: String(req.body.property_address || '').slice(0, 180),
@@ -494,7 +569,7 @@ async function main() {
       if (!stripeRes.ok || !session.url) {
         return res.status(502).json({ status: 'error', message: 'Card checkout could not be opened.' });
       }
-      await db.collection('transactions').insertOne({
+      await db().collection('transactions').insertOne({
         user_id: user._id,
         plan,
         amount: price,
@@ -506,11 +581,11 @@ async function main() {
       return res.json({ status: 'success', mode: 'live', checkout_url: session.url, plan, total_due: price });
     }
 
-    await db.collection('users').updateOne(
+    await db().collection('users').updateOne(
       { _id: user._id },
       { $inc: { credits_balance: tier.credits }, $set: { plan } }
     );
-    await db.collection('transactions').insertOne({
+    await db().collection('transactions').insertOne({
       user_id: user._id,
       plan,
       amount: price,
@@ -519,7 +594,7 @@ async function main() {
       stripe_session_id: '',
       created_at: new Date()
     });
-    const fresh = await db.collection('users').findOne({ _id: user._id });
+    const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({
       status: 'success',
       mode: 'demo',
@@ -537,7 +612,7 @@ async function main() {
     if (!user) return;
     const sessionId = String(req.body.session_id || '');
     if (!sessionId || !STRIPE_SECRET_KEY) {
-      const fresh = await db.collection('users').findOne({ _id: user._id });
+      const fresh = await db().collection('users').findOne({ _id: user._id });
       return res.json({ status: 'success', user: publicUser(fresh) });
     }
     const stripeRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
@@ -547,24 +622,27 @@ async function main() {
     if (!stripeRes.ok || session.payment_status !== 'paid' || session.metadata?.user_id !== String(user._id)) {
       return res.status(402).json({ status: 'error', message: 'That payment is not confirmed.' });
     }
-    const pending = await db.collection('transactions').findOne({ stripe_session_id: sessionId, status: 'pending' });
+    const pending = await db().collection('transactions').findOne({ stripe_session_id: sessionId, status: 'pending' });
     if (pending) {
-      await db.collection('transactions').updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
-      await db.collection('users').updateOne(
+      await db().collection('transactions').updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
+      await db().collection('users').updateOne(
         { _id: user._id },
         { $inc: { credits_balance: pending.credits_added }, $set: { plan: pending.plan } }
       );
     }
-    const fresh = await db.collection('users').findOne({ _id: user._id });
+    const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance });
   }));
 
-  app.use((err, req, res, next) => {
+  app.use((err, _req, res, _next) => {
+    if (err && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ status: 'error', message: 'Photo is larger than 10 MB.' });
+    }
     const status = err.status || 500;
     res.status(status).json({ status: 'error', message: err.message || 'Something went wrong.' });
   });
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`VirtualStage listening on http://127.0.0.1:${PORT}`);
   });
 }

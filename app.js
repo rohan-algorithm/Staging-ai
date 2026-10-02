@@ -56,7 +56,7 @@ const roomImages = {
     buyerLine: 'An empty living room photographs smaller than it is. Furniture shows a buyer that the sofa fits and that the view is the point of the room.',
     edge: 'One living-room photo at $1.96 replaces a staging visit that usually starts around $2,500.',
     before: 'assets/hero_empty.jpg',
-    after: 'assets/hero_staged.jpg',
+    after: 'assets/hero_coastal.jpg',
     daysOnMarket: '9 Days',
     benchmark: 'vs 46 MLS avg',
     overAsking: '+$22,500',
@@ -73,7 +73,7 @@ const roomImages = {
     buyerLine: 'Buyers rank the primary bedroom just behind the kitchen. A made bed and nightstands make a vacant suite feel like a place to sleep, not a white box.',
     edge: 'BoxBrownie charges about $24 and a day for this same shot. You can restage the suite before the listing appointment ends.',
     before: 'assets/bedroom_empty.jpg',
-    after: 'assets/bedroom_staged.jpg',
+    after: 'assets/bedroom_scandinavian.jpg',
     daysOnMarket: '12 Days',
     benchmark: 'vs 42 MLS avg',
     overAsking: '+$18,000',
@@ -237,6 +237,8 @@ let isHoldingBefore = false;
 let isShowingBefore = false;
 let isUserPhoto = false;
 let userUploadedPhoto = null;
+let userUploadedFile = null;
+let uploadedCloudUrl = '';
 
 // --- NAVBAR SCROLL ---
 function initNavbar() {
@@ -524,11 +526,8 @@ function paintGalleryStyle() {
   const afterEl = document.getElementById('afterImage');
   if (!afterEl) return;
   const photo = styleImages[galleryRoom] && styleImages[galleryRoom][galleryStyle];
-  const fallback = roomImages[galleryRoom]?.after || 'assets/hero_staged.jpg';
+  const fallback = roomImages[galleryRoom]?.after || 'assets/hero_coastal.jpg';
   afterEl.style.backgroundImage = `url('${photo || fallback}')`;
-  afterEl.classList.remove('style-lux', 'style-mid');
-  if (!photo && galleryStyle === 'luxury') afterEl.classList.add('style-lux');
-  if (!photo && galleryStyle === 'midcentury') afterEl.classList.add('style-mid');
 }
 
 // --- SHOWCASE BENTO GRID INITIALIZER (POINTER DRAG OPTIMIZED) ---
@@ -626,18 +625,20 @@ function downloadActiveGallerySample() {
 // --- PHOTOREALISTIC DESIGN STYLE IMAGE MAP ---
 const styleImages = {
   living: {
-    modern: 'assets/hero_staged.jpg',
+    modern: 'assets/hero_coastal.jpg',
     scandinavian: 'assets/hero_scandinavian.jpg',
     farmhouse: 'assets/hero_farmhouse.jpg',
     coastal: 'assets/hero_coastal.jpg',
-    luxury: 'assets/hero_luxury.jpg',
-    midcentury: 'assets/hero_midcentury.jpg'
+    luxury: 'assets/hero_coastal.jpg',
+    midcentury: 'assets/hero_farmhouse.jpg'
   },
   bedroom: {
-    modern: 'assets/bedroom_staged.jpg',
+    modern: 'assets/bedroom_scandinavian.jpg',
     scandinavian: 'assets/bedroom_scandinavian.jpg',
     farmhouse: 'assets/bedroom_farmhouse.jpg',
-    coastal: 'assets/bedroom_staged.jpg'
+    coastal: 'assets/bedroom_scandinavian.jpg',
+    luxury: 'assets/bedroom_scandinavian.jpg',
+    midcentury: 'assets/bedroom_farmhouse.jpg'
   },
   dining: {
     modern: 'assets/dining_staged.jpg',
@@ -684,13 +685,15 @@ function getStagedImageForRoom(room, style) {
   if (roomImages[room] && roomImages[room].after) {
     return roomImages[room].after;
   }
-  return 'assets/hero_staged.jpg';
+  return 'assets/hero_coastal.jpg';
 }
 
 // --- STUDIO: SAMPLE LOADER ---
 function loadSample(room, btnEl) {
   isUserPhoto = false;
   userUploadedPhoto = null;
+  userUploadedFile = null;
+  uploadedCloudUrl = '';
   sourceJobId = null;
   preserveStudioImage = false;
   currentRoom = room;
@@ -765,6 +768,7 @@ function selectStyle(style, btnEl) {
   if (cb) cb.classList.remove('active');
 
   updateStudioStatus();
+  updateEditorChrome();
   showToast(`Switched design style to ${style.charAt(0).toUpperCase() + style.slice(1)}!`);
 }
 
@@ -816,6 +820,24 @@ function showAccount() {
   if (app) app.hidden = false;
 }
 
+function selectStudioJob(job, btnEl) {
+  document.querySelectorAll('.job-choice').forEach(button => {
+    button.classList.toggle('active', button === btnEl);
+  });
+  const options = document.getElementById('stageOptions');
+  if (job === 'stage') {
+    if (options) options.hidden = false;
+    if (!['living', 'bedroom', 'dining', 'office'].includes(currentRoom)) {
+      const pill = document.querySelector('.sidebar-pills .pill[data-room="living"]');
+      loadSample('living', pill);
+    }
+    return;
+  }
+  if (options) options.hidden = true;
+  const room = job === 'twilight' ? 'twilight' : 'declutter';
+  loadSample(room, null);
+}
+
 function updateEditorChrome() {
   const status = document.getElementById('editorStatus');
   const stageBtn = document.getElementById('stageButton');
@@ -824,13 +846,24 @@ function updateEditorChrome() {
   const styleName = currentStyle ? currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1) : 'Modern';
   const roomName = formatRoomTitle(currentRoom);
   const job = accountJobs.find(item => item.id === currentStudioJob);
+  const plainRooms = { living: 'Living room', bedroom: 'Bedroom', dining: 'Dining room', office: 'Office', twilight: 'Twilight', declutter: 'Declutter' };
+  const stagedRoom = ['living', 'bedroom', 'dining', 'office'].includes(currentRoom);
   if (status) {
-    status.textContent = sourceJobId
-      ? `${roomName} · ${styleName}. Save a new version, or download the one on screen.`
-      : `${roomName} · ${styleName}. Stage it to keep this preview.`;
+    if (isDashboardPage()) {
+      const plain = plainRooms[currentRoom] || roomName;
+      status.textContent = stagedRoom ? `${plain} · ${styleName}` : plain;
+    } else {
+      status.textContent = sourceJobId
+        ? `${roomName} · ${styleName}. Save a new version, or download the one on screen.`
+        : `${roomName} · ${styleName}. Stage it to keep this preview.`;
+    }
   }
   if (stageBtn && !stageBtn.disabled) {
-    stageBtn.textContent = sourceJobId ? 'Save new version' : 'Stage this room';
+    if (isDashboardPage()) {
+      stageBtn.textContent = sourceJobId ? 'Save a new version' : 'Make this photo';
+    } else {
+      stageBtn.textContent = sourceJobId ? 'Save new version' : 'Stage this room';
+    }
   }
   if (downloadLabel && isDashboardPage()) {
     downloadLabel.textContent = job && job.status === 'downloaded'
@@ -976,16 +1009,18 @@ function initUploadZone() {
 function handleUpload(file) {
   sourceJobId = null;
   preserveStudioImage = false;
+  uploadedCloudUrl = '';
   if (!file.type.startsWith('image/')) {
     showToast('Please upload an image file (JPG, PNG, or WEBP).', 'error');
     return;
   }
 
-  if (file.size > 35 * 1024 * 1024) {
-    showToast('File size exceeds 35 MB limit. Please choose a smaller photo.', 'error');
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('Photo is larger than 10 MB. Choose a smaller file.', 'error');
     return;
   }
 
+  userUploadedFile = file;
   const reader = new FileReader();
   reader.onload = (e) => {
     userUploadedPhoto = e.target.result;
@@ -997,7 +1032,6 @@ function handleUpload(file) {
     if (img) img.src = userUploadedPhoto;
     if (resultBox) resultBox.className = 'canvas-image-wrap style-filter-none';
 
-    // Deselect room pills
     document.querySelectorAll('.sidebar-pills .pill').forEach(p => p.classList.remove('active'));
 
     isShowingBefore = false;
@@ -1009,9 +1043,25 @@ function handleUpload(file) {
     const tag = document.getElementById('studioStatusTag');
     if (tag) tag.textContent = 'Uploaded Photo • Ready to Stage';
 
-    showToast(`"${file.name}" uploaded successfully! Select a style and click "Stage this room".`, 'success', 4000);
+    showToast(`"${file.name}" ready. Stage it to save this room to your account.`, 'success', 4000);
+    persistUploadedPhoto(file);
   };
   reader.readAsDataURL(file);
+}
+
+async function persistUploadedPhoto(file) {
+  if (!getAuthToken() || !file) return;
+  const form = new FormData();
+  form.append('image', file);
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getAuthToken()}` },
+      body: form
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.url) uploadedCloudUrl = data.url;
+  } catch (_) {}
 }
 
 // --- MLS STAMP ---
@@ -1343,25 +1393,26 @@ function requestStudioDownload() {
 
 async function requestLiveStage() {
   const prompt = document.getElementById('customPrompt')?.value.trim() || '';
-  const payload = {
-    room_type: currentRoom,
-    style: currentStyle,
-    prompt
-  };
-  if (isUserPhoto && userUploadedPhoto && userUploadedPhoto.length < 1500000) {
-    payload.image_data = userUploadedPhoto;
+  const form = new FormData();
+  form.append('room_type', currentRoom);
+  form.append('style', currentStyle);
+  form.append('prompt', prompt);
+  if (isUserPhoto && userUploadedFile) {
+    form.append('image', userUploadedFile);
+  } else if (isUserPhoto && uploadedCloudUrl) {
+    form.append('image_url', uploadedCloudUrl);
   } else if (sourceJobId) {
-    payload.source_job_id = sourceJobId;
+    form.append('source_job_id', sourceJobId);
   }
   try {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     const token = getAuthToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) headers.Authorization = `Bearer ${token}`;
 
     const res = await fetch('/api/stage', {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload)
+      body: form
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -1370,6 +1421,7 @@ async function requestLiveStage() {
       return null;
     }
     if (data.user) setCurrentUser(data.user);
+    if (data.before_url) uploadedCloudUrl = data.before_url;
     return data;
   } catch (_) {
     return null;
@@ -1438,6 +1490,8 @@ function editHistoryJob(id) {
   currentRoom = job.room_type || 'living';
   isUserPhoto = false;
   userUploadedPhoto = null;
+  userUploadedFile = null;
+  uploadedCloudUrl = job.before_url || '';
   document.querySelectorAll('.sidebar-pills .pill').forEach(pill => {
     pill.classList.toggle('active', pill.getAttribute('data-room') === currentRoom);
   });
@@ -2289,6 +2343,13 @@ function updateStudioStatus() {
     patio: 'Outdoor Patio',
     renovation: 'Virtual Remodel'
   };
+
+  const plainRooms = { living: 'Living room', bedroom: 'Bedroom', dining: 'Dining room', office: 'Office', twilight: 'Twilight', declutter: 'Declutter', patio: 'Patio', renovation: 'Remodel' };
+  if (isDashboardPage()) {
+    const plain = plainRooms[currentRoom] || 'Photo';
+    tag.textContent = isUserPhoto ? `Your photo · ${plain}` : (['living', 'bedroom', 'dining', 'office'].includes(currentRoom) ? `${plain} · ${styleCapitalized}` : plain);
+    return;
+  }
 
   if (isUserPhoto) {
     if (isShowingBefore) {

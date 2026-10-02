@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4.8">
+  <link rel="stylesheet" href="style.css?v=5.5">
 </head>
 <body data-page="dashboard">
 
@@ -23,6 +23,74 @@
   </header>
 
   <main class="account-page" id="accountApp" hidden>
+    <section class="account-studio" id="studio">
+      <div class="editor-photo">
+        <div class="canvas-frame" id="previewArea">
+          <div class="render-overlay" id="renderOverlay" aria-live="polite">
+            <div class="spinner"></div>
+            <div class="render-status" id="renderStatus">Saving…</div>
+            <div class="render-bar"><div class="render-bar-fill" id="progressFill"></div></div>
+          </div>
+          <div class="canvas-image-wrap" id="resultBox">
+            <div class="studio-status-tag" id="studioStatusTag">Living room</div>
+            <img id="stagedImageDisplay" src="assets/hero_coastal.jpg" alt="Room you are editing">
+          </div>
+        </div>
+        <button class="btn btn-outline studio-download" type="button" onclick="requestStudioDownload()">
+          <span id="downloadBtnLabel">Download</span>
+        </button>
+      </div>
+
+      <div class="editor-panel">
+        <p id="editorStatus">Upload a photo, then pick one job.</p>
+        <div class="upload-zone editor-upload" id="dropZone" role="button" tabindex="0" aria-label="Upload your own photo">
+          <input type="file" id="fileInput" accept="image/*" hidden aria-label="Choose image file">
+          <strong>Upload your photo</strong>
+        </div>
+
+        <div class="editor-field">
+          <span class="editor-label">Job</span>
+          <div class="job-choices">
+            <button class="job-choice active" type="button" data-job="stage" onclick="selectStudioJob('stage', this)">Stage</button>
+            <button class="job-choice" type="button" data-job="declutter" onclick="selectStudioJob('declutter', this)">Declutter</button>
+            <button class="job-choice" type="button" data-job="twilight" onclick="selectStudioJob('twilight', this)">Twilight</button>
+          </div>
+        </div>
+
+        <div id="stageOptions">
+          <div class="editor-field">
+            <span class="editor-label">Style</span>
+            <div class="style-grid editor-choices">
+              <button class="style-option active" type="button" onclick="selectStyle('modern', this)"><strong>Modern</strong></button>
+              <button class="style-option" type="button" onclick="selectStyle('scandinavian', this)"><strong>Scandinavian</strong></button>
+              <button class="style-option" type="button" onclick="selectStyle('farmhouse', this)"><strong>Farmhouse</strong></button>
+              <button class="style-option" type="button" onclick="selectStyle('coastal', this)"><strong>Coastal</strong></button>
+            </div>
+          </div>
+          <div class="editor-field">
+            <span class="editor-label">Room</span>
+            <div class="sidebar-pills editor-choices">
+              <button class="pill active" type="button" data-room="living" onclick="loadSample('living', this)">Living</button>
+              <button class="pill" type="button" data-room="bedroom" onclick="loadSample('bedroom', this)">Bedroom</button>
+              <button class="pill" type="button" data-room="dining" onclick="loadSample('dining', this)">Dining</button>
+              <button class="pill" type="button" data-room="office" onclick="loadSample('office', this)">Office</button>
+            </div>
+          </div>
+          <label class="editor-field" for="customPrompt">
+            <span class="editor-label">Note, optional</span>
+            <input id="customPrompt" class="form-field-input" type="text" maxlength="400" placeholder="Linen sofa, leave the window">
+          </label>
+        </div>
+
+        <button class="btn btn-primary btn-stage" id="stageButton" type="button" onclick="runStagingSimulation()">Make this photo</button>
+      </div>
+    </section>
+
+    <section class="account-history" aria-label="Past renders">
+      <div class="dash-section-title"><span>Your rooms</span><span>Click one to edit it above</span></div>
+      <div class="dashboard-renders-grid" id="dashRendersGallery"></div>
+    </section>
+
     <section class="account-plan" aria-label="Current plan">
       <div>
         <p class="account-kicker">Current plan</p>
@@ -38,84 +106,26 @@
 
     <section class="account-identity">
       <form id="profileForm" class="account-profile" onsubmit="saveProfile(event)">
-        <h2 id="dashUserName">Your account</h2>
-        <label for="profileName">Name</label>
-        <input id="profileName" class="form-field-input" type="text" autocomplete="name" required>
-        <label for="profileBrokerage">Brokerage</label>
-        <input id="profileBrokerage" class="form-field-input" type="text" autocomplete="organization">
-        <p class="account-email" id="dashUserEmail"></p>
+        <div class="account-profile-top">
+          <div>
+            <h2 id="dashUserName">Your account</h2>
+            <p class="account-email" id="dashUserEmail"></p>
+          </div>
+          <div class="account-stats">
+            <div><strong id="kpiRoomsStaged">0</strong><span>Rooms staged</span></div>
+            <div><strong id="kpiDownloads">0</strong><span>Downloads</span></div>
+          </div>
+        </div>
+        <div class="account-fields">
+          <label for="profileName">Name
+            <input id="profileName" class="form-field-input" type="text" autocomplete="name" required>
+          </label>
+          <label for="profileBrokerage">Brokerage
+            <input id="profileBrokerage" class="form-field-input" type="text" autocomplete="organization">
+          </label>
+        </div>
         <button class="btn btn-outline btn-sm" type="submit">Save account</button>
       </form>
-      <div class="account-stats">
-        <div><strong id="kpiRoomsStaged">0</strong><span>Rooms staged</span></div>
-        <div><strong id="kpiDownloads">0</strong><span>Downloads</span></div>
-      </div>
-    </section>
-
-    <section class="account-studio" id="studio">
-      <div class="editor-photo">
-        <div class="canvas-frame" id="previewArea">
-          <div class="render-overlay" id="renderOverlay" aria-live="polite">
-            <div class="spinner"></div>
-            <div class="render-status" id="renderStatus">Saving…</div>
-            <div class="render-bar"><div class="render-bar-fill" id="progressFill"></div></div>
-          </div>
-          <div class="canvas-image-wrap style-filter-modern" id="resultBox">
-            <div class="studio-status-tag" id="studioStatusTag">Living room</div>
-            <img id="stagedImageDisplay" src="assets/hero_staged.jpg" alt="Room you are editing">
-          </div>
-        </div>
-      </div>
-
-      <div class="editor-panel">
-        <p id="editorStatus">Choose a style, then stage the room. The preview is free.</p>
-        <div class="editor-actions">
-          <button class="btn btn-primary btn-stage" id="stageButton" type="button" onclick="runStagingSimulation()">Stage this room</button>
-          <button class="btn btn-outline btn-stage" type="button" onclick="requestStudioDownload()">
-            <span id="downloadBtnLabel">Download</span>
-          </button>
-          <div class="upload-zone editor-upload" id="dropZone" role="button" tabindex="0" aria-label="Upload your own photo">
-            <input type="file" id="fileInput" accept="image/*" hidden aria-label="Choose image file">
-            <strong>Use your photo</strong>
-          </div>
-        </div>
-
-        <div class="editor-field">
-          <span class="editor-label">Style</span>
-          <div class="style-grid editor-choices">
-            <button class="style-option active" type="button" onclick="selectStyle('modern', this)"><strong>Modern</strong></button>
-            <button class="style-option" type="button" onclick="selectStyle('scandinavian', this)"><strong>Scandinavian</strong></button>
-            <button class="style-option" type="button" onclick="selectStyle('farmhouse', this)"><strong>Farmhouse</strong></button>
-            <button class="style-option" type="button" onclick="selectStyle('coastal', this)"><strong>Coastal</strong></button>
-            <button class="style-option" type="button" onclick="selectStyle('luxury', this)"><strong>Luxury</strong></button>
-            <button class="style-option" type="button" onclick="selectStyle('midcentury', this)"><strong>Mid-century</strong></button>
-          </div>
-        </div>
-
-        <div class="editor-field">
-          <span class="editor-label">Room</span>
-          <div class="sidebar-pills editor-choices">
-            <button class="pill active" type="button" data-room="living" onclick="loadSample('living', this)">Living</button>
-            <button class="pill" type="button" data-room="bedroom" onclick="loadSample('bedroom', this)">Bedroom</button>
-            <button class="pill" type="button" data-room="dining" onclick="loadSample('dining', this)">Dining</button>
-            <button class="pill" type="button" data-room="office" onclick="loadSample('office', this)">Office</button>
-            <button class="pill" type="button" data-room="twilight" onclick="loadSample('twilight', this)">Twilight</button>
-            <button class="pill" type="button" data-room="declutter" onclick="loadSample('declutter', this)">Declutter</button>
-            <button class="pill" type="button" data-room="patio" onclick="loadSample('patio', this)">Patio</button>
-            <button class="pill" type="button" data-room="renovation" onclick="loadSample('renovation', this)">Remodel</button>
-          </div>
-        </div>
-
-        <label class="editor-field" for="customPrompt">
-          <span class="editor-label">Furniture notes</span>
-          <textarea id="customPrompt" class="sidebar-textarea" maxlength="400" rows="2" placeholder="Linen sofa, walnut table, leave the window as it is"></textarea>
-        </label>
-      </div>
-    </section>
-
-    <section class="account-history" aria-label="Past renders">
-      <div class="dash-section-title"><span>Your rooms</span><span>Click one to edit it above</span></div>
-      <div class="dashboard-renders-grid" id="dashRendersGallery"></div>
     </section>
 
     <section class="account-billing" aria-label="Purchases">
@@ -213,6 +223,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=4.7"></script>
+  <script src="app.js?v=5.7"></script>
 </body>
 </html>

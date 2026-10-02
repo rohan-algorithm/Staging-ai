@@ -1,0 +1,13 @@
+{
+  "name": "virtualstage",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0",
+    "mongodb-memory-server": "^10.1.4"
+  }
+}

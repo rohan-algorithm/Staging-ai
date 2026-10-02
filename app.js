@@ -19,17 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initShowcaseCards();
   selectGalleryStyle('modern', null);
   updateStudioStatus();
-  initAuth();
+  initAuth().then(() => confirmCheckoutReturn());
   initCheckoutRadios();
   initConcierge();
   refreshDownloadButton();
   updateSniperPreview();
-  const pendingCredits = parseInt(sessionStorage.getItem('vs_pending_credits') || '0', 10);
-  if (new URLSearchParams(window.location.search).get('checkout') === 'success' && pendingCredits > 0) {
-    addCredits(pendingCredits);
-    sessionStorage.removeItem('vs_pending_credits');
-    showToast('Payment received. Credits are ready to download.', 'success', 5000);
-  }
 });
 
 // --- SCROLL REVEAL ---
@@ -697,6 +691,8 @@ function getStagedImageForRoom(room, style) {
 function loadSample(room, btnEl) {
   isUserPhoto = false;
   userUploadedPhoto = null;
+  sourceJobId = null;
+  preserveStudioImage = false;
   currentRoom = room;
 
   const img = document.getElementById('stagedImageDisplay');
@@ -720,6 +716,7 @@ function loadSample(room, btnEl) {
   const cb = document.getElementById('studioCompareBtn');
   if (cb) cb.classList.remove('active');
   updateStudioStatus();
+  updateEditorChrome();
 }
 
 // --- STUDIO: STYLE SELECTOR ---
@@ -739,6 +736,12 @@ function selectStyle(style, btnEl) {
 
   if (resultBox) {
     resultBox.className = `canvas-image-wrap style-filter-${style}`;
+  }
+
+  if (preserveStudioImage) {
+    updateStudioStatus();
+    updateEditorChrome();
+    return;
   }
 
   if (isUserPhoto) {
@@ -799,8 +802,52 @@ function toggleStudioCompare() {
 
 // --- STUDIO: STAGING SIMULATION ---
 let stageButtonHtml = '';
+let currentStudioJob = null;
+let sourceJobId = null;
+let preserveStudioImage = false;
+let accountJobs = [];
+
+function isDashboardPage() {
+  return document.body.dataset.page === 'dashboard';
+}
+
+function showAccount() {
+  const app = document.getElementById('accountApp');
+  if (app) app.hidden = false;
+}
+
+function updateEditorChrome() {
+  const status = document.getElementById('editorStatus');
+  const stageBtn = document.getElementById('stageButton');
+  const downloadLabel = document.getElementById('downloadBtnLabel');
+  if (!status && !stageBtn) return;
+  const styleName = currentStyle ? currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1) : 'Modern';
+  const roomName = formatRoomTitle(currentRoom);
+  const job = accountJobs.find(item => item.id === currentStudioJob);
+  if (status) {
+    status.textContent = sourceJobId
+      ? `${roomName} · ${styleName}. Save a new version, or download the one on screen.`
+      : `${roomName} · ${styleName}. Stage it to keep this preview.`;
+  }
+  if (stageBtn && !stageBtn.disabled) {
+    stageBtn.textContent = sourceJobId ? 'Save new version' : 'Stage this room';
+  }
+  if (downloadLabel && isDashboardPage()) {
+    downloadLabel.textContent = job && job.status === 'downloaded'
+      ? 'Download again'
+      : `Download · ${getCredits()} left`;
+  }
+  document.querySelectorAll('.render-history-card').forEach(card => {
+    card.classList.toggle('is-open', card.dataset.id === currentStudioJob);
+  });
+}
 
 function runStagingSimulation() {
+  if (!getAuthToken()) {
+    openLoginModal('login');
+    showToast('Log in so this render is saved on your account.', 'info');
+    return;
+  }
   const overlay = document.getElementById('renderOverlay');
   const status = document.getElementById('renderStatus');
   const fill = document.getElementById('progressFill');
@@ -823,7 +870,9 @@ function runStagingSimulation() {
 
   const roomLabel = isUserPhoto ? 'custom uploaded room' : (roomImages[currentRoom]?.title || 'room');
   const styleCapitalized = currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1);
-  const steps = [
+  const steps = isDashboardPage()
+    ? [{ pct: 70, text: 'Saving this version…', delay: 180 }]
+    : [
     { pct: 15, text: `Analyzing ${roomLabel} architecture & lighting…`, delay: 450 },
     { pct: 35, text: `Detecting boundaries, wall planes & flooring…`, delay: 650 },
     { pct: 55, text: `Arranging ${styleCapitalized} architectural furniture to scale…`, delay: 750 },
@@ -836,15 +885,20 @@ function runStagingSimulation() {
   function next() {
     if (i >= steps.length) {
       setTimeout(async () => {
-        let stagedUrl = null;
-        try { stagedUrl = await livePromise; } catch (_) {}
+        let stageData = null;
+        try { stageData = await livePromise; } catch (_) {}
 
         overlay.classList.remove('active');
 
-        if (stagedUrl && img) {
-          img.src = stagedUrl;
+        if (stageData && stageData.staged_url && img) {
+          img.src = stageData.staged_url;
+          currentStudioJob = stageData.job_id;
+          sourceJobId = stageData.job_id;
+          preserveStudioImage = true;
           if (resultBox) resultBox.className = 'canvas-image-wrap style-filter-none';
-          showToast(`Staging complete — ${styleCapitalized} render ready.`, 'success');
+          showToast(isDashboardPage() ? 'Saved. Download when you want the file.' : (stageData.message || `${styleCapitalized} preview saved to your studio.`), 'success', 4000);
+          if (isDashboardPage()) loadDashboardData();
+          else loadStudioHistory();
         } else if (isUserPhoto) {
           if (img && userUploadedPhoto) img.src = userUploadedPhoto;
           if (resultBox) resultBox.className = `canvas-image-wrap style-filter-${currentStyle}`;
@@ -859,6 +913,7 @@ function runStagingSimulation() {
         const cb = document.getElementById('studioCompareBtn');
         if (cb) cb.classList.remove('active');
         updateStudioStatus();
+        updateEditorChrome();
 
         if (stageBtn) {
           stageBtn.disabled = false;
@@ -919,6 +974,8 @@ function initUploadZone() {
 }
 
 function handleUpload(file) {
+  sourceJobId = null;
+  preserveStudioImage = false;
   if (!file.type.startsWith('image/')) {
     showToast('Please upload an image file (JPG, PNG, or WEBP).', 'error');
     return;
@@ -1102,49 +1159,59 @@ function updateModalTotal() {
 }
 
 async function completeDemoOrder() {
+  if (!getAuthToken()) {
+    closePricingModal();
+    openLoginModal('login');
+    showToast('Log in before buying credits. They stay on the account.', 'info');
+    return;
+  }
   const total = document.getElementById('modalTotalAmount')?.textContent || '$49.00';
   const include_twilight = Boolean(document.getElementById('bumpCheckbox')?.checked);
   const include_cert = Boolean(document.getElementById('bumpCertCheckbox')?.checked);
   const plan = selectedTier;
-  const credits = tierPrices[plan]?.credits || 1;
 
-  let liveUrl = '';
   try {
-    const headers = { 'Content-Type': 'application/json' };
-    const token = getAuthToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
-      headers,
+      headers: authHeaders(),
       body: JSON.stringify({ plan, include_twilight, include_cert })
     });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.mode === 'live' && data.checkout_url) {
-        liveUrl = data.checkout_url;
-      } else if (data.user) {
-        setCurrentUser(data.user);
-      }
+    const data = await res.json();
+    if (!res.ok || data.status !== 'success') {
+      showToast(data.message || 'Checkout could not be completed.', 'error');
+      return;
+    }
+    if (data.mode === 'live' && data.checkout_url) {
+      window.location.href = data.checkout_url;
+      return;
+    }
+    if (data.user) setCurrentUser(data.user);
+    closePricingModal();
+    refreshDownloadButton();
+    if (isDashboardPage()) loadDashboardData();
+    showToast(data.message || `${total} applied. ${data.credits_added || ''} credits are on this account.`, 'success', 5500);
+  } catch (_) {
+    showToast('Checkout could not reach the server.', 'error');
+  }
+}
+
+async function confirmCheckoutReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('checkout') !== 'success') return;
+  const sessionId = params.get('session_id');
+  if (!getAuthToken()) return;
+  try {
+    const res = await fetch('/api/checkout/confirm', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ session_id: sessionId || '' })
+    });
+    const data = await res.json();
+    if (res.ok && data.user) {
+      setCurrentUser(data.user);
+      showToast('Payment received. Credits are on this account.', 'success', 5000);
     }
   } catch (_) {}
-
-  if (liveUrl) {
-    sessionStorage.setItem('vs_pending_credits', String(credits));
-    window.location.href = liveUrl;
-    return;
-  }
-
-  if (!getCurrentUser()) {
-    addCredits(credits);
-  }
-  closePricingModal();
-
-  const watermark = document.getElementById('watermark');
-  if (watermark) watermark.style.display = 'none';
-  refreshDownloadButton();
-
-  showToast(`${total} order confirmed — ${credits} credit${credits === 1 ? '' : 's'} added. Unused credits rollover.`, 'success', 5500);
 }
 
 // --- MLS COMPLIANCE CERTIFICATE ENGINE ---
@@ -1226,25 +1293,52 @@ function copySniperEmail() {
   });
 }
 
-function requestStudioDownload() {
-  const credits = getCredits();
-  if (credits < 1) {
-    openPricingModal('unlock');
-    showToast('Add a credit to download this render.', 'info');
+async function downloadStudioJob(jobId) {
+  if (!getAuthToken()) {
+    openLoginModal('login');
     return;
   }
-  const img = document.getElementById('stagedImageDisplay');
-  if (!img?.src) return;
-  const a = document.createElement('a');
-  a.href = img.src;
-  a.download = `VirtualStageAI_${currentRoom}_${currentStyle}.jpg`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  addCredits(-1);
-  refreshDownloadButton();
-  trackUsageEvent('download_4k', '', { room: currentRoom, style: currentStyle });
-  showToast(`Download started. ${getCredits()} credit${getCredits() === 1 ? '' : 's'} left.`, 'success');
+  const id = jobId || currentStudioJob;
+  if (!id) {
+    showToast('Stage a room first. The preview is saved, then a download uses one credit.', 'info');
+    return;
+  }
+  try {
+    const res = await fetch('/api/studio/download', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ job_id: id })
+    });
+    const data = await res.json();
+    if (res.status === 402) {
+      if (data.user) setCurrentUser(data.user);
+      openPricingModal('single');
+      showToast(data.message || 'Add a credit to download this render.', 'info');
+      return;
+    }
+    if (!res.ok || !data.download_url) {
+      showToast(data.message || 'Download failed.', 'error');
+      return;
+    }
+    if (data.user) setCurrentUser(data.user);
+    if (isDashboardPage() || document.getElementById('dashboardModal')?.classList.contains('active')) {
+      loadDashboardData();
+    }
+    const a = document.createElement('a');
+    a.href = data.download_url;
+    a.download = `VirtualStage_${currentRoom}_${currentStyle}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    loadStudioHistory();
+    showToast(`Download started. ${getCredits()} credit${getCredits() === 1 ? '' : 's'} left.`, 'success');
+  } catch (_) {
+    showToast('Download could not reach the server.', 'error');
+  }
+}
+
+function requestStudioDownload() {
+  downloadStudioJob(currentStudioJob);
 }
 
 async function requestLiveStage() {
@@ -1256,6 +1350,8 @@ async function requestLiveStage() {
   };
   if (isUserPhoto && userUploadedPhoto && userUploadedPhoto.length < 1500000) {
     payload.image_data = userUploadedPhoto;
+  } else if (sourceJobId) {
+    payload.source_job_id = sourceJobId;
   }
   try {
     const headers = { 'Content-Type': 'application/json' };
@@ -1267,14 +1363,118 @@ async function requestLiveStage() {
       headers,
       body: JSON.stringify(payload)
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.user) {
-      setCurrentUser(data.user);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 401) openLoginModal('login');
+      showToast(data.message || 'Staging could not be saved.', 'error');
+      return null;
     }
-    return data.staged_url || null;
+    if (data.user) setCurrentUser(data.user);
+    return data;
   } catch (_) {
     return null;
+  }
+}
+
+function authHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = getAuthToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
+async function loadStudioHistory() {
+  const box = document.getElementById('studioHistory');
+  const row = document.getElementById('studioHistoryRow');
+  if (!box || !row || !getAuthToken()) {
+    if (box) box.hidden = true;
+    return;
+  }
+  try {
+    const res = await fetch('/api/studio/jobs', { headers: authHeaders() });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.user) setCurrentUser({ ...getCurrentUser(), credits_balance: data.credits_balance });
+    else if (typeof data.credits_balance === 'number') {
+      const user = getCurrentUser();
+      if (user) setCurrentUser({ ...user, credits_balance: data.credits_balance });
+    }
+    accountJobs = data.jobs;
+    if (!data.jobs || !data.jobs.length) {
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    row.innerHTML = data.jobs.map(job => `
+      <button type="button" class="studio-history-card" onclick="editHistoryJob('${job.id}')">
+        <img src="${escapeHtml(job.image_url)}" alt="">
+        <span>${escapeHtml(formatRoomTitle(job.room_type))}</span>
+        <em>${job.status === 'downloaded' ? 'Downloaded' : 'Preview'}</em>
+      </button>
+    `).join('');
+  } catch (_) {}
+}
+
+function openStudioJob(id, url) {
+  if (accountJobs.some(job => job.id === id)) {
+    editHistoryJob(id);
+    return;
+  }
+  currentStudioJob = id;
+  sourceJobId = id;
+  preserveStudioImage = true;
+  const img = document.getElementById('stagedImageDisplay');
+  if (img && url) img.src = url;
+  const studio = document.getElementById('studio') || document.getElementById('demo');
+  if (studio) studio.scrollIntoView({ behavior: 'smooth' });
+}
+
+function editHistoryJob(id) {
+  const job = accountJobs.find(item => item.id === id);
+  if (!job) return;
+  currentStudioJob = job.id;
+  sourceJobId = job.id;
+  preserveStudioImage = true;
+  currentRoom = job.room_type || 'living';
+  isUserPhoto = false;
+  userUploadedPhoto = null;
+  document.querySelectorAll('.sidebar-pills .pill').forEach(pill => {
+    pill.classList.toggle('active', pill.getAttribute('data-room') === currentRoom);
+  });
+  selectStyle(job.style || 'modern', null);
+  const prompt = document.getElementById('customPrompt');
+  if (prompt) prompt.value = job.prompt || '';
+  const img = document.getElementById('stagedImageDisplay');
+  if (img) img.src = job.image_url;
+  const studio = document.getElementById('studio') || document.getElementById('demo');
+  if (studio) studio.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  updateEditorChrome();
+}
+
+async function saveProfile(event) {
+  if (event) event.preventDefault();
+  const name = document.getElementById('profileName')?.value.trim();
+  const brokerage = document.getElementById('profileBrokerage')?.value.trim() || '';
+  if (!name) {
+    showToast('Enter a name for this account.', 'error');
+    return;
+  }
+  try {
+    const res = await fetch('/api/user/profile', {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ name, brokerage })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.message || 'Account details could not be saved.', 'error');
+      return;
+    }
+    if (data.user) setCurrentUser(data.user);
+    loadDashboardData();
+    showToast(data.message || 'Account details saved.', 'success');
+  } catch (_) {
+    showToast('Account details could not reach the server.', 'error');
   }
 }
 
@@ -1481,7 +1681,7 @@ function getCredits() {
   if (user && typeof user.credits_balance === 'number') {
     return user.credits_balance;
   }
-  return parseInt(localStorage.getItem('vs_credits') || '0', 10) || 0;
+  return 0;
 }
 
 function addCredits(amount) {
@@ -1498,6 +1698,10 @@ function addCredits(amount) {
 }
 
 function refreshDownloadButton() {
+  if (isDashboardPage()) {
+    updateEditorChrome();
+    return;
+  }
   const label = document.getElementById('downloadBtnLabel');
   if (!label) return;
   const credits = getCredits();
@@ -1510,6 +1714,7 @@ async function initAuth() {
   const token = getAuthToken();
   if (!token) {
     renderUserStatus();
+    if (isDashboardPage()) openLoginModal('login');
     return;
   }
   try {
@@ -1520,13 +1725,21 @@ async function initAuth() {
       const data = await res.json();
       if (data.status === 'success' && data.user) {
         setCurrentUser(data.user);
+        if (isDashboardPage()) {
+          showAccount();
+          loadDashboardData();
+        } else {
+          loadStudioHistory();
+        }
         return;
       }
     }
     clearAuth();
     renderUserStatus();
+    if (isDashboardPage()) openLoginModal('login');
   } catch (_) {
     renderUserStatus();
+    if (isDashboardPage() && getAuthToken()) showAccount();
   }
 }
 
@@ -1544,7 +1757,7 @@ function renderUserStatus() {
         .toUpperCase();
       const firstName = (user.name || 'User').split(' ')[0];
       navSlot.innerHTML = `
-        <button class="nav-user-badge" id="navUserBadgeBtn" onclick="openDashboardModal(); return false;" title="Open account dashboard and usage tracking" aria-label="Open User Dashboard">
+        <button class="nav-user-badge" id="navUserBadgeBtn" onclick="window.location.href='/dashboard'" title="Open your studio" aria-label="Open your studio">
           <span class="nav-avatar-circle">${initials}</span>
           <span>${escapeHtml(firstName)}</span>
           <span class="nav-credits-chip">
@@ -1564,7 +1777,7 @@ function renderUserStatus() {
   document.querySelectorAll('.drawer-login').forEach(el => {
     if (user) {
       el.textContent = `Dashboard (${user.credits_balance} Credits)`;
-      el.onclick = (e) => { e.preventDefault(); openDashboardModal(); };
+      el.onclick = (e) => { e.preventDefault(); window.location.href = '/dashboard'; };
     } else {
       el.textContent = 'Log in';
       el.onclick = (e) => { e.preventDefault(); openLoginModal('login'); };
@@ -1623,6 +1836,10 @@ function openLoginModal(tab = 'login') {
 }
 
 function closeLoginModal() {
+  if (isDashboardPage() && !getAuthToken()) {
+    window.location.href = '/';
+    return;
+  }
   const modal = document.getElementById('loginModal');
   if (!modal) return;
   modal.classList.remove('active');
@@ -1686,7 +1903,13 @@ async function handleAuthSubmit(event) {
     setAuthToken(data.token);
     setCurrentUser(data.user);
     closeLoginModal();
-    showToast(data.message || `Welcome, ${data.user.name}!`, 'success', 5000);
+    if (isDashboardPage()) {
+      showAccount();
+      loadDashboardData();
+      showToast(data.message || `Welcome, ${data.user.name}!`, 'success', 5000);
+      return;
+    }
+    window.location.href = '/dashboard';
   } catch (err) {
     showToast('Network error during authentication. Please retry.', 'error');
   } finally {
@@ -1709,7 +1932,15 @@ async function handleLogout() {
   }
   clearAuth();
   setCurrentUser(null);
+  currentStudioJob = null;
+  sourceJobId = null;
+  const history = document.getElementById('studioHistory');
+  if (history) history.hidden = true;
   closeDashboardModal();
+  if (isDashboardPage()) {
+    window.location.href = '/';
+    return;
+  }
   showToast('You have been logged out.', 'info');
 }
 
@@ -1718,6 +1949,10 @@ function openDashboardModal() {
   const user = getCurrentUser();
   if (!user) {
     openLoginModal('login');
+    return;
+  }
+  if (!isDashboardPage()) {
+    window.location.href = '/dashboard';
     return;
   }
   const modal = document.getElementById('dashboardModal');
@@ -1761,6 +1996,13 @@ async function loadDashboardData() {
     if (data.user) {
       setCurrentUser(data.user);
     }
+    accountJobs = data.recent_renders || [];
+    const planTitle = document.getElementById('dashPlanTitle');
+    if (planTitle && data.user) planTitle.textContent = formatPlanName(data.user.plan);
+    const profileName = document.getElementById('profileName');
+    const profileBrokerage = document.getElementById('profileBrokerage');
+    if (profileName && data.user) profileName.value = data.user.name || '';
+    if (profileBrokerage && data.user) profileBrokerage.value = data.user.brokerage || '';
 
     // Avatar & Identity
     const initials = (data.user.name || 'User')
@@ -1774,12 +2016,18 @@ async function loadDashboardData() {
 
     const nameEl = document.getElementById('dashUserName');
     if (nameEl) {
-      nameEl.innerHTML = `${escapeHtml(data.user.name)} <span class="dash-plan-badge" id="dashPlanBadge">${formatPlanName(data.user.plan)}</span>`;
+      nameEl.textContent = data.user.name || 'Your account';
     }
 
     const brokEl = document.getElementById('dashUserBrokerage');
     if (brokEl) {
-      brokEl.innerHTML = `${escapeHtml(data.user.brokerage || 'Independent Agent')} · <span id="dashUserEmail">${escapeHtml(data.user.email)}</span>`;
+      if (document.getElementById('profileName')) {
+        brokEl.textContent = data.user.brokerage || 'Independent agent';
+        const emailOnly = document.getElementById('dashUserEmail');
+        if (emailOnly) emailOnly.textContent = data.user.email || '';
+      } else {
+        brokEl.innerHTML = `${escapeHtml(data.user.brokerage || 'Independent Agent')} · <span id="dashUserEmail">${escapeHtml(data.user.email)}</span>`;
+      }
     }
 
     // Balance
@@ -1804,14 +2052,13 @@ async function loadDashboardData() {
     if (galleryEl) {
       if (data.recent_renders && data.recent_renders.length > 0) {
         galleryEl.innerHTML = data.recent_renders.map(r => `
-          <div class="render-history-card">
+          <div class="render-history-card ${r.id === currentStudioJob ? 'is-open' : ''}" data-id="${escapeHtml(r.id)}" onclick="editHistoryJob('${escapeHtml(r.id)}')">
             <img src="${escapeHtml(r.image_url)}" alt="${escapeHtml(r.room_type)} staged" loading="lazy" />
             <div class="render-card-body">
               <div class="render-card-title">${formatRoomTitle(r.room_type)}</div>
-              <div class="render-card-meta">${capitalize(r.style)} Style · ${formatDate(r.created_at)}</div>
+              <div class="render-card-meta">${capitalize(r.style)} · ${r.status === 'downloaded' ? 'Downloaded' : 'Preview'}</div>
               <div class="render-card-actions">
-                <button class="btn btn-outline btn-xs" onclick="previewRender('${escapeHtml(r.image_url)}')">Preview</button>
-                <a class="btn btn-primary btn-xs" href="${escapeHtml(r.image_url)}" download="VirtualStage_${escapeHtml(r.room_type)}_${escapeHtml(r.style)}.jpg">Download 4K</a>
+                <button class="btn btn-primary btn-xs" type="button" onclick="event.stopPropagation(); downloadStudioJob('${escapeHtml(r.id)}')">Download</button>
               </div>
             </div>
           </div>
@@ -1850,6 +2097,7 @@ async function loadDashboardData() {
     }
 
     trackUsageEvent('view_dashboard');
+    updateEditorChrome();
   } catch (err) {
     console.error('Error loading dashboard data:', err);
   }

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio — VirtualStage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4.8">
+</head>
+<body data-page="dashboard">
+
+  <header class="account-bar">
+    <a href="/" class="nav-brand" aria-label="VirtualStage home">
+      <span class="brand-name">VirtualStage</span>
+    </a>
+    <div class="account-bar-actions">
+      <a href="/#pricing">Pricing</a>
+      <div id="navAuthSlot"></div>
+      <button class="btn btn-outline btn-sm" type="button" onclick="handleLogout()">Log out</button>
+    </div>
+  </header>
+
+  <main class="account-page" id="accountApp" hidden>
+    <section class="account-plan" aria-label="Current plan">
+      <div>
+        <p class="account-kicker">Current plan</p>
+        <h1 id="dashPlanTitle">Starter Pack</h1>
+        <p id="dashUserBrokerage">Account</p>
+      </div>
+      <div class="account-credits">
+        <span class="balance-num" id="dashCreditsNum">0</span>
+        <span>credits left</span>
+      </div>
+      <button class="btn btn-primary" type="button" onclick="openPricingModal('starter')">Buy credits</button>
+    </section>
+
+    <section class="account-identity">
+      <form id="profileForm" class="account-profile" onsubmit="saveProfile(event)">
+        <h2 id="dashUserName">Your account</h2>
+        <label for="profileName">Name</label>
+        <input id="profileName" class="form-field-input" type="text" autocomplete="name" required>
+        <label for="profileBrokerage">Brokerage</label>
+        <input id="profileBrokerage" class="form-field-input" type="text" autocomplete="organization">
+        <p class="account-email" id="dashUserEmail"></p>
+        <button class="btn btn-outline btn-sm" type="submit">Save account</button>
+      </form>
+      <div class="account-stats">
+        <div><strong id="kpiRoomsStaged">0</strong><span>Rooms staged</span></div>
+        <div><strong id="kpiDownloads">0</strong><span>Downloads</span></div>
+      </div>
+    </section>
+
+    <section class="account-studio" id="studio">
+      <div class="editor-photo">
+        <div class="canvas-frame" id="previewArea">
+          <div class="render-overlay" id="renderOverlay" aria-live="polite">
+            <div class="spinner"></div>
+            <div class="render-status" id="renderStatus">Saving…</div>
+            <div class="render-bar"><div class="render-bar-fill" id="progressFill"></div></div>
+          </div>
+          <div class="canvas-image-wrap style-filter-modern" id="resultBox">
+            <div class="studio-status-tag" id="studioStatusTag">Living room</div>
+            <img id="stagedImageDisplay" src="assets/hero_staged.jpg" alt="Room you are editing">
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-panel">
+        <p id="editorStatus">Choose a style, then stage the room. The preview is free.</p>
+        <div class="editor-actions">
+          <button class="btn btn-primary btn-stage" id="stageButton" type="button" onclick="runStagingSimulation()">Stage this room</button>
+          <button class="btn btn-outline btn-stage" type="button" onclick="requestStudioDownload()">
+            <span id="downloadBtnLabel">Download</span>
+          </button>
+          <div class="upload-zone editor-upload" id="dropZone" role="button" tabindex="0" aria-label="Upload your own photo">
+            <input type="file" id="fileInput" accept="image/*" hidden aria-label="Choose image file">
+            <strong>Use your photo</strong>
+          </div>
+        </div>
+
+        <div class="editor-field">
+          <span class="editor-label">Style</span>
+          <div class="style-grid editor-choices">
+            <button class="style-option active" type="button" onclick="selectStyle('modern', this)"><strong>Modern</strong></button>
+            <button class="style-option" type="button" onclick="selectStyle('scandinavian', this)"><strong>Scandinavian</strong></button>
+            <button class="style-option" type="button" onclick="selectStyle('farmhouse', this)"><strong>Farmhouse</strong></button>
+            <button class="style-option" type="button" onclick="selectStyle('coastal', this)"><strong>Coastal</strong></button>
+            <button class="style-option" type="button" onclick="selectStyle('luxury', this)"><strong>Luxury</strong></button>
+            <button class="style-option" type="button" onclick="selectStyle('midcentury', this)"><strong>Mid-century</strong></button>
+          </div>
+        </div>
+
+        <div class="editor-field">
+          <span class="editor-label">Room</span>
+          <div class="sidebar-pills editor-choices">
+            <button class="pill active" type="button" data-room="living" onclick="loadSample('living', this)">Living</button>
+            <button class="pill" type="button" data-room="bedroom" onclick="loadSample('bedroom', this)">Bedroom</button>
+            <button class="pill" type="button" data-room="dining" onclick="loadSample('dining', this)">Dining</button>
+            <button class="pill" type="button" data-room="office" onclick="loadSample('office', this)">Office</button>
+            <button class="pill" type="button" data-room="twilight" onclick="loadSample('twilight', this)">Twilight</button>
+            <button class="pill" type="button" data-room="declutter" onclick="loadSample('declutter', this)">Declutter</button>
+            <button class="pill" type="button" data-room="patio" onclick="loadSample('patio', this)">Patio</button>
+            <button class="pill" type="button" data-room="renovation" onclick="loadSample('renovation', this)">Remodel</button>
+          </div>
+        </div>
+
+        <label class="editor-field" for="customPrompt">
+          <span class="editor-label">Furniture notes</span>
+          <textarea id="customPrompt" class="sidebar-textarea" maxlength="400" rows="2" placeholder="Linen sofa, walnut table, leave the window as it is"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="account-history" aria-label="Past renders">
+      <div class="dash-section-title"><span>Your rooms</span><span>Click one to edit it above</span></div>
+      <div class="dashboard-renders-grid" id="dashRendersGallery"></div>
+    </section>
+
+    <section class="account-billing" aria-label="Purchases">
+      <div class="dash-section-title"><span>Purchases</span></div>
+      <div class="account-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr><th>Date</th><th>Plan</th><th>Credits</th><th>Amount</th><th>Status</th></tr>
+          </thead>
+          <tbody id="dashTransactionsBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+    <div class="modal-box">
+      <button class="modal-x" onclick="closeLoginModal()" aria-label="Close login dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabAuthLogin" type="button" onclick="switchAuthTab('login')">Log in</button>
+        <button class="auth-tab-btn" id="tabAuthSignup" type="button" onclick="switchAuthTab('signup')">Create account</button>
+      </div>
+      <h2 id="loginModalTitle">Welcome back</h2>
+      <p class="modal-sub" id="loginModalSub">Log in to open your studio, plan, and past renders.</p>
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        <div class="form-field-group" id="groupAuthName" style="display: none;">
+          <label class="form-field-label" for="authName">Full name</label>
+          <input type="text" class="form-field-input" id="authName" autocomplete="name">
+        </div>
+        <div class="form-field-group" id="groupAuthBrokerage" style="display: none;">
+          <label class="form-field-label" for="authBrokerage">Brokerage</label>
+          <input type="text" class="form-field-input" id="authBrokerage" autocomplete="organization">
+        </div>
+        <div class="form-field-group">
+          <label class="form-field-label" for="authEmail">Email</label>
+          <input type="email" class="form-field-input" id="authEmail" autocomplete="email" required>
+        </div>
+        <div class="form-field-group">
+          <label class="form-field-label" for="authPassword">Password</label>
+          <input type="password" class="form-field-input" id="authPassword" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary full-w" id="authSubmitBtn" type="submit">Log in</button>
+      </form>
+      <button class="demo-quick-auth-btn" type="button" onclick="fillDemoCredentials()">Use the demo account</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutModalTitle">
+    <div class="modal-box">
+      <button class="modal-x" onclick="closePricingModal()" aria-label="Close checkout">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h2 id="checkoutModalTitle">Add credits</h2>
+      <p class="modal-sub">Credits stay on this account. A card is charged only when Stripe is connected.</p>
+      <div class="modal-options">
+        <label class="modal-opt" id="tierSingle" onclick="selectModalTier('single')">
+          <input type="radio" name="modalOption" id="optSingle" value="single">
+          <div class="modal-opt-body"><strong>Single photo</strong><span>1 credit</span></div>
+          <span class="modal-opt-price">$2.99</span>
+        </label>
+        <label class="modal-opt" id="tierStarter" onclick="selectModalTier('starter')">
+          <input type="radio" name="modalOption" id="optStarter" value="starter">
+          <div class="modal-opt-body"><strong>Starter pack</strong><span>10 credits</span></div>
+          <span class="modal-opt-price">$29</span>
+        </label>
+        <label class="modal-opt selected" id="tierPro" onclick="selectModalTier('pro')">
+          <input type="radio" name="modalOption" id="optPro" value="pro" checked>
+          <div class="modal-opt-body"><strong>Pro pack</strong><span>25 credits</span></div>
+          <span class="modal-opt-price">$49</span>
+        </label>
+        <label class="modal-opt" id="tierActiveMonthly" onclick="selectModalTier('active_monthly')">
+          <input type="radio" name="modalOption" id="optActiveMonthly" value="active_monthly">
+          <div class="modal-opt-body"><strong>Active Agent</strong><span>25 credits</span></div>
+          <span class="modal-opt-price">$39</span>
+        </label>
+        <label class="modal-opt" id="tierPowerMonthly" onclick="selectModalTier('power_monthly')">
+          <input type="radio" name="modalOption" id="optPowerMonthly" value="power_monthly">
+          <div class="modal-opt-body"><strong>Power Producer</strong><span>60 credits</span></div>
+          <span class="modal-opt-price">$79</span>
+        </label>
+      </div>
+      <label class="bump-box">
+        <input type="checkbox" id="bumpCheckbox" onchange="updateModalTotal()">
+        <div><strong>Day-to-dusk — $14</strong><span>Added to this order</span></div>
+      </label>
+      <input type="checkbox" id="bumpCertCheckbox" hidden>
+      <div class="modal-total">
+        <span>Total</span>
+        <span class="modal-total-amount" id="modalTotalAmount">$49.00</span>
+        <input type="hidden" id="modalPlanName" value="Pro Agent Pack (25 Renders)">
+      </div>
+      <button class="btn btn-primary full-w" type="button" onclick="completeDemoOrder()">Add credits to this account</button>
+    </div>
+  </div>
+
+  <script src="app.js?v=4.7"></script>
+</body>
+</html>

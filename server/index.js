@@ -1,0 +1,575 @@
+/**
+ * VirtualStage app server.
+ * Accounts, credits, studio jobs, and payments live in MongoDB.
+ * Set MONGODB_URI to a real database. Without it, a local in-memory
+ * MongoDB starts so the app can run on this machine.
+ */
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const { MongoClient, ObjectId } = require('mongodb');
+
+const PORT = parseInt(process.env.PORT || '8080', 10);
+const ROOT = path.join(__dirname, '..');
+const UPLOADS = path.join(ROOT, 'uploads');
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN || '';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+
+const CATALOG = {
+  single: { name: 'Single Photo', price: 2.99, credits: 1, type: 'pack' },
+  starter: { name: 'Starter Pack (10 Images)', price: 29, credits: 10, type: 'pack' },
+  pro: { name: 'Pro Agent Pack (25 Images)', price: 49, credits: 25, type: 'pack' },
+  agency_pack: { name: 'Agency Bulk Pack (60 Images)', price: 99, credits: 60, type: 'pack' },
+  active_monthly: { name: 'Active Agent Membership', price: 39, credits: 25, type: 'sub' },
+  power_monthly: { name: 'Power Producer Membership', price: 79, credits: 60, type: 'sub' },
+  broker_monthly: { name: 'Brokerage Team Membership', price: 149, credits: 150, type: 'sub' },
+  broker: { name: 'Brokerage Team Membership', price: 149, credits: 150, type: 'sub' }
+};
+
+const SAMPLE = {
+  living: ['assets/hero_empty.jpg', 'assets/hero_staged.jpg'],
+  bedroom: ['assets/bedroom_empty.jpg', 'assets/bedroom_staged.jpg'],
+  dining: ['assets/dining_empty.jpg', 'assets/dining_staged.jpg'],
+  office: ['assets/office_empty.jpg', 'assets/office_staged.jpg'],
+  twilight: ['assets/twilight_day.jpg', 'assets/twilight_dusk.jpg'],
+  declutter: ['assets/declutter_before.jpg', 'assets/declutter_after.jpg'],
+  patio: ['assets/patio_empty.jpg', 'assets/patio_staged.jpg'],
+  renovation: ['assets/reno_before.jpg', 'assets/reno_after.jpg']
+};
+
+let db;
+
+function publicUser(user) {
+  if (!user) return null;
+  return {
+    id: String(user._id),
+    email: user.email,
+    name: user.name,
+    brokerage: user.brokerage || '',
+    plan: user.plan,
+    credits_balance: user.credits_balance,
+    created_at: user.created_at
+  };
+}
+
+function authUser(req) {
+  const header = req.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : (req.get('x-session-token') || '');
+  if (!token) return null;
+  return db.collection('users').findOne({ session_token: token });
+}
+
+async function requireUser(req, res) {
+  const user = await authUser(req);
+  if (!user) {
+    res.status(401).json({ status: 'error', message: 'Log in to save this work to your account.' });
+    return null;
+  }
+  return user;
+}
+
+function storeUpload(userId, dataUrl) {
+  if (!dataUrl || !String(dataUrl).startsWith('data:image/')) return '';
+  const match = String(dataUrl).match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.+)$/);
+  if (!match) return '';
+  const ext = match[1].includes('png') ? 'png' : match[1].includes('webp') ? 'webp' : 'jpg';
+  const buf = Buffer.from(match[2], 'base64');
+  if (buf.length > 12 * 1024 * 1024) {
+    const err = new Error('Photo is larger than 12 MB.');
+    err.status = 400;
+    throw err;
+  }
+  fs.mkdirSync(UPLOADS, { recursive: true });
+  const name = `${userId}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+  fs.writeFileSync(path.join(UPLOADS, name), buf);
+  return `/uploads/${name}`;
+}
+
+function sampleFor(room) {
+  return SAMPLE[room] || SAMPLE.living;
+}
+
+async function callReplicate(imageUrl, style, room, prompt) {
+  const fullPrompt = `Professional architectural photograph of a ${style} ${room}, furniture only, walls windows and floors unchanged, listing photo. ${prompt || ''}`.trim();
+  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-dev/predictions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
+      'Content-Type': 'application/json',
+      Prefer: 'wait'
+    },
+    body: JSON.stringify({
+      input: { prompt: fullPrompt, image: imageUrl, guidance: 3.5, num_inference_steps: 28 }
+    })
+  });
+  let prediction = await start.json();
+  if (!start.ok) throw new Error(prediction.detail || prediction.error || 'Render service rejected the photo.');
+  const pollUrl = prediction.urls && prediction.urls.get;
+  for (let i = 0; i < 20 && prediction.status !== 'succeeded'; i++) {
+    if (prediction.status === 'failed' || prediction.status === 'canceled') {
+      throw new Error(prediction.error || 'Render failed.');
+    }
+    await new Promise(r => setTimeout(r, 2000));
+    const poll = await fetch(pollUrl, { headers: { Authorization: `Bearer ${REPLICATE_API_TOKEN}` } });
+    prediction = await poll.json();
+  }
+  const output = prediction.output;
+  if (Array.isArray(output) && output[0]) return output[0];
+  if (typeof output === 'string') return output;
+  throw new Error('Render finished without an image.');
+}
+
+async function seed() {
+  const users = db.collection('users');
+  const existing = await users.findOne({ email: 'demo@virtualstage.ai' });
+  if (existing) return;
+  const now = new Date();
+  const password_hash = bcrypt.hashSync('demo1234', 10);
+  const inserted = await users.insertOne({
+    email: 'demo@virtualstage.ai',
+    password_hash,
+    name: 'Sarah Jenkins',
+    brokerage: 'Keller Williams Beverly Hills',
+    plan: 'starter',
+    credits_balance: 12,
+    session_token: crypto.randomBytes(32).toString('hex'),
+    created_at: now
+  });
+  const id = inserted.insertedId;
+  await db.collection('jobs').insertMany([
+    { user_id: id, room_type: 'living', style: 'modern', prompt: '', before_url: 'assets/hero_empty.jpg', image_url: 'assets/hero_staged.jpg', status: 'downloaded', created_at: now },
+    { user_id: id, room_type: 'bedroom', style: 'modern', prompt: '', before_url: 'assets/bedroom_empty.jpg', image_url: 'assets/bedroom_staged.jpg', status: 'preview', created_at: now }
+  ]);
+  await db.collection('transactions').insertOne({
+    user_id: id, plan: 'starter', amount: 29, credits_added: 10, status: 'completed', stripe_session_id: '', created_at: now
+  });
+  await db.collection('events').insertOne({
+    user_id: id, event_type: 'download', property_address: '', metadata: { room: 'living' }, created_at: now
+  });
+}
+
+async function connect() {
+  let uri = process.env.MONGODB_URI;
+  if (!uri) {
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    const memory = await MongoMemoryServer.create();
+    uri = memory.getUri();
+    console.log('MongoDB: in-memory instance (set MONGODB_URI for a permanent database).');
+  } else {
+    console.log('MongoDB: using MONGODB_URI.');
+  }
+  const client = new MongoClient(uri);
+  await client.connect();
+  db = client.db('virtualstage');
+  await db.collection('users').createIndex({ email: 1 }, { unique: true });
+  await db.collection('users').createIndex({ session_token: 1 });
+  await db.collection('jobs').createIndex({ user_id: 1, created_at: -1 });
+  await seed();
+}
+
+function asyncRoute(fn) {
+  return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+}
+
+async function main() {
+  await connect();
+  const app = express();
+  app.use(express.json({ limit: '16mb' }));
+  app.use((req, res, next) => {
+    const blocked = req.path.startsWith('/server')
+      || req.path.startsWith('/node_modules')
+      || req.path === '/package.json'
+      || req.path === '/package-lock.json';
+    if (blocked) return res.status(404).end();
+    next();
+  });
+  app.use('/uploads', express.static(UPLOADS));
+  app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(ROOT, 'dashboard.html'));
+  });
+  app.use(express.static(ROOT, { index: 'index.html', etag: false, maxAge: 0 }));
+
+  app.get('/api/auth/me', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    res.json({ status: 'success', user: publicUser(user) });
+  }));
+
+  app.post('/api/auth/signup', asyncRoute(async (req, res) => {
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const password = String(req.body.password || '');
+    const name = String(req.body.name || '').trim();
+    const brokerage = String(req.body.brokerage || '').trim();
+    if (!email || !password || !name) {
+      return res.status(400).json({ status: 'error', message: 'Name, email, and password are required.' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ status: 'error', message: 'Use a password of at least 8 characters.' });
+    }
+    const doc = {
+      email,
+      password_hash: bcrypt.hashSync(password, 10),
+      name,
+      brokerage,
+      plan: 'free_trial',
+      credits_balance: 3,
+      session_token: crypto.randomBytes(32).toString('hex'),
+      created_at: new Date()
+    };
+    try {
+      const result = await db.collection('users').insertOne(doc);
+      doc._id = result.insertedId;
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(409).json({ status: 'error', message: 'An account with this email already exists.' });
+      }
+      throw err;
+    }
+    await db.collection('events').insertOne({
+      user_id: doc._id, event_type: 'signup', property_address: '', metadata: { plan: 'free_trial' }, created_at: new Date()
+    });
+    res.json({
+      status: 'success',
+      message: `Account created. 3 preview credits are on ${name.split(' ')[0]}'s account.`,
+      user: publicUser(doc),
+      token: doc.session_token
+    });
+  }));
+
+  app.post('/api/auth/login', asyncRoute(async (req, res) => {
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const password = String(req.body.password || '');
+    const user = await db.collection('users').findOne({ email });
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(401).json({ status: 'error', message: 'Email or password does not match.' });
+    }
+    const token = crypto.randomBytes(32).toString('hex');
+    await db.collection('users').updateOne({ _id: user._id }, { $set: { session_token: token } });
+    user.session_token = token;
+    res.json({
+      status: 'success',
+      message: `Welcome back, ${user.name.split(' ')[0]}.`,
+      user: publicUser(user),
+      token
+    });
+  }));
+
+  app.post('/api/auth/logout', asyncRoute(async (req, res) => {
+    const user = await authUser(req);
+    if (user) {
+      await db.collection('users').updateOne({ _id: user._id }, { $set: { session_token: '' } });
+    }
+    res.json({ status: 'success', message: 'Logged out.' });
+  }));
+
+  app.get('/api/user/dashboard', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const jobs = await db.collection('jobs').find({ user_id: user._id }).sort({ created_at: -1 }).limit(48).toArray();
+    const transactions = await db.collection('transactions').find({ user_id: user._id }).sort({ created_at: -1 }).limit(8).toArray();
+    const downloads = await db.collection('events').countDocuments({ user_id: user._id, event_type: 'download' });
+    res.json({
+      status: 'success',
+      dashboard: {
+        user: publicUser(user),
+        stats: {
+          total_renders: await db.collection('jobs').countDocuments({ user_id: user._id }),
+          credits_balance: user.credits_balance,
+          downloads_4k: downloads,
+          certs_generated: await db.collection('events').countDocuments({ user_id: user._id, event_type: 'cert_generate' }),
+          zillow_snipes: await db.collection('events').countDocuments({ user_id: user._id, event_type: 'zillow_snipe' })
+        },
+        recent_renders: jobs.map(job => ({
+          id: String(job._id),
+          room_type: job.room_type,
+          style: job.style,
+          image_url: job.image_url,
+          before_url: job.before_url,
+          prompt: job.prompt || '',
+          status: job.status,
+          created_at: job.created_at
+        })),
+        recent_transactions: transactions.map(tx => ({
+          id: String(tx._id),
+          plan: tx.plan,
+          amount: tx.amount,
+          credits_added: tx.credits_added,
+          status: tx.status,
+          created_at: tx.created_at
+        }))
+      }
+    });
+  }));
+
+  app.get('/api/studio/jobs', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const jobs = await db.collection('jobs').find({ user_id: user._id }).sort({ created_at: -1 }).limit(48).toArray();
+    res.json({
+      status: 'success',
+      credits_balance: user.credits_balance,
+      jobs: jobs.map(job => ({
+        id: String(job._id),
+        room_type: job.room_type,
+        style: job.style,
+        image_url: job.image_url,
+        before_url: job.before_url,
+        prompt: job.prompt || '',
+        status: job.status,
+        created_at: job.created_at
+      }))
+    });
+  }));
+
+  app.patch('/api/user/profile', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const name = String(req.body.name || '').trim();
+    const brokerage = String(req.body.brokerage || '').trim();
+    if (!name) return res.status(400).json({ status: 'error', message: 'Name is required.' });
+    await db.collection('users').updateOne(
+      { _id: user._id },
+      { $set: { name, brokerage } }
+    );
+    const fresh = await db.collection('users').findOne({ _id: user._id });
+    res.json({ status: 'success', user: publicUser(fresh), message: 'Account details saved.' });
+  }));
+
+  app.post('/api/stage', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const room = String(req.body.room_type || 'living');
+    const style = String(req.body.style || 'modern');
+    const prompt = String(req.body.prompt || '').slice(0, 500);
+    const [sampleBefore, sampleAfter] = sampleFor(room);
+    let beforeUrl = sampleBefore;
+    if (req.body.source_job_id) {
+      try {
+        const prior = await db.collection('jobs').findOne({
+          _id: new ObjectId(req.body.source_job_id),
+          user_id: user._id
+        });
+        if (prior && prior.before_url) beforeUrl = prior.before_url;
+      } catch (_) {}
+    }
+    const uploaded = req.body.image_data || '';
+    if (uploaded) beforeUrl = storeUpload(user._id, uploaded) || beforeUrl;
+
+    let imageUrl = sampleAfter;
+    let source = 'sample';
+    if (REPLICATE_API_TOKEN && beforeUrl.startsWith('/uploads/')) {
+      try {
+        const absolute = `${req.protocol}://${req.get('host')}${beforeUrl}`;
+        imageUrl = await callReplicate(absolute, style, room, prompt);
+        source = 'replicate';
+      } catch (err) {
+        source = 'sample';
+        imageUrl = sampleAfter;
+      }
+    }
+
+    const job = {
+      user_id: user._id,
+      room_type: room,
+      style,
+      prompt,
+      before_url: beforeUrl,
+      image_url: imageUrl,
+      status: 'preview',
+      source,
+      created_at: new Date()
+    };
+    const result = await db.collection('jobs').insertOne(job);
+    await db.collection('events').insertOne({
+      user_id: user._id,
+      event_type: 'stage_preview',
+      property_address: '',
+      metadata: { room, style, job_id: String(result.insertedId) },
+      created_at: new Date()
+    });
+    const fresh = await db.collection('users').findOne({ _id: user._id });
+    res.json({
+      status: 'success',
+      staged_url: imageUrl,
+      before_url: beforeUrl,
+      job_id: String(result.insertedId),
+      source,
+      credits_balance: fresh.credits_balance,
+      user: publicUser(fresh),
+      message: source === 'replicate'
+        ? 'Preview saved to your studio. A download uses one credit.'
+        : 'Preview saved to your studio. A live furniture render needs a Replicate token. A download uses one credit.'
+    });
+  }));
+
+  app.post('/api/studio/download', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    let jobId;
+    try { jobId = new ObjectId(req.body.job_id); } catch (_) {
+      return res.status(400).json({ status: 'error', message: 'Stage a room before downloading it.' });
+    }
+    const job = await db.collection('jobs').findOne({ _id: jobId, user_id: user._id });
+    if (!job) return res.status(404).json({ status: 'error', message: 'That render is not on this account.' });
+
+    let credits = user.credits_balance;
+    if (job.status !== 'downloaded') {
+      if (credits < 1) {
+        return res.status(402).json({ status: 'error', message: 'Add a credit to download this render.', credits_balance: credits });
+      }
+      credits -= 1;
+      await db.collection('users').updateOne({ _id: user._id }, { $inc: { credits_balance: -1 } });
+      await db.collection('jobs').updateOne({ _id: job._id }, { $set: { status: 'downloaded', downloaded_at: new Date() } });
+      await db.collection('events').insertOne({
+        user_id: user._id, event_type: 'download', property_address: '', metadata: { job_id: String(job._id) }, created_at: new Date()
+      });
+    }
+    const fresh = await db.collection('users').findOne({ _id: user._id });
+    res.json({
+      status: 'success',
+      download_url: job.image_url,
+      credits_balance: fresh.credits_balance,
+      user: publicUser(fresh)
+    });
+  }));
+
+  app.post('/api/user/track-event', asyncRoute(async (req, res) => {
+    const user = await authUser(req);
+    if (!user) return res.json({ status: 'success' });
+    await db.collection('events').insertOne({
+      user_id: user._id,
+      event_type: String(req.body.event_type || 'activity').slice(0, 40),
+      property_address: String(req.body.property_address || '').slice(0, 180),
+      metadata: req.body.metadata && typeof req.body.metadata === 'object' ? req.body.metadata : {},
+      created_at: new Date()
+    });
+    res.json({ status: 'success' });
+  }));
+
+  app.post('/api/create-checkout', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const plan = CATALOG[req.body.plan] ? req.body.plan : 'pro';
+    const tier = CATALOG[plan];
+    let price = tier.price;
+    const items = [{ name: tier.name, price, type: tier.type }];
+    if (req.body.include_twilight) {
+      price += 14;
+      items.push({ name: 'Day-to-dusk', price: 14, type: 'addon' });
+    }
+    price = Math.round(price * 100) / 100;
+
+    if (STRIPE_SECRET_KEY) {
+      const host = req.get('host');
+      const proto = req.get('x-forwarded-proto') || req.protocol;
+      const base = `${proto}://${host}`;
+      const params = new URLSearchParams();
+      params.set('mode', tier.type === 'sub' ? 'subscription' : 'payment');
+      params.set('success_url', `${base}/index.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
+      params.set('cancel_url', `${base}/index.html?checkout=cancel#pricing`);
+      params.set('client_reference_id', String(user._id));
+      params.set('metadata[user_id]', String(user._id));
+      params.set('metadata[plan]', plan);
+      params.set('metadata[credits]', String(tier.credits));
+      items.forEach((item, i) => {
+        params.set(`line_items[${i}][quantity]`, '1');
+        params.set(`line_items[${i}][price_data][currency]`, 'usd');
+        params.set(`line_items[${i}][price_data][unit_amount]`, String(Math.round(item.price * 100)));
+        params.set(`line_items[${i}][price_data][product_data][name]`, item.name);
+        if (tier.type === 'sub' && item.type === 'sub') {
+          params.set(`line_items[${i}][price_data][recurring][interval]`, 'month');
+        }
+      });
+      const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+      });
+      const session = await stripeRes.json();
+      if (!stripeRes.ok || !session.url) {
+        return res.status(502).json({ status: 'error', message: 'Card checkout could not be opened.' });
+      }
+      await db.collection('transactions').insertOne({
+        user_id: user._id,
+        plan,
+        amount: price,
+        credits_added: tier.credits,
+        status: 'pending',
+        stripe_session_id: session.id,
+        created_at: new Date()
+      });
+      return res.json({ status: 'success', mode: 'live', checkout_url: session.url, plan, total_due: price });
+    }
+
+    await db.collection('users').updateOne(
+      { _id: user._id },
+      { $inc: { credits_balance: tier.credits }, $set: { plan } }
+    );
+    await db.collection('transactions').insertOne({
+      user_id: user._id,
+      plan,
+      amount: price,
+      credits_added: tier.credits,
+      status: 'completed',
+      stripe_session_id: '',
+      created_at: new Date()
+    });
+    const fresh = await db.collection('users').findOne({ _id: user._id });
+    res.json({
+      status: 'success',
+      mode: 'demo',
+      plan,
+      total_due: price,
+      credits_added: tier.credits,
+      credits_balance: fresh.credits_balance,
+      user: publicUser(fresh),
+      message: 'Credits are on this account. A card is charged only when a Stripe key is connected.'
+    });
+  }));
+
+  app.post('/api/checkout/confirm', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const sessionId = String(req.body.session_id || '');
+    if (!sessionId || !STRIPE_SECRET_KEY) {
+      const fresh = await db.collection('users').findOne({ _id: user._id });
+      return res.json({ status: 'success', user: publicUser(fresh) });
+    }
+    const stripeRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+      headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` }
+    });
+    const session = await stripeRes.json();
+    if (!stripeRes.ok || session.payment_status !== 'paid' || session.metadata?.user_id !== String(user._id)) {
+      return res.status(402).json({ status: 'error', message: 'That payment is not confirmed.' });
+    }
+    const pending = await db.collection('transactions').findOne({ stripe_session_id: sessionId, status: 'pending' });
+    if (pending) {
+      await db.collection('transactions').updateOne({ _id: pending._id }, { $set: { status: 'completed' } });
+      await db.collection('users').updateOne(
+        { _id: user._id },
+        { $inc: { credits_balance: pending.credits_added }, $set: { plan: pending.plan } }
+      );
+    }
+    const fresh = await db.collection('users').findOne({ _id: user._id });
+    res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance });
+  }));
+
+  app.use((err, req, res, next) => {
+    const status = err.status || 500;
+    res.status(status).json({ status: 'error', message: err.message || 'Something went wrong.' });
+  });
+
+  app.listen(PORT, () => {
+    console.log(`VirtualStage listening on http://127.0.0.1:${PORT}`);
+  });
+}
+
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

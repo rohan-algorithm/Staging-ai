@@ -2269,16 +2269,7 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-function initConcierge() {
-  const pill = document.getElementById('floatingConcierge');
-  if (!pill) return;
-  pill.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openLegalModal('mls');
-    }
-  });
-}
+function initConcierge() {}
 
 // --- TOAST ---
 function showToast(message, type = 'success', duration = 3500) {
@@ -2363,10 +2354,16 @@ function initLegalModal() {
 
   // Deep linking
   const hash = window.location.hash.toLowerCase();
-  if (hash === '#mls-guide' || hash === '#mls') openLegalModal('mls');
-  else if (hash === '#terms' || hash === '#tos') openLegalModal('terms');
-  else if (hash === '#privacy') openLegalModal('privacy');
-  else if (hash === '#refund' || hash === '#guarantee') openLegalModal('refund');
+  const legalHash = {
+    '#mls-guide': 'mls-compliance.html',
+    '#mls': 'mls-compliance.html',
+    '#terms': 'terms.html',
+    '#tos': 'terms.html',
+    '#privacy': 'privacy.html',
+    '#refund': 'refund-guarantee.html',
+    '#guarantee': 'refund-guarantee.html'
+  };
+  if (legalHash[hash]) window.location.replace(legalHash[hash]);
 }
 
 // --- STUDIO STATUS SYNC ---

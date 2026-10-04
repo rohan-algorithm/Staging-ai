@@ -217,6 +217,7 @@ async function callReplicate(imageInput, style, room, prompt) {
 }
 
 async function seed() {
+  if (process.env.NODE_ENV === 'production') return;
   const users = db().collection('users');
   const existing = await users.findOne({ email: 'demo@roomgenix.com' });
   if (existing) return;

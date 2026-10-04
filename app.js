@@ -3,6 +3,7 @@
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  hidePublicDemo();
   initNavbar();
   initHamburger();
   initSlider();
@@ -1932,6 +1933,12 @@ function closeLoginModal() {
   if (!modal) return;
   modal.classList.remove('active');
   lockPageScroll(false);
+}
+
+function hidePublicDemo() {
+  const host = location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return;
+  document.querySelectorAll('.demo-quick-auth-btn').forEach(btn => btn.remove());
 }
 
 function fillDemoCredentials() {

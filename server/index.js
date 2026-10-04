@@ -21,6 +21,7 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 
 const CATALOG = {
   single: { name: 'Single Photo', price: 2.99, credits: 1, type: 'pack' },
+  listing: { name: 'Single Listing Pass (8 Photos)', price: 19, credits: 8, type: 'pack' },
   starter: { name: 'Starter Pack (10 Images)', price: 29, credits: 10, type: 'pack' },
   pro: { name: 'Pro Agent Pack (25 Images)', price: 49, credits: 25, type: 'pack' },
   agency_pack: { name: 'Agency Bulk Pack (60 Images)', price: 99, credits: 60, type: 'pack' },

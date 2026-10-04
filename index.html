@@ -949,7 +949,7 @@
           </button>
           <button class="pricing-toggle-btn" id="btnToggleSubs" onclick="switchPricingMode('subs')">
             Monthly Memberships
-            <span class="save-badge">Save up to 30% · MRR</span>
+            <span class="save-badge">Save up to 30%</span>
           </button>
         </div>
       </div>
@@ -957,24 +957,24 @@
       <!-- PAY-AS-YOU-GO PACKS ROW -->
       <div class="pricing-row reveal reveal-delay-2" id="pricingPacksRow">
 
-        <!-- Starter Pack -->
+        <!-- Single Listing Pass -->
         <div class="price-card">
           <div class="price-card-header">
-            <h3>Starter Pack</h3>
-            <p class="price-desc">Try it on your next listing</p>
+            <h3>Single Listing Pass</h3>
+            <p class="price-desc">Stage 1 complete home</p>
           </div>
           <div class="price-amount">
-            <span class="price-dollar">$</span><span class="price-num">29</span>
-            <span class="price-per">for 10 images</span>
+            <span class="price-dollar">$</span><span class="price-num">19</span>
+            <span class="price-per">for 8 images</span>
           </div>
-          <p class="price-unit">$2.90 / image</p>
+          <p class="price-unit">$2.37 / image · bill directly to seller</p>
           <ul class="price-list">
-            <li>10 staged photos in 4K</li>
+            <li><strong>8 staged photos in 4K</strong></li>
             <li>All 6 design styles</li>
             <li>Credits never expire</li>
             <li>MLS compliance watermarks</li>
           </ul>
-          <button class="btn btn-outline full-w" onclick="checkout('starter')">Get Starter pack</button>
+          <button class="btn btn-outline full-w" onclick="checkout('listing')">Get Listing pass</button>
         </div>
 
         <!-- Pro Pack — Featured -->
@@ -1356,6 +1356,14 @@
             <span>Instant 4K unlock — ready to list right now</span>
           </div>
           <span class="modal-opt-price">$2.99</span>
+        </label>
+        <label class="modal-opt" id="tierListing" onclick="selectModalTier('listing')">
+          <input type="radio" name="modalOption" id="optListing" value="listing" aria-label="Single listing pass 8 photos for $19">
+          <div class="modal-opt-body">
+            <strong>Single listing pass — 8 photos</strong>
+            <span>$2.37/image · Stage 1 whole home · Credits never expire</span>
+          </div>
+          <span class="modal-opt-price">$19</span>
         </label>
         <label class="modal-opt" id="tierStarter" onclick="selectModalTier('starter')">
           <input type="radio" name="modalOption" id="optStarter" value="starter" aria-label="Starter pack 10 images for $29">

@@ -274,6 +274,12 @@ function initHamburger() {
     btn.setAttribute('aria-expanded', isOpen);
   });
 
+  drawer.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      closeDrawer();
+    });
+  });
+
   document.addEventListener('click', (e) => {
     if (!drawer.classList.contains('open')) return;
     if (drawer.contains(e.target) || btn.contains(e.target)) return;
@@ -327,12 +333,12 @@ function initSlider() {
     isDraggingSlider = true;
     try { container.setPointerCapture(e.pointerId); } catch (_) {}
     handlePointer(e.clientX);
-    e.preventDefault();
   });
 
   container.addEventListener('pointermove', (e) => {
     if (isDraggingSlider && galleryViewMode === 'slider') {
       handlePointer(e.clientX);
+      if (e.cancelable) e.preventDefault();
     }
   });
 
@@ -1220,10 +1226,11 @@ let selectedTier = 'pro';
 const tierPrices = {
   // Pay-As-You-Go Packs
   single:         { name: 'Single Photo 4K Unlock', price: 2.99, credits: 1, type: 'pack' },
+  listing:        { name: 'Single Listing Pass (8 Photos)', price: 19.00, credits: 8, type: 'pack' },
   starter:        { name: 'Starter Pack (10 Images)', price: 29.00, credits: 10, type: 'pack' },
   pro:            { name: 'Pro Agent Pack (25 Images)', price: 49.00, credits: 25, type: 'pack' },
   agency_pack:    { name: 'Agency Bulk Pack (60 Images)', price: 99.00, credits: 60, type: 'pack' },
-  // Monthly Subscriptions (MRR Engine)
+  // Monthly Memberships
   active_monthly: { name: 'Active Agent Membership (25 Credits/mo)', price: 39.00, credits: 25, type: 'sub' },
   power_monthly:  { name: 'Power Producer Membership (60 Credits/mo)', price: 79.00, credits: 60, type: 'sub' },
   broker_monthly: { name: 'Brokerage Team Membership (150 Credits/mo)', price: 149.00, credits: 150, type: 'sub' }
@@ -1250,8 +1257,9 @@ function switchPricingMode(mode) {
 
 function openPricingModal(context) {
   if (context === 'unlock') selectedTier = 'single';
+  else if (context === 'listing') selectedTier = 'listing';
   else if (context === 'starter') selectedTier = 'starter';
-  else if (context === 'agency_pack') selectedTier = 'pro';
+  else if (context === 'agency_pack') selectedTier = 'agency_pack';
   else if (context === 'active_monthly') selectedTier = 'active_monthly';
   else if (context === 'power_monthly') selectedTier = 'power_monthly';
   else selectedTier = 'pro';
@@ -1271,12 +1279,14 @@ function closePricingModal() {
 function selectModalTier(tier) {
   selectedTier = tierPrices[tier] ? tier : 'pro';
   const singleR = document.getElementById('optSingle');
+  const listingR = document.getElementById('optListing');
   const starterR = document.getElementById('optStarter');
   const proR = document.getElementById('optPro');
   const activeR = document.getElementById('optActiveMonthly');
   const powerR = document.getElementById('optPowerMonthly');
 
   if (singleR) singleR.checked = (selectedTier === 'single');
+  if (listingR) listingR.checked = (selectedTier === 'listing');
   if (starterR) starterR.checked = (selectedTier === 'starter');
   if (proR) proR.checked = (selectedTier === 'pro');
   if (activeR) activeR.checked = (selectedTier === 'active_monthly');
@@ -1727,7 +1737,8 @@ function submitBrokerageTrial() {
 }
 
 function checkout(plan) {
-  if (plan === 'starter') openPricingModal('starter');
+  if (plan === 'listing') openPricingModal('listing');
+  else if (plan === 'starter') openPricingModal('starter');
   else if (plan === 'pro') openPricingModal('pro');
   else if (plan === 'agency_pack') openPricingModal('agency_pack');
   else if (plan === 'active_monthly') openPricingModal('active_monthly');
@@ -2285,6 +2296,7 @@ function formatPlanName(plan) {
   const plans = {
     free_trial: 'Free Trial (3 Credits)',
     single: 'Single Photo Unlock',
+    listing: 'Single Listing Pass',
     starter: 'Starter Pack',
     pro: 'Pro Agent Pack',
     agency_pack: 'Agency Bulk Pack',

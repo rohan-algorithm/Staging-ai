@@ -125,7 +125,7 @@ const roomImages = {
     category: 'Curb Appeal · Exterior Lighting',
     badge: 'Stronger hero photo',
     buyerLine: 'A flat noon exterior is easy to scroll past. Warm windows and a dusk sky make the same house the photo people stop on.',
-    edge: 'A second twilight photo shoot is often $350. This conversion is a $14 add-on on a photo you already have. Brokerage plans include it.',
+    edge: 'A second twilight photo shoot is often $350. This uses one credit on the photo you already have.',
     before: 'assets/twilight_day.jpg',
     after: 'assets/twilight_dusk.jpg',
     daysOnMarket: '6 Days',
@@ -1317,10 +1317,7 @@ function initCheckoutRadios() {
 }
 
 function updateModalTotal() {
-  const base = tierPrices[selectedTier]?.price || 49.00;
-  const twilightBump = document.getElementById('bumpCheckbox')?.checked ? 14.00 : 0;
-  const certBump = document.getElementById('bumpCertCheckbox')?.checked ? 9.00 : 0;
-  const total = base + twilightBump + certBump;
+  const total = tierPrices[selectedTier]?.price || 49.00;
   const totalEl = document.getElementById('modalTotalAmount');
   if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
 }
@@ -1333,15 +1330,13 @@ async function completeDemoOrder() {
     return;
   }
   const total = document.getElementById('modalTotalAmount')?.textContent || '$49.00';
-  const include_twilight = Boolean(document.getElementById('bumpCheckbox')?.checked);
-  const include_cert = Boolean(document.getElementById('bumpCertCheckbox')?.checked);
   const plan = selectedTier;
 
   try {
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ plan, include_twilight, include_cert })
+      body: JSON.stringify({ plan })
     });
     const data = await res.json();
     if (!res.ok || data.status !== 'success') {
@@ -1374,10 +1369,14 @@ async function confirmCheckoutReturn() {
       body: JSON.stringify({ session_id: sessionId || '' })
     });
     const data = await res.json();
-    if (res.ok && data.user) {
-      setCurrentUser(data.user);
+    if (res.ok && data.user) setCurrentUser(data.user);
+    if (res.ok && data.credited) {
       showToast('Payment received. Credits are on this account.', 'success', 5000);
     }
+    params.delete('checkout');
+    params.delete('session_id');
+    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', next);
   } catch (_) {}
 }
 
@@ -1611,7 +1610,7 @@ async function saveProfile(event) {
 const personaProfiles = {
   solo: {
     title: "Stage the vacant rooms before the listing appointment ends",
-    text: "Living room and primary suite are the two photos buyers linger on. Do those first. Twilight is the add-on when the exterior was shot at noon.",
+    text: "Living room and primary suite are the two photos buyers linger on. Do those first. Twilight uses one credit when the exterior was shot at noon.",
     rec: "Start with the living room",
     room: "living"
   },
@@ -1635,7 +1634,7 @@ const personaProfiles = {
   },
   team: {
     title: "Buy the week of listings in one pack",
-    text: "The bulk pack is $99 for 60 photos. Credits stay on the account. Twilight is $14 on top of a photo, not included in the pack.",
+    text: "The bulk pack is $99 for 60 photos. Credits stay on the account. Twilight uses one credit, the same as any other photo.",
     rec: "Look at the office",
     room: "office"
   }
@@ -1831,6 +1830,9 @@ async function initAuth() {
 function renderUserStatus() {
   const user = getCurrentUser();
   const navSlot = document.getElementById('navAuthSlot');
+
+  const logoutBtn = document.getElementById('accountLogout');
+  if (logoutBtn) logoutBtn.hidden = !user;
 
   if (navSlot) {
     if (user) {

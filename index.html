@@ -59,7 +59,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6.7">
+  <link rel="stylesheet" href="style.css?v=6.9">
 </head>
 <body>
 
@@ -77,6 +77,7 @@
         <a href="#comparison">vs. BoxBrownie</a>
         <a href="#chatgpt">vs. ChatGPT</a>
         <a href="#pricing">Pricing</a>
+        <a href="how-to.html">How to use</a>
       </div>
 
       <div class="nav-actions">
@@ -403,7 +404,7 @@
         </div>
         <div class="compare-row">
           <div class="compare-label">Twilight</div>
-          <div class="compare-cell compare-us" data-who="RoomGenixAI">$14</div>
+          <div class="compare-cell compare-us" data-who="RoomGenixAI">1 credit</div>
           <div class="compare-cell" data-who="BoxBrownie">$35 extra</div>
           <div class="compare-cell" data-who="Physical staging">A second shoot</div>
         </div>
@@ -532,7 +533,7 @@
           <p class="price-unit price-unit-savings">$1.65 / image — <strong>save 43%</strong></p>
           <ul class="price-list">
             <li><strong>60 staged photos in 4K</strong></li>
-            <li>Includes Day-to-Dusk twilight</li>
+            <li>Day-to-dusk uses one credit</li>
             <li>Item removal &amp; sky replacement</li>
             <li>Credits never expire</li>
             <li>Wholesale rate for volume</li>
@@ -545,7 +546,7 @@
       <div class="payment-trust-row">
         <div class="payment-trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span>Card checkout when Stripe is connected</span>
+          <span>Card checkout through Dodo Payments</span>
         </div>
         <div class="payment-trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -750,17 +751,6 @@
         </label>
       </div>
 
-      <!-- High-Converting Order Bumps -->
-      <label class="bump-box">
-        <input type="checkbox" id="bumpCheckbox" onchange="updateModalTotal()" aria-label="Add day-to-dusk conversion">
-        <div>
-          <strong>Add Day-to-Dusk Sunset Twilight — $14</strong>
-          <span>Turn daytime exterior shot into dramatic golden-hour twilight</span>
-        </div>
-      </label>
-
-      <input type="checkbox" id="bumpCertCheckbox" hidden>
-
       <div class="modal-total">
         <span>Total</span>
         <span class="modal-total-amount" id="modalTotalAmount">$49.00</span>
@@ -771,7 +761,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Complete secure purchase
       </button>
-      <p class="modal-trust">Credits stay on this account · A card is charged only when Stripe is connected</p>
+      <p class="modal-trust">Credits stay on this account · Card checkout through Dodo Payments</p>
     </div>
   </div>
 
@@ -892,6 +882,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=6.9"></script>
+  <script src="app.js?v=6.12"></script>
 </body>
 </html>

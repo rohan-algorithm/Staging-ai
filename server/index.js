@@ -14,11 +14,44 @@ const multer = require('multer');
 const { ObjectId } = require('mongodb');
 const { connect, getDb } = require('./db');
 const storage = require('./storage');
+const dodo = require('./dodo');
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const ROOT = path.join(__dirname, '..');
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN || '';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const GA_MEASUREMENT_ID = (process.env.GA_MEASUREMENT_ID || '').trim();
+const GA_SNIPPET = /^G-[A-Z0-9]+$/i.test(GA_MEASUREMENT_ID)
+  ? `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', ${JSON.stringify(GA_MEASUREMENT_ID)});
+</script>`
+  : '';
+
+function pageFile(urlPath) {
+  let p = urlPath.split('?')[0];
+  try { p = decodeURIComponent(p); } catch { return null; }
+  if (p === '/' || p === '') return path.join(ROOT, 'index.html');
+  if (p === '/dashboard') return path.join(ROOT, 'dashboard.html');
+  if (!p.endsWith('.html') || p.includes('..') || p.includes('\0')) return null;
+  const file = path.normalize(path.join(ROOT, p));
+  if (file !== path.join(ROOT, path.basename(file))) return null;
+  if (!fs.existsSync(file)) return null;
+  return file;
+}
+
+function sendPage(res, file) {
+  let html = fs.readFileSync(file, 'utf8');
+  if (GA_SNIPPET && !html.includes('googletagmanager.com/gtag/js')) {
+    html = html.replace('</head>', `${GA_SNIPPET}\n</head>`);
+  }
+  res.set('Cache-Control', 'no-cache');
+  res.type('html').send(html);
+}
 
 const CATALOG = {
   single: { name: 'Single Photo', price: 2.99, credits: 1, type: 'pack' },
@@ -289,7 +322,48 @@ async function main() {
   await seed();
   storage.init();
 
+  async function completeDodoPayment(filter, paymentId) {
+    const tx = await db().collection('transactions').findOne(filter);
+    if (!tx) return { found: false };
+    if (tx.status === 'completed') return { found: true, credited: false };
+    const claim = await db().collection('transactions').updateOne(
+      { _id: tx._id, status: 'pending' },
+      { $set: { status: 'completed', dodo_payment_id: paymentId || tx.dodo_payment_id || '' } }
+    );
+    if (claim.modifiedCount !== 1) return { found: true, credited: false };
+    await db().collection('users').updateOne(
+      { _id: tx.user_id },
+      { $inc: { credits_balance: tx.credits_added }, $set: { plan: tx.plan } }
+    );
+    return { found: true, credited: true };
+  }
+
   const app = express();
+  app.post('/api/webhooks/dodo', express.raw({ type: '*/*' }), asyncRoute(async (req, res) => {
+    const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
+    let event;
+    try {
+      event = dodo.verifyWebhook(raw, req.headers);
+    } catch (err) {
+      return res.status(401).json({ status: 'error', message: 'Invalid webhook signature.' });
+    }
+    if (event.type === 'payment.succeeded') {
+      const data = event.data || {};
+      const meta = data.metadata || {};
+      const paymentId = data.payment_id || '';
+      let result = { found: false };
+      if (meta.transaction_id && ObjectId.isValid(meta.transaction_id)) {
+        result = await completeDodoPayment({ _id: new ObjectId(meta.transaction_id) }, paymentId);
+      }
+      if (!result.found && data.checkout_session_id) {
+        result = await completeDodoPayment({ dodo_session_id: data.checkout_session_id }, paymentId);
+      }
+      if (!result.found && (meta.transaction_id || data.checkout_session_id)) {
+        return res.status(409).json({ status: 'error', message: 'Payment is not matched yet.' });
+      }
+    }
+    res.json({ status: 'success' });
+  }));
   app.use(express.json({ limit: '16mb' }));
   app.use(express.urlencoded({ extended: true, limit: '16mb' }));
   app.use((req, res, next) => {
@@ -304,9 +378,15 @@ async function main() {
   });
   app.use('/uploads', express.static(storage.UPLOADS));
   app.get('/dashboard', (_req, res) => {
-    res.sendFile(path.join(ROOT, 'dashboard.html'));
+    sendPage(res, path.join(ROOT, 'dashboard.html'));
   });
   app.get('/dashboard/', (_req, res) => res.redirect('/dashboard'));
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    const file = pageFile(req.path);
+    if (!file) return next();
+    sendPage(res, file);
+  });
   app.use(express.static(ROOT, { index: 'index.html', etag: false, maxAge: 0 }));
 
   app.get('/api/health', (_req, res) => {
@@ -315,7 +395,7 @@ async function main() {
       mongo: true,
       images: storage.configured() ? 'cloudinary' : 'local',
       render: REPLICATE_API_TOKEN ? 'kontext-dev' : 'off',
-      checkout: STRIPE_SECRET_KEY ? 'stripe' : 'demo'
+      checkout: dodo.configured() ? 'dodo' : (STRIPE_SECRET_KEY ? 'stripe' : 'demo')
     });
   });
 
@@ -611,13 +691,49 @@ async function main() {
     if (!user) return;
     const plan = CATALOG[req.body.plan] ? req.body.plan : 'pro';
     const tier = CATALOG[plan];
-    let price = tier.price;
+    const price = tier.price;
     const items = [{ name: tier.name, price, type: tier.type }];
-    if (req.body.include_twilight) {
-      price += 14;
-      items.push({ name: 'Day-to-dusk', price: 14, type: 'addon' });
+
+    if (dodo.configured()) {
+      const host = req.get('host');
+      const proto = req.get('x-forwarded-proto') || req.protocol;
+      const base = `${proto}://${host}`;
+      const referer = req.get('referer') || '';
+      const returnPath = referer.includes('/dashboard') ? '/dashboard?checkout=success' : '/?checkout=success';
+      const txId = new ObjectId();
+      await db().collection('transactions').insertOne({
+        _id: txId,
+        user_id: user._id,
+        plan,
+        amount: price,
+        credits_added: tier.credits,
+        status: 'pending',
+        provider: 'dodo',
+        stripe_session_id: '',
+        dodo_session_id: '',
+        created_at: new Date()
+      });
+      let session;
+      try {
+        session = await dodo.createCheckout({
+          db: db(),
+          catalog: CATALOG,
+          user,
+          plan,
+          price,
+          returnUrl: `${base}${returnPath}`,
+          transactionId: txId
+        });
+      } catch (err) {
+        await db().collection('transactions').deleteOne({ _id: txId, status: 'pending' });
+        throw err;
+      }
+      await db().collection('transactions').updateOne(
+        { _id: txId },
+        { $set: { dodo_session_id: session.session_id } }
+      );
+      return res.json({ status: 'success', mode: 'live', checkout_url: session.checkout_url, plan, total_due: price });
     }
-    price = Math.round(price * 100) / 100;
 
     if (STRIPE_SECRET_KEY) {
       const host = req.get('host');
@@ -661,6 +777,10 @@ async function main() {
       return res.json({ status: 'success', mode: 'live', checkout_url: session.url, plan, total_due: price });
     }
 
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(503).json({ status: 'error', message: 'Card checkout is not connected yet.' });
+    }
+
     await db().collection('users').updateOne(
       { _id: user._id },
       { $inc: { credits_balance: tier.credits }, $set: { plan } }
@@ -683,7 +803,7 @@ async function main() {
       credits_added: tier.credits,
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh),
-      message: 'Credits are on this account. A card is charged only when a Stripe key is connected.'
+      message: 'Credits are on this account. A card is charged only when Dodo Payments is connected.'
     });
   }));
 
@@ -691,6 +811,24 @@ async function main() {
     const user = await requireUser(req, res);
     if (!user) return;
     const sessionId = String(req.body.session_id || '');
+    if (dodo.configured()) {
+      const query = sessionId
+        ? { user_id: user._id, dodo_session_id: sessionId }
+        : { user_id: user._id, provider: 'dodo' };
+      const pending = await db().collection('transactions').findOne(query, { sort: { created_at: -1 } });
+      let credited = false;
+      if (pending && pending.status === 'pending' && pending.dodo_session_id) {
+        const session = await dodo.getSession(pending.dodo_session_id);
+        if (session.payment_status === 'succeeded') {
+          const result = await completeDodoPayment({ _id: pending._id }, session.payment_id || '');
+          credited = result.credited;
+        }
+      } else if (pending && pending.status === 'completed') {
+        credited = true;
+      }
+      const fresh = await db().collection('users').findOne({ _id: user._id });
+      return res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance, credited });
+    }
     if (!sessionId || !STRIPE_SECRET_KEY) {
       const fresh = await db().collection('users').findOne({ _id: user._id });
       return res.json({ status: 'success', user: publicUser(fresh) });
@@ -711,7 +849,7 @@ async function main() {
       );
     }
     const fresh = await db().collection('users').findOne({ _id: user._id });
-    res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance });
+    res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance, credited: true });
   }));
 
   app.use((err, _req, res, _next) => {

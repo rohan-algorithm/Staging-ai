@@ -9,6 +9,7 @@
   padding: 0;
   box-sizing: border-box;
 }
+[hidden] { display: none !important; }
 
 :root {
   /* Colors — warm paper and ink, like a listing packet */
@@ -293,10 +294,18 @@ button { font-family: var(--font); cursor: pointer; }
   font-size: 15px;
   font-weight: 500;
   color: var(--text);
-  padding: 10px 0;
+  padding: 12px 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid var(--border-light);
 }
 .mobile-drawer a:last-of-type { border-bottom: none; }
+.mobile-drawer a.btn {
+  color: #fff;
+  justify-content: center;
+  margin-top: 8px;
+}
 
 /* ==========================================================================
    BUTTONS
@@ -3039,12 +3048,14 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 .modal-opt-body strong { display: block; font-size: 14px; color: var(--text); }
 .modal-opt-body span  { font-size: 12.5px; color: var(--text-muted); }
 .modal-opt-price { font-size: 16px; font-weight: 800; color: var(--text); }
-.val-badge {
+.val-badge,
+.modal-opt-body .val-badge {
   display: inline-block;
   font-size: 10px;
   font-weight: 700;
+  line-height: 1.4;
   padding: 2px 7px;
-  background: var(--green);
+  background: var(--amber);
   color: #fff;
   border-radius: 100px;
   vertical-align: middle;
@@ -3425,7 +3436,7 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
    ========================================================================== */
 @media (max-width: 1080px) {
   .nav-links { display: none; }
-  .hamburger { display: flex; }
+  .hamburger { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
 }
 
 @media (max-width: 860px) {
@@ -3434,7 +3445,7 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .hero-visual { order: 2; max-width: 560px; margin: 0 auto; }
   .hero-cta-row, .hero-trust-row, .hero-proof { justify-content: center; }
   .hero-desc { margin-inline: auto; }
-  .hero-title { font-size: clamp(40px, 11vw, 52px); }
+  .hero-title { font-size: clamp(40px, 11vw, 52px); line-height: 1.05; }
   .features-grid { grid-template-columns: repeat(2, 1fr); }
   .why-chat-grid { grid-template-columns: 1fr; }
   .pricing-row { grid-template-columns: 1fr; max-width: 420px; }
@@ -3445,7 +3456,7 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 
 @media (max-width: 768px) {
   .nav-links, .nav-actions .nav-login { display: none; }
-  .hamburger { display: flex; }
+  .hamburger { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
   .nav-actions { margin-left: auto; }
 
   .hero { padding: 90px 0 56px; }
@@ -3548,13 +3559,23 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
     overflow-x: auto;
     flex-wrap: nowrap;
     justify-content: flex-start;
-    padding-bottom: 6px;
-    gap: 6px;
+    padding-bottom: 4px;
+    gap: 8px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
   }
   .gallery-tabs::-webkit-scrollbar { display: none; }
-  .gallery-tab { flex-shrink: 0; white-space: nowrap; padding: 7px 14px; font-size: 12.5px; }
+  .gallery-tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 13px;
+    scroll-snap-align: start;
+  }
+  .style-chip { min-height: 40px; padding: 8px 14px; }
 
   /* Hero Slider Badges: avoid 3-way collision on mobile */
   .slider-badge-overlay-right { display: none; }
@@ -3580,8 +3601,11 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
   .footer-bottom { flex-direction: column; text-align: center; }
 
-  .sticky-cta { display: block; }
-  body:not(.legal-page-body) { padding-bottom: 72px; }
+  .sticky-cta {
+    display: block;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  body:not(.legal-page-body) { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .vs-toast { bottom: 88px; }
 
   /* Mobile bottom sheet modal experience with full scrolling support */
@@ -3604,13 +3628,24 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .rating-summary { flex-direction: column; gap: 16px; text-align: center; padding: 24px; }
   .payment-trust-row { gap: 14px; }
 
-  .press-bar .container { flex-direction: column; gap: 12px; }
-  .press-logos { gap: 10px; }
+  .press-bar .container { flex-direction: column; gap: 10px; }
+  .press-logos, .gallery-action-trust {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .press-sep, .gallery-action-trust span:empty { display: none; }
+  .gallery-action-trust span:nth-child(even) { display: none; }
+
+  .account-bar { padding: 12px 16px; gap: 10px; }
+  .account-bar-actions { gap: 8px; }
+  .account-bar-actions > a { display: none; }
+  .account-bar .brand-name { font-size: 18px; }
+  .account-bar .nav-user-badge > span:nth-child(2) { display: none; }
 }
 
 @media (max-width: 480px) {
   .container { padding: 0 16px; }
-  .nav-container { padding: 0 16px; gap: 12px; }
+  .nav-container { padding: 0 12px 0 14px; gap: 8px; }
   .hero-cta-row { flex-direction: column; }
   .btn-hero { width: 100%; justify-content: center; }
   .hero-trust-row { flex-direction: column; gap: 10px; align-items: center; }

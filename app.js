@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Staging Photo – Application Logic
+   Roomgenix – Application Logic
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initModalClickOutside();
   initLegalModal();
   initMLSStamp();
-  initRoiCalculator();
   initScrollReveal();
   initAnimatedCounters();
   initStickyCta();
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initCheckoutRadios();
   initConcierge();
   refreshDownloadButton();
-  updateSniperPreview();
 });
 
 // --- SCROLL REVEAL ---
@@ -156,13 +154,13 @@ const roomImages = {
     agentQuote: 'Remove the boxes and leave the real sofa. Buyers should still recognize the room they walk into.'
   },
   patio: {
-    title: 'Luxury Backyard Living & Fire Pit Patio',
-    category: 'Outdoor Living · Resort Lifestyle',
+    title: 'Outdoor living patio',
+    category: 'Outdoor Living · Daylight seating',
     badge: 'Outdoor living',
-    buyerLine: 'A bare slab reads as unused yard. A fire pit and seating show the outdoor room buyers pay for, without renting furniture that sits in the rain.',
+    buyerLine: 'A bare slab reads as unused yard. A sectional, chairs, and a dining table show the outdoor room a buyer is paying for, in the same daylight as the original photo.',
     edge: 'Outdoor rental staging is one of the most expensive rooms to do physically. This shot is still one image credit.',
     before: 'assets/patio_empty.jpg',
-    after: 'assets/patio_staged.jpg',
+    after: 'assets/patio_staged.jpg?v=2',
     daysOnMarket: '7 Days',
     benchmark: 'vs 44 MLS avg',
     overAsking: '+$35,000',
@@ -170,7 +168,7 @@ const roomImages = {
     savings: '$3,200 saved vs outdoor rental',
     agentName: 'Jessica Thornton',
     agentBrokerage: 'The Corcoran Group',
-    agentQuote: 'A bare patio reads as unused yard. Seating shows the outdoor room. You do not have to rent furniture that sits in the weather.'
+    agentQuote: 'A bare patio reads as unused yard. Daylight seating shows the outdoor room. You do not have to rent furniture that sits in the weather.'
   },
   renovation: {
     title: 'Virtual Remodel & Architectural Renovation',
@@ -231,6 +229,7 @@ const stylePresets = {
 };
 
 let currentRoom = 'living';
+let studioJob = 'stage';
 let galleryRoom = 'living';
 let galleryStyle = 'modern';
 let currentStyle = 'modern';
@@ -298,10 +297,10 @@ function initHamburger() {
 // --- HERO BEFORE/AFTER SLIDER (POINTER & TOUCH OPTIMIZED) ---
 function initSlider() {
   const container = document.getElementById('heroSlider');
-  if (!container) return;
+  const handle = document.getElementById('sliderHandle');
+  if (!container || !handle) return;
 
   const before = document.getElementById('beforeImage');
-  const handle = document.getElementById('sliderHandle');
   const hint = document.getElementById('sliderHint');
 
   function updateSlider(pct) {
@@ -438,8 +437,8 @@ function switchHeroRoom(room, btnEl) {
 
   const afterEl = document.getElementById('afterImage');
   const beforeEl = document.getElementById('beforeImage');
-  if (afterEl) afterEl.style.backgroundImage = `url('${data.after}')`;
-  if (beforeEl) beforeEl.style.backgroundImage = `url('${data.before}')`;
+  setGalleryPhoto(beforeEl, data.before, 'Before staging: ' + data.title);
+  setGalleryPhoto(afterEl, data.after, 'After staging: ' + data.title);
 
   // Update tabs
   document.querySelectorAll('.gallery-tab').forEach(t => {
@@ -536,13 +535,7 @@ function syncStyleChoices() {
     if (!show) btn.classList.remove('active');
   });
   if (isDashboardPage()) {
-    if (!keep.includes(currentStyle)) {
-      currentStyle = keep[0];
-      const btn = [...document.querySelectorAll('.style-option')].find(el => styleKeyFrom(el) === currentStyle);
-      if (btn) btn.classList.add('active');
-      const img = document.getElementById('stagedImageDisplay');
-      if (img && !preserveStudioImage && !isUserPhoto) img.src = getStagedImageForRoom(currentRoom, currentStyle);
-    }
+    document.querySelectorAll('.style-option').forEach(btn => { btn.hidden = false; });
     updateStudioStatus();
     updateEditorChrome();
     return;
@@ -589,12 +582,23 @@ function selectGalleryStyle(style, btnEl) {
   paintGalleryStyle();
 }
 
+function setGalleryPhoto(el, url, alt) {
+  if (!el || !url) return;
+  if (el.tagName === 'IMG') {
+    el.src = url;
+    if (alt) el.alt = alt;
+  } else {
+    el.style.backgroundImage = `url('${url}')`;
+  }
+}
+
 function paintGalleryStyle() {
   const afterEl = document.getElementById('afterImage');
   if (!afterEl) return;
   const photo = styleImages[galleryRoom] && styleImages[galleryRoom][galleryStyle];
   const fallback = roomImages[galleryRoom]?.after || 'assets/hero_coastal.jpg';
-  afterEl.style.backgroundImage = `url('${photo || fallback}')`;
+  const title = roomImages[galleryRoom]?.title || 'room';
+  setGalleryPhoto(afterEl, photo || fallback, 'After staging: ' + title);
 }
 
 // --- SHOWCASE BENTO GRID INITIALIZER (POINTER DRAG OPTIMIZED) ---
@@ -687,7 +691,7 @@ function downloadActiveGallerySample() {
   const data = roomImages[galleryRoom] || roomImages['living'];
   const a = document.createElement('a');
   a.href = data.after;
-  a.download = `StagingPhoto_example_${currentRoom}.jpg`;
+  a.download = `Roomgenix_example_${currentRoom}.jpg`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -737,10 +741,10 @@ const styleImages = {
     coastal: 'assets/declutter_after.jpg'
   },
   patio: {
-    modern: 'assets/patio_staged.jpg',
-    scandinavian: 'assets/patio_staged.jpg',
-    farmhouse: 'assets/patio_staged.jpg',
-    coastal: 'assets/patio_staged.jpg'
+    modern: 'assets/patio_staged.jpg?v=2',
+    scandinavian: 'assets/patio_staged.jpg?v=2',
+    farmhouse: 'assets/patio_staged.jpg?v=2',
+    coastal: 'assets/patio_staged.jpg?v=2'
   },
   renovation: {
     modern: 'assets/reno_after.jpg',
@@ -810,24 +814,23 @@ function selectStyle(style, btnEl) {
   const img = document.getElementById('stagedImageDisplay');
   const resultBox = document.getElementById('resultBox');
 
-  if (resultBox) {
+  if (resultBox && !isDashboardPage()) {
     resultBox.className = `canvas-image-wrap style-filter-${style}`;
   }
 
-  if (preserveStudioImage) {
+  if (preserveStudioImage || (isDashboardPage() && ownsStudioPhoto())) {
     updateStudioStatus();
     updateEditorChrome();
     return;
   }
 
   if (isUserPhoto) {
-    if (img && userUploadedPhoto) {
-      img.src = userUploadedPhoto;
-    }
+    if (img && userUploadedPhoto) img.src = userUploadedPhoto;
     isShowingBefore = false;
     const cb = document.getElementById('studioCompareBtn');
     if (cb) cb.classList.remove('active');
     updateStudioStatus();
+    updateEditorChrome();
     showToast(`Applied ${style.charAt(0).toUpperCase() + style.slice(1)} aesthetic to uploaded photo!`);
     return;
   }
@@ -933,24 +936,45 @@ function hasOwnPhoto() {
   return job.source !== 'sample' && !isExampleUrl(job.image_url) && !isExampleUrl(job.before_url);
 }
 
-function selectStudioJob(job, btnEl) {
-  document.querySelectorAll('.job-choice').forEach(button => {
-    button.classList.toggle('active', button === btnEl);
-  });
-  const options = document.getElementById('stageOptions');
-  if (job === 'stage') {
-    if (options) options.hidden = false;
-    if (!['living', 'bedroom', 'dining', 'office'].includes(currentRoom)) {
-      const pill = document.querySelector('.sidebar-pills .pill[data-room="living"]');
-      loadSample('living', pill);
-    } else {
-      syncStyleChoices();
-    }
+function ownsStudioPhoto() {
+  return isUserPhoto || preserveStudioImage || Boolean(userUploadedFile);
+}
+
+function selectStudioRoom(room, btnEl) {
+  if (isDashboardPage() && ownsStudioPhoto()) {
+    currentRoom = room;
+    document.querySelectorAll('.sidebar-pills .pill').forEach(p => {
+      p.classList.toggle('active', p === btnEl || p.getAttribute('data-room') === room);
+    });
+    updateStudioStatus();
+    updateEditorChrome();
     return;
   }
-  if (options) options.hidden = true;
-  const room = job === 'twilight' ? 'twilight' : 'declutter';
-  loadSample(room, null);
+  loadSample(room, btnEl);
+}
+
+function selectStudioJob(job, btnEl) {
+  studioJob = job === 'twilight' || job === 'declutter' ? job : 'stage';
+  document.querySelectorAll('.job-choice').forEach(button => {
+    button.classList.toggle('active', button === btnEl || button.getAttribute('data-job') === studioJob);
+  });
+  const options = document.getElementById('stageOptions');
+  const roomField = document.getElementById('roomOptions');
+  const styleField = document.getElementById('styleOptions');
+  const showRooms = studioJob !== 'twilight';
+  const showStyle = studioJob === 'stage';
+  if (options) options.hidden = !showRooms;
+  if (roomField) roomField.hidden = !showRooms;
+  if (styleField) styleField.hidden = !showStyle;
+  if (studioJob === 'twilight') {
+    currentRoom = 'twilight';
+  } else if (!['living', 'bedroom', 'dining', 'office'].includes(currentRoom)) {
+    const pill = document.querySelector('.sidebar-pills .pill[data-room="living"]');
+    selectStudioRoom('living', pill);
+    return;
+  }
+  updateStudioStatus();
+  updateEditorChrome();
 }
 
 function updateEditorChrome() {
@@ -962,13 +986,16 @@ function updateEditorChrome() {
   const roomName = formatRoomTitle(currentRoom);
   const job = accountJobs.find(item => item.id === currentStudioJob);
   const plainRooms = { living: 'Living room', bedroom: 'Bedroom', dining: 'Dining room', office: 'Office', twilight: 'Twilight', declutter: 'Declutter' };
-  const stagedRoom = ['living', 'bedroom', 'dining', 'office'].includes(currentRoom);
   if (status) {
     if (isDashboardPage()) {
       const plain = plainRooms[currentRoom] || roomName;
+      const jobName = studioJob === 'twilight' ? 'Twilight' : studioJob === 'declutter' ? 'Declutter' : 'Stage';
+      const choice = studioJob === 'twilight'
+        ? 'Twilight'
+        : (studioJob === 'stage' ? `${jobName} · ${plain} · ${styleName}` : `${jobName} · ${plain}`);
       status.textContent = hasOwnPhoto()
-        ? (stagedRoom ? `${plain} · ${styleName}` : plain)
-        : 'This picture is an example. Upload your photo to save a version.';
+        ? choice
+        : `${choice}. This picture is an example until you upload your photo.`;
     } else {
       status.textContent = sourceJobId
         ? `${roomName} · ${styleName}. Save a new version, or download the one on screen.`
@@ -1039,6 +1066,7 @@ function runStagingSimulation() {
   function next() {
     if (i >= steps.length) {
       setTimeout(async () => {
+        if (status) status.textContent = 'Adding furniture to this photo…';
         let stageData = null;
         try { stageData = await livePromise; } catch (_) {}
 
@@ -1199,7 +1227,7 @@ function toggleMLSStamp(isSilent = false) {
 
   if (!isSilent) {
     showToast(
-      isChecked ? '✓ Auto-add MLS watermark enabled ("Virtually Staged · NAR 12-10")' : 'MLS watermark disabled',
+      isChecked ? 'Auto-add MLS watermark enabled ("Virtually Staged · NAR 12-10")' : 'MLS watermark disabled',
       isChecked ? 'success' : 'info',
       3000
     );
@@ -1221,47 +1249,21 @@ function toggleFaq(item) {
   }
 }
 
-// --- PRICING & HYBRID TIERS (PACKS + SUBSCRIPTIONS) ---
+// --- PRICING PACKS ---
 let selectedTier = 'pro';
 const tierPrices = {
-  // Pay-As-You-Go Packs
   single:         { name: 'Single Photo 4K Unlock', price: 2.99, credits: 1, type: 'pack' },
   listing:        { name: 'Single Listing Pass (8 Photos)', price: 19.00, credits: 8, type: 'pack' },
   starter:        { name: 'Starter Pack (10 Images)', price: 29.00, credits: 10, type: 'pack' },
   pro:            { name: 'Pro Agent Pack (25 Images)', price: 49.00, credits: 25, type: 'pack' },
-  agency_pack:    { name: 'Agency Bulk Pack (60 Images)', price: 99.00, credits: 60, type: 'pack' },
-  // Monthly Memberships
-  active_monthly: { name: 'Active Agent Membership (25 Credits/mo)', price: 39.00, credits: 25, type: 'sub' },
-  power_monthly:  { name: 'Power Producer Membership (60 Credits/mo)', price: 79.00, credits: 60, type: 'sub' },
-  broker_monthly: { name: 'Brokerage Team Membership (150 Credits/mo)', price: 149.00, credits: 150, type: 'sub' }
+  agency_pack:    { name: 'Agency Bulk Pack (60 Images)', price: 99.00, credits: 60, type: 'pack' }
 };
-
-function switchPricingMode(mode) {
-  const packsBtn = document.getElementById('btnTogglePacks');
-  const subsBtn = document.getElementById('btnToggleSubs');
-  const packsRow = document.getElementById('pricingPacksRow');
-  const subsRow = document.getElementById('pricingSubsRow');
-
-  if (mode === 'subs') {
-    if (packsBtn) packsBtn.classList.remove('active');
-    if (subsBtn) subsBtn.classList.add('active');
-    if (packsRow) packsRow.style.display = 'none';
-    if (subsRow) subsRow.style.display = 'grid';
-  } else {
-    if (subsBtn) subsBtn.classList.remove('active');
-    if (packsBtn) packsBtn.classList.add('active');
-    if (subsRow) subsRow.style.display = 'none';
-    if (packsRow) packsRow.style.display = 'grid';
-  }
-}
 
 function openPricingModal(context) {
   if (context === 'unlock') selectedTier = 'single';
   else if (context === 'listing') selectedTier = 'listing';
   else if (context === 'starter') selectedTier = 'starter';
   else if (context === 'agency_pack') selectedTier = 'agency_pack';
-  else if (context === 'active_monthly') selectedTier = 'active_monthly';
-  else if (context === 'power_monthly') selectedTier = 'power_monthly';
   else selectedTier = 'pro';
 
   const modal = document.getElementById('checkoutModal');
@@ -1282,15 +1284,11 @@ function selectModalTier(tier) {
   const listingR = document.getElementById('optListing');
   const starterR = document.getElementById('optStarter');
   const proR = document.getElementById('optPro');
-  const activeR = document.getElementById('optActiveMonthly');
-  const powerR = document.getElementById('optPowerMonthly');
 
   if (singleR) singleR.checked = (selectedTier === 'single');
   if (listingR) listingR.checked = (selectedTier === 'listing');
   if (starterR) starterR.checked = (selectedTier === 'starter');
   if (proR) proR.checked = (selectedTier === 'pro');
-  if (activeR) activeR.checked = (selectedTier === 'active_monthly');
-  if (powerR) powerR.checked = (selectedTier === 'power_monthly');
 
   document.querySelectorAll('.modal-opt').forEach(el => el.classList.remove('selected'));
   const activeInput = document.querySelector(`input[name="modalOption"][value="${selectedTier}"]`);
@@ -1417,50 +1415,6 @@ function printCert() {
   window.print();
 }
 
-// --- ZILLOW SNIPER ASSISTANT ENGINE ---
-function updateSniperPreview() {
-  const address = (document.getElementById('sniperAddress')?.value || '742 Evergreen Terrace, Dallas, TX').trim();
-  const agent = (document.getElementById('sniperAgent')?.value || 'Sarah').trim();
-  const style = (document.getElementById('sniperStyle')?.value || 'Scandinavian Luxury');
-  const preview = document.getElementById('sniperEmailPreview');
-  if (!preview) return;
-
-  const origin = window.location.origin || 'https://stagingphoto.com';
-  const emailText = `Subject: Quick staging mockup for ${address}
-
-Hi ${agent},
-
-Noticed your listing on ${address} has been vacant for a few weeks—empty rooms make it tough for buyers on Zillow to visualize scale.
-
-I ran your living room photo through our architectural staging engine in ${style} for you (attached below).
-
-If you'd like to use the full-resolution unwatermarked 4K file for your MLS listing, you can unlock it here for $19:
-👉 ${origin}/#pricing
-
-Hope this helps get it under contract this weekend!
-
-Best,
-[Your Name]
-Staging Photo`;
-
-  preview.textContent = emailText;
-}
-
-function copySniperEmail() {
-  const preview = document.getElementById('sniperEmailPreview');
-  if (!preview) return;
-  const address = (document.getElementById('sniperAddress')?.value || '742 Evergreen Terrace, Dallas, TX').trim();
-  const agent = (document.getElementById('sniperAgent')?.value || 'the agent').trim();
-  const style = (document.getElementById('sniperStyle')?.value || 'Scandinavian Luxury');
-
-  navigator.clipboard.writeText(preview.textContent).then(() => {
-    trackUsageEvent('zillow_snipe', address, { agent, style });
-    showToast(`Cold email copied to clipboard! Paste into your email to ${agent}.`, 'success', 4000);
-  }).catch(() => {
-    showToast('Failed to copy. Please manually highlight and copy.', 'error');
-  });
-}
-
 async function downloadStudioJob(jobId) {
   if (!getAuthToken()) {
     openLoginModal('login');
@@ -1494,7 +1448,7 @@ async function downloadStudioJob(jobId) {
     }
     const a = document.createElement('a');
     a.href = data.download_url;
-    a.download = `StagingPhoto_${currentRoom}_${currentStyle}.jpg`;
+    a.download = `Roomgenix_${currentRoom}_${currentStyle}.jpg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1512,7 +1466,8 @@ function requestStudioDownload() {
 async function requestLiveStage() {
   const prompt = document.getElementById('customPrompt')?.value.trim() || '';
   const form = new FormData();
-  form.append('room_type', currentRoom);
+  form.append('job', studioJob);
+  form.append('room_type', studioJob === 'twilight' ? 'twilight' : studioJob === 'declutter' ? 'declutter' : currentRoom);
   form.append('style', currentStyle);
   form.append('prompt', prompt);
   if (isUserPhoto && userUploadedFile) {
@@ -1678,8 +1633,8 @@ const personaProfiles = {
     room: "renovation"
   },
   team: {
-    title: "One bill, up to five people",
-    text: "The team plan is $149 a month for 150 photos and 5 people. Twilight is $14 on top. The price on this page is the price on the card.",
+    title: "Buy the week of listings in one pack",
+    text: "The bulk pack is $99 for 60 photos. Credits stay on the account. Twilight is $14 on top of a photo, not included in the pack.",
     rec: "Look at the office",
     room: "office"
   }
@@ -1708,42 +1663,11 @@ function selectPersona(role, btnEl) {
   }
 }
 
-// --- BROKERAGE MODAL ENGINE ---
-let selectedTeamSeats = 5;
-
-function openBrokerageModal() {
-  const modal = document.getElementById('brokerageModal');
-  if (!modal) return;
-  modal.classList.add('active');
-  lockPageScroll(true);
-}
-
-function closeBrokerageModal() {
-  const modal = document.getElementById('brokerageModal');
-  if (!modal) return;
-  modal.classList.remove('active');
-  lockPageScroll(false);
-}
-
-function setTeamSeats(seats, btnEl) {
-  selectedTeamSeats = seats;
-  document.querySelectorAll('.team-seat-btn').forEach(b => b.classList.remove('active'));
-  if (btnEl) btnEl.classList.add('active');
-}
-
-function submitBrokerageTrial() {
-  closeBrokerageModal();
-  window.location.href = '/#pricing';
-}
-
 function checkout(plan) {
   if (plan === 'listing') openPricingModal('listing');
   else if (plan === 'starter') openPricingModal('starter');
   else if (plan === 'pro') openPricingModal('pro');
   else if (plan === 'agency_pack') openPricingModal('agency_pack');
-  else if (plan === 'active_monthly') openPricingModal('active_monthly');
-  else if (plan === 'power_monthly') openPricingModal('power_monthly');
-  else if (plan === 'broker_monthly' || plan === 'broker') openBrokerageModal();
   else openPricingModal('pro');
 }
 
@@ -1759,12 +1683,6 @@ function initModalClickOutside() {
   if (certBackdrop) {
     certBackdrop.addEventListener('click', (e) => {
       if (e.target === certBackdrop) closeCertModal();
-    });
-  }
-  const brokerBackdrop = document.getElementById('brokerageModal');
-  if (brokerBackdrop) {
-    brokerBackdrop.addEventListener('click', (e) => {
-      if (e.target === brokerBackdrop) closeBrokerageModal();
     });
   }
   const loginBackdrop = document.getElementById('loginModal');
@@ -2020,7 +1938,7 @@ function fillDemoCredentials() {
   switchAuthTab('login');
   const emailInput = document.getElementById('authEmail');
   const pwdInput = document.getElementById('authPassword');
-  if (emailInput) emailInput.value = 'demo@stagingphoto.com';
+  if (emailInput) emailInput.value = 'demo@roomgenix.com';
   if (pwdInput) pwdInput.value = 'demo1234';
   const form = document.getElementById('authForm');
   if (form) {
@@ -2254,7 +2172,7 @@ async function loadDashboardData() {
             <td style="font-weight: 600;">${formatPlanName(t.plan)}</td>
             <td><span class="badge badge-success">+${t.credits_added} Credits</span></td>
             <td style="font-weight: 700;">$${parseFloat(t.amount).toFixed(2)}</td>
-            <td><span style="color: #10b981; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">✓ Completed</span></td>
+            <td><span style="color: #10b981; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">Completed</span></td>
           </tr>
         `).join('');
       } else {
@@ -2431,7 +2349,6 @@ function initLegalModal() {
     if (e.key === 'Escape') {
       closeLegalModal();
       closePricingModal();
-      closeBrokerageModal();
       closeLoginModal();
       closeDashboardModal();
     }
@@ -2464,7 +2381,10 @@ function updateStudioStatus() {
   const plainRooms = { living: 'Living room', bedroom: 'Bedroom', dining: 'Dining room', office: 'Office', twilight: 'Twilight', declutter: 'Declutter', patio: 'Patio', renovation: 'Remodel' };
   if (isDashboardPage()) {
     const plain = plainRooms[currentRoom] || 'Photo';
-    tag.textContent = isUserPhoto ? `Your photo · ${plain}` : (['living', 'bedroom', 'dining', 'office'].includes(currentRoom) ? `${plain} · ${styleCapitalized}` : plain);
+    const jobName = studioJob === 'twilight' ? 'Twilight' : studioJob === 'declutter' ? 'Declutter' : styleCapitalized;
+    tag.textContent = studioJob === 'stage'
+      ? `${plain} · ${jobName}`
+      : (studioJob === 'twilight' ? 'Twilight' : `Declutter · ${plain}`);
     return;
   }
 
@@ -2482,43 +2402,6 @@ function updateStudioStatus() {
       tag.textContent = `Staged • ${roomName} (${styleCapitalized})`;
     }
   }
-}
-
-// --- ROI SAVINGS CALCULATOR ---
-function initRoiCalculator() {
-  const listingsSlider = document.getElementById('roiListingsSlider');
-  const roomsSlider = document.getElementById('roiRoomsSlider');
-  const listingsVal = document.getElementById('roiListingsVal');
-  const roomsVal = document.getElementById('roiRoomsVal');
-  const netSavingsEl = document.getElementById('roiNetSavings');
-  const physicalCostEl = document.getElementById('roiPhysicalCost');
-  const virtualCostEl = document.getElementById('roiVirtualCost');
-  const daysSavedEl = document.getElementById('roiDaysSaved');
-
-  if (!listingsSlider || !roomsSlider) return;
-
-  function calculate() {
-    const listings = parseInt(listingsSlider.value, 10);
-    const rooms = parseInt(roomsSlider.value, 10);
-
-    if (listingsVal) listingsVal.textContent = `${listings} Listing${listings > 1 ? 's' : ''}`;
-    if (roomsVal) roomsVal.textContent = `${rooms} Room${rooms > 1 ? 's' : ''}`;
-
-    const totalPhotos = listings * rooms;
-    const physicalCost = listings * 2500;
-    const virtualCost = totalPhotos * 1.96;
-    const netSavings = physicalCost - virtualCost;
-    const daysSaved = listings * 5;
-
-    if (netSavingsEl) netSavingsEl.textContent = '$' + Math.round(netSavings).toLocaleString();
-    if (physicalCostEl) physicalCostEl.textContent = '$' + physicalCost.toLocaleString();
-    if (virtualCostEl) virtualCostEl.textContent = '$' + virtualCost.toFixed(2);
-    if (daysSavedEl) daysSavedEl.textContent = `${daysSaved} Days`;
-  }
-
-  listingsSlider.addEventListener('input', calculate);
-  roomsSlider.addEventListener('input', calculate);
-  calculate();
 }
 
 // --- ANIMATED STAT COUNTERS ---
@@ -2556,17 +2439,11 @@ function initAnimatedCounters() {
 function initStickyCta() {
   const cta = document.getElementById('stickyCta');
   if (!cta) return;
-
-  // Hide when user is already in or past the demo section
-  const demo = document.getElementById('demo');
   const pricing = document.getElementById('pricing');
 
   const check = () => {
-    if (!demo) return;
-    const demoTop = demo.getBoundingClientRect().top;
-    const pricingBottom = pricing ? pricing.getBoundingClientRect().bottom : Infinity;
-    // Show sticky CTA only when demo is not yet visible and pricing is below viewport
-    const shouldHide = demoTop < window.innerHeight || pricingBottom < 0;
+    const pricingTop = pricing ? pricing.getBoundingClientRect().top : Infinity;
+    const shouldHide = pricingTop < window.innerHeight * 0.35;
     cta.style.transform = shouldHide ? 'translateY(120%)' : 'translateY(0)';
     cta.style.transition = 'transform .35s cubic-bezier(.215,.61,.355,1)';
   };

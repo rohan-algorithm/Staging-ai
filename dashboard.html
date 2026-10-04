@@ -3,18 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Studio — Staging Photo</title>
-  <link rel="canonical" href="https://stagingphoto.com/dashboard">
+  <title>Studio — Roomgenix</title>
+  <meta name="description" content="Upload a listing photo and add furniture with Roomgenix. The room in the picture stays as shot.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#1c1915">
+  <link rel="canonical" href="https://roomgenix.com/dashboard">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5.6">
+  <link rel="stylesheet" href="style.css?v=5.8">
 </head>
 <body data-page="dashboard">
 
   <header class="account-bar">
-    <a href="/" class="nav-brand" aria-label="Staging Photo home">
-      <span class="brand-name">Staging<span class="brand-ai">Photo</span></span>
+    <a href="/" class="nav-brand" aria-label="Roomgenix home">
+      <img class="brand-mark" src="/assets/logo-mark.png" alt="" width="32" height="32">
+      <span class="brand-name">Roomgenix</span>
     </a>
     <div class="account-bar-actions">
       <a href="/#pricing">Pricing</a>
@@ -59,22 +67,22 @@
         </div>
 
         <div id="stageOptions">
-          <div class="editor-field">
+          <div class="editor-field" id="roomOptions">
+            <span class="editor-label">Room</span>
+            <div class="sidebar-pills editor-choices">
+              <button class="pill active" type="button" data-room="living" onclick="selectStudioRoom('living', this)">Living</button>
+              <button class="pill" type="button" data-room="bedroom" onclick="selectStudioRoom('bedroom', this)">Bedroom</button>
+              <button class="pill" type="button" data-room="dining" onclick="selectStudioRoom('dining', this)">Dining</button>
+              <button class="pill" type="button" data-room="office" onclick="selectStudioRoom('office', this)">Office</button>
+            </div>
+          </div>
+          <div class="editor-field" id="styleOptions">
             <span class="editor-label">Style</span>
             <div class="style-grid editor-choices">
               <button class="style-option active" type="button" onclick="selectStyle('modern', this)"><strong>Modern</strong></button>
               <button class="style-option" type="button" onclick="selectStyle('scandinavian', this)"><strong>Scandinavian</strong></button>
               <button class="style-option" type="button" onclick="selectStyle('farmhouse', this)"><strong>Farmhouse</strong></button>
               <button class="style-option" type="button" onclick="selectStyle('coastal', this)"><strong>Coastal</strong></button>
-            </div>
-          </div>
-          <div class="editor-field">
-            <span class="editor-label">Room</span>
-            <div class="sidebar-pills editor-choices">
-              <button class="pill active" type="button" data-room="living" onclick="loadSample('living', this)">Living</button>
-              <button class="pill" type="button" data-room="bedroom" onclick="loadSample('bedroom', this)">Bedroom</button>
-              <button class="pill" type="button" data-room="dining" onclick="loadSample('dining', this)">Dining</button>
-              <button class="pill" type="button" data-room="office" onclick="loadSample('office', this)">Office</button>
             </div>
           </div>
           <label class="editor-field" for="customPrompt">
@@ -204,16 +212,6 @@
           <div class="modal-opt-body"><strong>Pro pack</strong><span>25 credits</span></div>
           <span class="modal-opt-price">$49</span>
         </label>
-        <label class="modal-opt" id="tierActiveMonthly" onclick="selectModalTier('active_monthly')">
-          <input type="radio" name="modalOption" id="optActiveMonthly" value="active_monthly">
-          <div class="modal-opt-body"><strong>Active Agent</strong><span>25 credits each month</span></div>
-          <span class="modal-opt-price">$39/mo</span>
-        </label>
-        <label class="modal-opt" id="tierPowerMonthly" onclick="selectModalTier('power_monthly')">
-          <input type="radio" name="modalOption" id="optPowerMonthly" value="power_monthly">
-          <div class="modal-opt-body"><strong>Power Producer</strong><span>60 credits each month</span></div>
-          <span class="modal-opt-price">$79/mo</span>
-        </label>
       </div>
       <label class="bump-box">
         <input type="checkbox" id="bumpCheckbox" onchange="updateModalTotal()">
@@ -229,6 +227,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=5.9"></script>
+  <script src="app.js?v=6.7"></script>
 </body>
 </html>

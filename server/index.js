@@ -1,10 +1,11 @@
 /**
- * Staging Photo app server.
+ * Roomgenix app server.
  * Users, credits, studio jobs, and purchases live in MongoDB.
  * Listing photos and staged results are stored on Cloudinary.
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
@@ -24,11 +25,7 @@ const CATALOG = {
   listing: { name: 'Single Listing Pass (8 Photos)', price: 19, credits: 8, type: 'pack' },
   starter: { name: 'Starter Pack (10 Images)', price: 29, credits: 10, type: 'pack' },
   pro: { name: 'Pro Agent Pack (25 Images)', price: 49, credits: 25, type: 'pack' },
-  agency_pack: { name: 'Agency Bulk Pack (60 Images)', price: 99, credits: 60, type: 'pack' },
-  active_monthly: { name: 'Active Agent Membership', price: 39, credits: 25, type: 'sub' },
-  power_monthly: { name: 'Power Producer Membership', price: 79, credits: 60, type: 'sub' },
-  broker_monthly: { name: 'Brokerage Team Membership', price: 149, credits: 150, type: 'sub' },
-  broker: { name: 'Brokerage Team Membership', price: 149, credits: 150, type: 'sub' }
+  agency_pack: { name: 'Agency Bulk Pack (60 Images)', price: 99, credits: 60, type: 'pack' }
 };
 
 const SAMPLE = {
@@ -123,9 +120,63 @@ function userFolder(userId, kind) {
   return `virtualstage/${userId}/${kind || 'uploads'}`;
 }
 
-async function callReplicate(imageUrl, style, room, prompt) {
-  const fullPrompt = `Professional architectural photograph of a ${style} ${room}, furniture only, walls windows and floors unchanged, listing photo. ${prompt || ''}`.trim();
-  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-dev/predictions', {
+const FURNITURE = {
+  modern: 'a low sofa, a light wood table, and one neutral rug',
+  scandinavian: 'a pale wood bed or sofa, linen upholstery, and a simple rug',
+  farmhouse: 'a wood table, soft linen seating, and a woven rug',
+  coastal: 'a light sofa, a natural-fiber rug, and a little pale blue',
+  luxury: 'tailored upholstery, a low table, and a quiet rug',
+  midcentury: 'low wood-leg seating and a single rug'
+};
+
+function editPrompt(style, room, prompt) {
+  const extra = prompt ? ` Also follow this note: ${prompt}` : '';
+  if (room === 'twilight') {
+    return `Turn this daytime exterior into dusk. Add warm light in the windows that already exist and a deep blue sky. Keep the same house, yard, landscaping, and camera.${extra}`;
+  }
+  if (room === 'declutter') {
+    return `Remove boxes, clutter, and laundry from this photo. Keep the real furniture, walls, windows, floors, and camera exactly as they are.${extra}`;
+  }
+  if (room === 'renovation') {
+    return `Refresh the wall color and floor finish so the room looks updated. Keep the same windows, doors, ceiling height, and camera. Do not move walls.${extra}`;
+  }
+  if (room === 'patio') {
+    return `Add a teak sectional, two chairs, a coffee table, and an outdoor rug on this patio. Keep the house, doors, fence, lawn, and daylight exactly the same. No fire and no string lights.${extra}`;
+  }
+  const furniture = FURNITURE[style] || FURNITURE.modern;
+  const roomName = {
+    living: 'living room',
+    bedroom: 'bedroom',
+    dining: 'dining room',
+    office: 'home office'
+  }[room] || 'room';
+  return `Add ${furniture} to this empty ${roomName}. Keep the same walls, windows, doors, floors, ceiling, and camera. Change only the furniture. Match the daylight already in the photo.${extra}`;
+}
+
+function dataUri(buffer, mime) {
+  const type = mime && String(mime).startsWith('image/') ? String(mime).split(';')[0] : 'image/jpeg';
+  return `data:${type};base64,${buffer.toString('base64')}`;
+}
+
+function imageForReplicate(req, before) {
+  if (req.file && req.file.buffer) {
+    return dataUri(req.file.buffer, req.file.mimetype);
+  }
+  const url = before.url || '';
+  if (url.startsWith('/uploads/')) {
+    const name = path.basename(url.split('?')[0]);
+    const filePath = path.join(storage.UPLOADS, name);
+    if (!fs.existsSync(filePath)) throw new Error('The uploaded photo is no longer on this server.');
+    const ext = path.extname(name).toLowerCase();
+    const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+    return dataUri(fs.readFileSync(filePath), mime);
+  }
+  if (url.startsWith('https://')) return url;
+  throw new Error('The photo has to be a public link or a file on this server.');
+}
+
+async function callReplicate(imageInput, style, room, prompt) {
+  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-dev/predictions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
@@ -133,16 +184,28 @@ async function callReplicate(imageUrl, style, room, prompt) {
       Prefer: 'wait'
     },
     body: JSON.stringify({
-      input: { prompt: fullPrompt, image: imageUrl, guidance: 3.5, num_inference_steps: 28 }
+      input: {
+        prompt: editPrompt(style, room, prompt),
+        input_image: imageInput,
+        aspect_ratio: 'match_input_image',
+        output_format: 'jpg',
+        output_quality: 90,
+        guidance: 2.5,
+        num_inference_steps: 28
+      }
     })
   });
   let prediction = await start.json();
-  if (!start.ok) throw new Error(prediction.detail || prediction.error || 'Render service rejected the photo.');
+  if (!start.ok) {
+    const detail = prediction.detail || prediction.error || prediction.title;
+    throw new Error(typeof detail === 'string' ? detail : 'Render service rejected the photo.');
+  }
   const pollUrl = prediction.urls && prediction.urls.get;
-  for (let i = 0; i < 20 && prediction.status !== 'succeeded'; i++) {
+  for (let i = 0; i < 45 && prediction.status !== 'succeeded'; i++) {
     if (prediction.status === 'failed' || prediction.status === 'canceled') {
       throw new Error(prediction.error || 'Render failed.');
     }
+    if (!pollUrl) break;
     await new Promise(r => setTimeout(r, 2000));
     const poll = await fetch(pollUrl, { headers: { Authorization: `Bearer ${REPLICATE_API_TOKEN}` } });
     prediction = await poll.json();
@@ -155,12 +218,12 @@ async function callReplicate(imageUrl, style, room, prompt) {
 
 async function seed() {
   const users = db().collection('users');
-  const existing = await users.findOne({ email: 'demo@stagingphoto.com' });
+  const existing = await users.findOne({ email: 'demo@roomgenix.com' });
   if (existing) return;
   const now = new Date();
   const password_hash = bcrypt.hashSync('demo1234', 10);
   const inserted = await users.insertOne({
-    email: 'demo@stagingphoto.com',
+    email: 'demo@roomgenix.com',
     password_hash,
     name: 'Sarah Jenkins',
     brokerage: 'Keller Williams Beverly Hills',
@@ -220,14 +283,6 @@ async function resolveBeforeImage(req, user) {
   return { url: sampleBefore, public_id: '', provider: 'sample' };
 }
 
-function publicImageUrl(req, url) {
-  if (!url) return '';
-  if (url.startsWith('/uploads/')) {
-    return `${req.protocol}://${req.get('host')}${url}`;
-  }
-  return url;
-}
-
 async function main() {
   await connect();
   await seed();
@@ -258,7 +313,7 @@ async function main() {
       status: 'ok',
       mongo: true,
       images: storage.configured() ? 'cloudinary' : 'local',
-      render: REPLICATE_API_TOKEN ? 'replicate' : 'sample',
+      render: REPLICATE_API_TOKEN ? 'kontext-dev' : 'off',
       checkout: STRIPE_SECRET_KEY ? 'stripe' : 'demo'
     });
   });
@@ -418,7 +473,13 @@ async function main() {
   app.post('/api/stage', acceptImage, asyncRoute(async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    const room = String(req.body.room_type || 'living');
+    const requestedJob = String(req.body.job || '');
+    const roomType = String(req.body.room_type || 'living');
+    const room = requestedJob === 'twilight' || roomType === 'twilight'
+      ? 'twilight'
+      : requestedJob === 'declutter' || roomType === 'declutter'
+        ? 'declutter'
+        : roomType;
     const style = String(req.body.style || 'modern');
     const prompt = String(req.body.prompt || '').slice(0, 500);
     const before = await resolveBeforeImage(req, user);
@@ -430,7 +491,7 @@ async function main() {
         message: 'Upload your photo first. The picture on screen is an example.'
       });
     }
-    if (!REPLICATE_API_TOKEN || !(beforeUrl.startsWith('http') || beforeUrl.startsWith('/uploads/'))) {
+    if (!REPLICATE_API_TOKEN) {
       return res.status(503).json({
         status: 'error',
         message: 'Furniture rendering is not connected on this server yet. Your photo was not replaced with an example.'
@@ -441,14 +502,19 @@ async function main() {
     let imagePublicId = '';
     let source = 'replicate';
     try {
-      const staged = await callReplicate(publicImageUrl(req, beforeUrl), style, room, prompt);
+      const staged = await callReplicate(imageForReplicate(req, before), style, room, prompt);
       const persisted = await storage.persistRemote(staged, { folder: userFolder(user._id, 'staged') });
       imageUrl = persisted.url;
       imagePublicId = persisted.public_id || '';
-    } catch (_) {
+    } catch (err) {
+      const detail = String(err && err.message || '');
+      console.error('Render failed:', detail || err);
+      const billing = /insufficient credit/i.test(detail);
       return res.status(502).json({
         status: 'error',
-        message: 'The render did not finish. Your photo was not replaced with an example.'
+        message: billing
+          ? 'Replicate has no credit left. Add credit in the Replicate billing page, wait a few minutes, then try this photo again.'
+          : 'The render did not finish. Your photo was not replaced with an example.'
       });
     }
 
@@ -520,7 +586,7 @@ async function main() {
     const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({
       status: 'success',
-      download_url: storage.downloadUrl(job.image_url, `StagingPhoto_${job.room_type}_${job.style}`),
+      download_url: storage.downloadUrl(job.image_url, `Roomgenix_${job.room_type}_${job.style}`),
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh)
     });
@@ -557,7 +623,7 @@ async function main() {
       const proto = req.get('x-forwarded-proto') || req.protocol;
       const base = `${proto}://${host}`;
       const params = new URLSearchParams();
-      params.set('mode', tier.type === 'sub' ? 'subscription' : 'payment');
+      params.set('mode', 'payment');
       params.set('success_url', `${base}/index.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
       params.set('cancel_url', `${base}/index.html?checkout=cancel#pricing`);
       params.set('client_reference_id', String(user._id));
@@ -569,9 +635,6 @@ async function main() {
         params.set(`line_items[${i}][price_data][currency]`, 'usd');
         params.set(`line_items[${i}][price_data][unit_amount]`, String(Math.round(item.price * 100)));
         params.set(`line_items[${i}][price_data][product_data][name]`, item.name);
-        if (tier.type === 'sub' && item.type === 'sub') {
-          params.set(`line_items[${i}][price_data][recurring][interval]`, 'month');
-        }
       });
       const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
         method: 'POST',
@@ -659,7 +722,7 @@ async function main() {
   });
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Staging Photo listening on http://127.0.0.1:${PORT}`);
+    console.log(`Roomgenix listening on http://127.0.0.1:${PORT}`);
   });
 }
 

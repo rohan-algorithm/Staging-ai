@@ -48,8 +48,21 @@ function extFromMime(mime) {
   return 'jpg';
 }
 
-async function uploadBuffer(buffer, { folder, mime } = {}) {
-  assertSize(buffer);
+async function uploadBuffer(buffer, { folder, mime, maxBytes } = {}) {
+  if (maxBytes) {
+    if (!buffer || !buffer.length) {
+      const err = new Error('Choose a photo to upload.');
+      err.status = 400;
+      throw err;
+    }
+    if (buffer.length > maxBytes) {
+      const err = new Error('The staged photo was too large to save.');
+      err.status = 400;
+      throw err;
+    }
+  } else {
+    assertSize(buffer);
+  }
   if (configured()) {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream({
@@ -99,6 +112,13 @@ async function persistRemote(url, { folder } = {}) {
       resource_type: 'image'
     });
     return { url: result.secure_url, public_id: result.public_id, provider: 'cloudinary' };
+  }
+  if (/^https?:\/\//i.test(url)) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Could not save the staged photo.');
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const mime = (res.headers.get('content-type') || 'image/jpeg').split(';')[0];
+    return uploadBuffer(buffer, { folder, mime, maxBytes: 25 * 1024 * 1024 });
   }
   return { url, public_id: '', provider: url.startsWith('/uploads/') ? 'local' : 'remote' };
 }

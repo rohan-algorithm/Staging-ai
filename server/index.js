@@ -1,5 +1,5 @@
 /**
- * VirtualStage app server.
+ * Staging Photo app server.
  * Users, credits, studio jobs, and purchases live in MongoDB.
  * Listing photos and staged results are stored on Cloudinary.
  */
@@ -84,6 +84,7 @@ function publicJob(job) {
     before_url: job.before_url,
     prompt: job.prompt || '',
     status: job.status,
+    source: job.source || (String(job.image_url || '').includes('assets/') ? 'sample' : ''),
     created_at: job.created_at
   };
 }
@@ -153,12 +154,12 @@ async function callReplicate(imageUrl, style, room, prompt) {
 
 async function seed() {
   const users = db().collection('users');
-  const existing = await users.findOne({ email: 'demo@virtualstage.ai' });
+  const existing = await users.findOne({ email: 'demo@stagingphoto.com' });
   if (existing) return;
   const now = new Date();
   const password_hash = bcrypt.hashSync('demo1234', 10);
   const inserted = await users.insertOne({
-    email: 'demo@virtualstage.ai',
+    email: 'demo@stagingphoto.com',
     password_hash,
     name: 'Sarah Jenkins',
     brokerage: 'Keller Williams Beverly Hills',
@@ -169,8 +170,8 @@ async function seed() {
   });
   const id = inserted.insertedId;
   await db().collection('jobs').insertMany([
-    { user_id: id, room_type: 'living', style: 'modern', prompt: '', before_url: 'assets/hero_empty.jpg', image_url: 'assets/hero_coastal.jpg', status: 'downloaded', created_at: now },
-    { user_id: id, room_type: 'bedroom', style: 'modern', prompt: '', before_url: 'assets/bedroom_empty.jpg', image_url: 'assets/bedroom_scandinavian.jpg', status: 'preview', created_at: now }
+    { user_id: id, room_type: 'living', style: 'coastal', prompt: '', before_url: 'assets/hero_empty.jpg', image_url: 'assets/hero_coastal.jpg', status: 'preview', source: 'sample', created_at: now },
+    { user_id: id, room_type: 'bedroom', style: 'scandinavian', prompt: '', before_url: 'assets/bedroom_empty.jpg', image_url: 'assets/bedroom_scandinavian.jpg', status: 'preview', source: 'sample', created_at: now }
   ]);
   await db().collection('transactions').insertOne({
     user_id: id, plan: 'starter', amount: 29, credits_added: 10, status: 'completed', stripe_session_id: '', created_at: now
@@ -419,25 +420,35 @@ async function main() {
     const room = String(req.body.room_type || 'living');
     const style = String(req.body.style || 'modern');
     const prompt = String(req.body.prompt || '').slice(0, 500);
-    const [, sampleAfter] = sampleFor(room);
     const before = await resolveBeforeImage(req, user);
-    const beforeUrl = before.url;
+    const beforeUrl = before.url || '';
+    const catalog = before.provider === 'sample' || beforeUrl.startsWith('assets/') || beforeUrl.includes('/assets/');
+    if (catalog) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Upload your photo first. The picture on screen is an example.'
+      });
+    }
+    if (!REPLICATE_API_TOKEN || !(beforeUrl.startsWith('http') || beforeUrl.startsWith('/uploads/'))) {
+      return res.status(503).json({
+        status: 'error',
+        message: 'Furniture rendering is not connected on this server yet. Your photo was not replaced with an example.'
+      });
+    }
 
-    let imageUrl = sampleAfter;
+    let imageUrl = '';
     let imagePublicId = '';
-    let source = 'sample';
-    const canRender = Boolean(REPLICATE_API_TOKEN && (beforeUrl.startsWith('http') || beforeUrl.startsWith('/uploads/')));
-    if (canRender) {
-      try {
-        const staged = await callReplicate(publicImageUrl(req, beforeUrl), style, room, prompt);
-        const persisted = await storage.persistRemote(staged, { folder: userFolder(user._id, 'staged') });
-        imageUrl = persisted.url;
-        imagePublicId = persisted.public_id || '';
-        source = 'replicate';
-      } catch (_) {
-        source = 'sample';
-        imageUrl = sampleAfter;
-      }
+    let source = 'replicate';
+    try {
+      const staged = await callReplicate(publicImageUrl(req, beforeUrl), style, room, prompt);
+      const persisted = await storage.persistRemote(staged, { folder: userFolder(user._id, 'staged') });
+      imageUrl = persisted.url;
+      imagePublicId = persisted.public_id || '';
+    } catch (_) {
+      return res.status(502).json({
+        status: 'error',
+        message: 'The render did not finish. Your photo was not replaced with an example.'
+      });
     }
 
     const job = {
@@ -485,6 +496,10 @@ async function main() {
     }
     const job = await db().collection('jobs').findOne({ _id: jobId, user_id: user._id });
     if (!job) return res.status(404).json({ status: 'error', message: 'That render is not on this account.' });
+    const example = job.source === 'sample' || String(job.image_url || '').includes('assets/');
+    if (example) {
+      return res.status(400).json({ status: 'error', message: 'This is an example photo. Upload your own before downloading.' });
+    }
 
     if (job.status !== 'downloaded') {
       if (user.credits_balance < 1) {
@@ -504,7 +519,7 @@ async function main() {
     const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({
       status: 'success',
-      download_url: storage.downloadUrl(job.image_url, `VirtualStage_${job.room_type}_${job.style}`),
+      download_url: storage.downloadUrl(job.image_url, `StagingPhoto_${job.room_type}_${job.style}`),
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh)
     });
@@ -643,7 +658,7 @@ async function main() {
   });
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`VirtualStage listening on http://127.0.0.1:${PORT}`);
+    console.log(`Staging Photo listening on http://127.0.0.1:${PORT}`);
   });
 }
 

@@ -1,6 +1,6 @@
 /* ==========================================================================
-   VirtualStage AI — Premium Design System v3
-   Competitor-grade: beats VirtualStagingAI.app, BoxBrownie, ApplyDesign.io
+   Staging Photo — Premium Design System v3
+   stagingphoto.com — virtual staging for listing photos
    ========================================================================== */
 
 /* --- Reset & Base --- */
@@ -66,7 +66,15 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-section[id] { scroll-margin-top: 78px; }
+section[id],
+.persona-tab,
+.gallery-tab,
+.persona-selector-wrap,
+.style-chip,
+button,
+a {
+  scroll-margin-top: 88px;
+}
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 body {
@@ -2105,7 +2113,9 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 }
 .studio-download { width: 100%; margin-top: 10px; }
 #stageOptions { display: flex; flex-direction: column; gap: 14px; }
-#stageOptions[hidden] { display: none; }
+#stageOptions[hidden],
+.style-chip[hidden],
+.style-option[hidden] { display: none; }
 .account-history .dashboard-renders-grid {
   display: flex;
   gap: 12px;

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   VirtualStage AI – Application Logic
+   Staging Photo – Application Logic
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,8 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initThumbRibbon();
   initShowcaseCards();
   selectGalleryStyle('modern', null);
+  syncStyleChoices();
   updateStudioStatus();
-  initAuth().then(() => confirmCheckoutReturn());
+  initAuth().then(() => {
+    applyStudioQuery();
+    confirmCheckoutReturn();
+  });
   initCheckoutRadios();
   initConcierge();
   refreshDownloadButton();
@@ -54,7 +58,7 @@ const roomImages = {
     category: 'Vacant Staging · Living Area',
     badge: 'Open-Concept Living',
     buyerLine: 'An empty living room photographs smaller than it is. Furniture shows a buyer that the sofa fits and that the view is the point of the room.',
-    edge: 'One living-room photo at $1.96 replaces a staging visit that usually starts around $2,500.',
+    edge: 'One living-room photo is $2.99. A staging visit usually starts around $2,500.',
     before: 'assets/hero_empty.jpg',
     after: 'assets/hero_coastal.jpg',
     daysOnMarket: '9 Days',
@@ -489,6 +493,7 @@ function switchHeroRoom(room, btnEl) {
 
   galleryRoom = room;
   paintGalleryStyle();
+  syncStyleChoices();
 }
 
 function loadHeroRoom(room) {
@@ -496,7 +501,63 @@ function loadHeroRoom(room) {
 }
 
 // --- GALLERY STYLE PRESET SELECTOR ---
+function uniqueStyles(room) {
+  const order = ['modern', 'scandinavian', 'farmhouse', 'coastal', 'luxury', 'midcentury'];
+  const byPhoto = new Map();
+  for (const style of order) {
+    const photo = styleImages[room] && styleImages[room][style];
+    if (!photo) continue;
+    const named = photo.toLowerCase().includes(style);
+    const current = byPhoto.get(photo);
+    if (!current || (named && !current.named)) byPhoto.set(photo, { style, named });
+  }
+  const kept = [...byPhoto.values()].map(item => item.style);
+  return kept.length ? kept : ['modern'];
+}
+
+function styleKeyFrom(btn) {
+  return btn.getAttribute('data-style') || ((btn.getAttribute('onclick') || '').match(/'([a-z]+)'/) || [])[1] || '';
+}
+
+function syncStyleChoices() {
+  const room = isDashboardPage() ? currentRoom : (galleryRoom || 'living');
+  const keep = uniqueStyles(room);
+  document.querySelectorAll('.style-option, .style-chip').forEach(btn => {
+    const style = styleKeyFrom(btn);
+    if (!style) return;
+    const show = keep.includes(style);
+    btn.hidden = !show;
+    if (!show) btn.classList.remove('active');
+  });
+  if (isDashboardPage()) {
+    if (!keep.includes(currentStyle)) {
+      currentStyle = keep[0];
+      const btn = [...document.querySelectorAll('.style-option')].find(el => styleKeyFrom(el) === currentStyle);
+      if (btn) btn.classList.add('active');
+      const img = document.getElementById('stagedImageDisplay');
+      if (img && !preserveStudioImage && !isUserPhoto) img.src = getStagedImageForRoom(currentRoom, currentStyle);
+    }
+    updateStudioStatus();
+    updateEditorChrome();
+    return;
+  }
+  if (!keep.includes(galleryStyle)) {
+    galleryStyle = keep[0];
+    document.querySelectorAll('.style-chip').forEach(el => el.classList.toggle('active', styleKeyFrom(el) === galleryStyle));
+    paintGalleryStyle();
+    const preset = stylePresets[galleryStyle];
+    const titleEl = document.getElementById('stylePresetTitle');
+    const descEl = document.getElementById('stylePresetDesc');
+    const bestEl = document.getElementById('stylePresetBest');
+    if (preset && titleEl) titleEl.textContent = preset.title;
+    if (preset && descEl) descEl.textContent = preset.desc;
+    if (preset && bestEl) bestEl.textContent = 'Best for: ' + preset.bestFor;
+  }
+}
+
 function selectGalleryStyle(style, btnEl) {
+  const keep = uniqueStyles(galleryRoom || 'living');
+  if (!keep.includes(style)) style = keep[0];
   galleryStyle = style;
   document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('active'));
   const chip = btnEl || document.querySelector(`.style-chip[onclick*="'${style}'"]`);
@@ -595,31 +656,36 @@ function inspectRoomInTheater(room) {
   }
 }
 
+function goToStudio(room) {
+  const job = room === 'twilight' ? 'twilight' : room === 'declutter' ? 'declutter' : 'stage';
+  const params = new URLSearchParams();
+  params.set('job', job);
+  if (['living', 'bedroom', 'dining', 'office'].includes(room)) params.set('room', room);
+  window.location.href = '/dashboard?' + params.toString();
+}
+
 function stageRoomInStudio(room) {
-  scrollToSection('demo');
-  loadSample(room, null);
+  goToStudio(room);
 }
 
 // --- GALLERY ACTION HANDLERS ---
 function stageThisGalleryRoom() {
-  openStudioRoom(galleryRoom);
+  goToStudio(galleryRoom);
 }
 
 function openStudioRoom(room) {
-  scrollToSection('demo');
-  const matchingPill = document.querySelector(`.sidebar-pills .pill[data-room="${room}"]`);
-  loadSample(room, matchingPill || null);
+  goToStudio(room);
 }
 
 function downloadActiveGallerySample() {
   const data = roomImages[galleryRoom] || roomImages['living'];
   const a = document.createElement('a');
   a.href = data.after;
-  a.download = `VirtualStageAI_${currentRoom}_MLS_Compliant.jpg`;
+  a.download = `StagingPhoto_example_${currentRoom}.jpg`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  showToast(`Downloaded MLS sample for ${data.title}`);
+  showToast(`Downloaded the example for ${data.title}`);
 }
 
 // --- PHOTOREALISTIC DESIGN STYLE IMAGE MAP ---
@@ -720,6 +786,7 @@ function loadSample(room, btnEl) {
   if (cb) cb.classList.remove('active');
   updateStudioStatus();
   updateEditorChrome();
+  syncStyleChoices();
 }
 
 // --- STUDIO: STYLE SELECTOR ---
@@ -818,6 +885,46 @@ function isDashboardPage() {
 function showAccount() {
   const app = document.getElementById('accountApp');
   if (app) app.hidden = false;
+  applyStudioQuery();
+}
+
+function applyStudioQuery() {
+  if (!isDashboardPage()) return;
+  const params = new URLSearchParams(window.location.search);
+  const job = params.get('job');
+  const room = params.get('room');
+  if (job === 'declutter' || job === 'twilight') {
+    const btn = document.querySelector(`.job-choice[data-job="${job}"]`);
+    selectStudioJob(job, btn);
+    return;
+  }
+  if (room && ['living', 'bedroom', 'dining', 'office'].includes(room)) {
+    const pill = document.querySelector(`.sidebar-pills .pill[data-room="${room}"]`);
+    loadSample(room, pill);
+  }
+  if (job === 'stage') {
+    const btn = document.querySelector('.job-choice[data-job="stage"]');
+    document.querySelectorAll('.job-choice').forEach(button => {
+      button.classList.toggle('active', button === btn);
+    });
+    const options = document.getElementById('stageOptions');
+    if (options) options.hidden = false;
+    syncStyleChoices();
+  }
+}
+
+function isExampleUrl(url) {
+  const value = String(url || '');
+  return value.startsWith('assets/') || value.includes('/assets/');
+}
+
+function hasOwnPhoto() {
+  if (isUserPhoto && userUploadedFile) return true;
+  if (isUserPhoto && uploadedCloudUrl && !isExampleUrl(uploadedCloudUrl)) return true;
+  if (!sourceJobId) return false;
+  const job = accountJobs.find(item => item.id === sourceJobId);
+  if (!job) return true;
+  return job.source !== 'sample' && !isExampleUrl(job.image_url) && !isExampleUrl(job.before_url);
 }
 
 function selectStudioJob(job, btnEl) {
@@ -830,6 +937,8 @@ function selectStudioJob(job, btnEl) {
     if (!['living', 'bedroom', 'dining', 'office'].includes(currentRoom)) {
       const pill = document.querySelector('.sidebar-pills .pill[data-room="living"]');
       loadSample('living', pill);
+    } else {
+      syncStyleChoices();
     }
     return;
   }
@@ -851,7 +960,9 @@ function updateEditorChrome() {
   if (status) {
     if (isDashboardPage()) {
       const plain = plainRooms[currentRoom] || roomName;
-      status.textContent = stagedRoom ? `${plain} · ${styleName}` : plain;
+      status.textContent = hasOwnPhoto()
+        ? (stagedRoom ? `${plain} · ${styleName}` : plain)
+        : 'This picture is an example. Upload your photo to save a version.';
     } else {
       status.textContent = sourceJobId
         ? `${roomName} · ${styleName}. Save a new version, or download the one on screen.`
@@ -879,6 +990,10 @@ function runStagingSimulation() {
   if (!getAuthToken()) {
     openLoginModal('login');
     showToast('Log in so this render is saved on your account.', 'info');
+    return;
+  }
+  if (!hasOwnPhoto()) {
+    showToast('Upload your photo first. The picture on screen is an example.', 'info', 4000);
     return;
   }
   const overlay = document.getElementById('renderOverlay');
@@ -928,18 +1043,11 @@ function runStagingSimulation() {
           currentStudioJob = stageData.job_id;
           sourceJobId = stageData.job_id;
           preserveStudioImage = true;
+          isUserPhoto = true;
           if (resultBox) resultBox.className = 'canvas-image-wrap style-filter-none';
-          showToast(isDashboardPage() ? 'Saved. Download when you want the file.' : (stageData.message || `${styleCapitalized} preview saved to your studio.`), 'success', 4000);
+          showToast(stageData.message || 'Saved. Download when you want the file.', 'success', 4000);
           if (isDashboardPage()) loadDashboardData();
           else loadStudioHistory();
-        } else if (isUserPhoto) {
-          if (img && userUploadedPhoto) img.src = userUploadedPhoto;
-          if (resultBox) resultBox.className = `canvas-image-wrap style-filter-${currentStyle}`;
-          showToast(`Style preview ready. Furniture rendering needs a Replicate token — your photo is shown with the ${styleCapitalized} treatment.`, 'info', 5000);
-        } else {
-          if (img) img.src = getStagedImageForRoom(currentRoom, currentStyle);
-          if (resultBox) resultBox.className = `canvas-image-wrap style-filter-${currentStyle}`;
-          showToast(`${styleCapitalized} sample ready.`, 'success');
         }
 
         isShowingBefore = false;
@@ -1307,7 +1415,7 @@ function updateSniperPreview() {
   const preview = document.getElementById('sniperEmailPreview');
   if (!preview) return;
 
-  const origin = window.location.origin || 'https://virtualstage.ai';
+  const origin = window.location.origin || 'https://stagingphoto.com';
   const emailText = `Subject: Quick staging mockup for ${address}
 
 Hi ${agent},
@@ -1323,7 +1431,7 @@ Hope this helps get it under contract this weekend!
 
 Best,
 [Your Name]
-VirtualStage.AI`;
+Staging Photo`;
 
   preview.textContent = emailText;
 }
@@ -1376,7 +1484,7 @@ async function downloadStudioJob(jobId) {
     }
     const a = document.createElement('a');
     a.href = data.download_url;
-    a.download = `VirtualStage_${currentRoom}_${currentStyle}.jpg`;
+    a.download = `StagingPhoto_${currentRoom}_${currentStyle}.jpg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1484,14 +1592,15 @@ function openStudioJob(id, url) {
 function editHistoryJob(id) {
   const job = accountJobs.find(item => item.id === id);
   if (!job) return;
+  const example = job.source === 'sample' || isExampleUrl(job.image_url) || isExampleUrl(job.before_url);
   currentStudioJob = job.id;
-  sourceJobId = job.id;
+  sourceJobId = example ? null : job.id;
   preserveStudioImage = true;
   currentRoom = job.room_type || 'living';
   isUserPhoto = false;
   userUploadedPhoto = null;
   userUploadedFile = null;
-  uploadedCloudUrl = job.before_url || '';
+  uploadedCloudUrl = example ? '' : (job.before_url || '');
   document.querySelectorAll('.sidebar-pills .pill').forEach(pill => {
     pill.classList.toggle('active', pill.getAttribute('data-room') === currentRoom);
   });
@@ -1560,7 +1669,7 @@ const personaProfiles = {
   },
   team: {
     title: "One bill, up to five people",
-    text: "The brokerage plan is $99 a month, twilight included. Each download can carry the same disclosure stamp.",
+    text: "The team plan is $149 a month for 150 photos and 5 people. Twilight is $14 on top. The price on this page is the price on the card.",
     rec: "Look at the office",
     room: "office"
   }
@@ -1613,16 +1722,8 @@ function setTeamSeats(seats, btnEl) {
 }
 
 function submitBrokerageTrial() {
-  const name = document.getElementById('brokerTeamName')?.value.trim();
-  const email = document.getElementById('brokerEmail')?.value.trim();
-
-  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showToast('Enter your brokerage name and a valid email.', 'error');
-    return;
-  }
-
   closeBrokerageModal();
-  showToast(`Brokerage trial activated for ${name} (${selectedTeamSeats} seats)! Check ${email} for access.`, 'success', 6000);
+  window.location.href = '/#pricing';
 }
 
 function checkout(plan) {
@@ -1810,8 +1911,12 @@ function renderUserStatus() {
         .substring(0, 2)
         .toUpperCase();
       const firstName = (user.name || 'User').split(' ')[0];
+      const homeLink = isDashboardPage()
+        ? ''
+        : ' onclick="window.location.href=\'/dashboard\'"';
+      const homeLabel = isDashboardPage() ? escapeHtml(firstName) : 'Open your studio';
       navSlot.innerHTML = `
-        <button class="nav-user-badge" id="navUserBadgeBtn" onclick="window.location.href='/dashboard'" title="Open your studio" aria-label="Open your studio">
+        <button class="nav-user-badge" id="navUserBadgeBtn" type="button"${homeLink} title="${homeLabel}" aria-label="${homeLabel}">
           <span class="nav-avatar-circle">${initials}</span>
           <span>${escapeHtml(firstName)}</span>
           <span class="nav-credits-chip">
@@ -1904,7 +2009,7 @@ function fillDemoCredentials() {
   switchAuthTab('login');
   const emailInput = document.getElementById('authEmail');
   const pwdInput = document.getElementById('authPassword');
-  if (emailInput) emailInput.value = 'demo@virtualstage.ai';
+  if (emailInput) emailInput.value = 'demo@stagingphoto.com';
   if (pwdInput) pwdInput.value = 'demo1234';
   const form = document.getElementById('authForm');
   if (form) {
@@ -2110,7 +2215,7 @@ async function loadDashboardData() {
             <img src="${escapeHtml(r.image_url)}" alt="${escapeHtml(r.room_type)} staged" loading="lazy" />
             <div class="render-card-body">
               <div class="render-card-title">${formatRoomTitle(r.room_type)}</div>
-              <div class="render-card-meta">${capitalize(r.style)} · ${r.status === 'downloaded' ? 'Downloaded' : 'Preview'}</div>
+              <div class="render-card-meta">${(r.source === 'sample' || String(r.image_url || '').includes('assets/')) ? 'Example' : `${capitalize(r.style)} · ${r.status === 'downloaded' ? 'Downloaded' : 'Preview'}`}</div>
               <div class="render-card-actions">
                 <button class="btn btn-primary btn-xs" type="button" onclick="event.stopPropagation(); downloadStudioJob('${escapeHtml(r.id)}')">Download</button>
               </div>

@@ -3,34 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VirtualStage — Furniture for empty listing photos</title>
-  <meta name="description" content="Add furniture to an empty listing photo in about 15 seconds. From $1.96 a picture. Walls, windows, and floors stay as photographed. MLS disclosure on the file.">
-  <meta property="og:title" content="VirtualStage — Furniture for empty listing photos">
-  <meta property="og:description" content="Stage a vacant room from the photo you already have. About 15 seconds. From $1.96 a picture. Architecture stays unchanged.">
+  <title>Staging Photo — Virtual staging for listing photos</title>
+  <meta name="description" content="Add furniture to an empty listing photo in about 15 seconds. A photo is $2.99, or $1.96 each on the 25-photo pack. Walls, windows, and floors stay as photographed.">
+  <meta property="og:title" content="Staging Photo — Virtual staging for listing photos">
+  <meta property="og:url" content="https://stagingphoto.com/">
+  <link rel="canonical" href="https://stagingphoto.com/">
+  <meta property="og:description" content="Stage a vacant room from the photo you already have. About 15 seconds. A photo is $2.99, or $1.96 each on the 25-photo pack.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="assets/hero_coastal.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5.4">
+  <link rel="stylesheet" href="style.css?v=5.6">
 </head>
 <body>
 
   <!-- ===== NAVIGATION ===== -->
   <nav class="navbar" id="navbar">
     <div class="nav-container">
-      <a href="#" class="nav-brand" aria-label="VirtualStage AI home">
+      <a href="#" class="nav-brand" aria-label="Staging Photo home">
         <svg class="brand-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
-        <span class="brand-name">VirtualStage<span class="brand-ai">AI</span></span>
+        <span class="brand-name">Staging<span class="brand-ai">Photo</span></span>
       </a>
 
       <div class="nav-links" id="navLinks">
         <a href="#gallery">Gallery</a>
-        <a href="#demo">Try Free</a>
+        <a href="/dashboard">Try Free</a>
         <a href="#comparison">vs. BoxBrownie</a>
         <a href="#calculator">ROI Calculator</a>
         <a href="#pricing">Pricing</a>
@@ -40,7 +42,7 @@
         <div id="navAuthSlot">
           <a href="#account" class="nav-login" id="navLoginBtn" onclick="handleNavAuthClick(); return false;">Log in</a>
         </div>
-        <a href="#demo" class="btn btn-primary btn-nav" onclick="scrollToSection('demo'); return false;">
+        <a href="/dashboard" class="btn btn-primary btn-nav">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload Free
         </a>
@@ -54,12 +56,12 @@
   <!-- Mobile Drawer -->
   <div class="mobile-drawer" id="mobileDrawer" role="navigation" aria-label="Mobile navigation">
     <a href="#gallery">Gallery</a>
-    <a href="#demo">Try Free</a>
+    <a href="/dashboard">Try Free</a>
     <a href="#comparison">vs. BoxBrownie</a>
     <a href="#calculator">ROI Calculator</a>
     <a href="#pricing">Pricing</a>
     <a href="#account" class="drawer-login" onclick="openLoginModal(); return false;">Log in</a>
-    <a href="#demo" class="btn btn-primary" onclick="scrollToSection('demo'); return false;">Upload Image for Free</a>
+    <a href="/dashboard" class="btn btn-primary">Upload Image for Free</a>
   </div>
 
   <!-- ===== HERO — SPLIT LAYOUT ===== -->
@@ -78,11 +80,11 @@
         </h1>
 
         <p class="hero-desc">
-          Upload the photo you already shot. A sofa, a bed, or a table goes in, and the walls, windows, and floors stay as they are. From $1.96 a picture.
+          Upload the photo you already shot. A sofa, a bed, or a table goes in, and the walls, windows, and floors stay as they are. A photo is $2.99, or $1.96 each on the 25-photo pack.
         </p>
 
         <div class="hero-cta-row">
-          <a href="#demo" class="btn btn-primary btn-hero" onclick="scrollToSection('demo'); return false;" id="heroUploadBtn">
+          <a href="/dashboard" class="btn btn-primary btn-hero" id="heroUploadBtn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Upload image for free
           </a>
@@ -356,12 +358,12 @@
           <div class="compete-row" aria-label="Listing value compared with other staging options">
             <article class="compete-card compete-card-us">
               <span class="compete-tag">This listing photo</span>
-              <strong>VirtualStage AI</strong>
-              <div class="compete-price">$1.96 <span>per image</span></div>
+              <strong>Staging Photo</strong>
+              <div class="compete-price">$2.99 <span>one photo</span></div>
               <ul>
                 <li>Ready in 15 seconds</li>
                 <li>Walls, windows, and floor unchanged</li>
-                <li>Switch style in one click</li>
+                <li>Your photo, not a stock example</li>
                 <li>MLS disclosure on the photo</li>
               </ul>
             </article>
@@ -388,7 +390,7 @@
               </ul>
             </article>
           </div>
-          <p class="compete-edge" id="galleryEdge">One living-room photo at $1.96 replaces a staging visit that usually starts around $2,500.</p>
+          <p class="compete-edge" id="galleryEdge">One living-room photo is $2.99. A staging visit usually starts around $2,500.</p>
         </div>
 
         <!-- Aesthetic Preset Studio Panel -->
@@ -398,9 +400,7 @@
             <button class="style-chip active" onclick="selectGalleryStyle('modern', this)">Modern</button>
             <button class="style-chip" onclick="selectGalleryStyle('scandinavian', this)">Scandinavian</button>
             <button class="style-chip" onclick="selectGalleryStyle('farmhouse', this)">Farmhouse</button>
-            <button class="style-chip" onclick="selectGalleryStyle('coastal', this)">Coastal</button>
-            <button class="style-chip" onclick="selectGalleryStyle('luxury', this)">Luxury</button>
-            <button class="style-chip" onclick="selectGalleryStyle('midcentury', this)">Mid-Century</button>
+            <button class="style-chip" data-style="coastal" onclick="selectGalleryStyle('coastal', this)">Coastal</button>
           </div>
           <div class="style-preset-card">
             <div class="style-preset-top">
@@ -445,13 +445,13 @@
             </button>
             <button class="btn btn-secondary btn-gallery-download" onclick="downloadActiveGallerySample()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download MLS 4K sample proof
+              Download this example
             </button>
           </div>
           <div class="gallery-action-trust">
-            <span>🛡️ 100% MLS &amp; NAR 12-10 Compliant</span>
+            <span>Disclosure note on the file</span>
             <span>·</span>
-            <span>⚡ From $1.96/image (Physical is $2,800+)</span>
+            <span>⚡ $2.99 a photo, $1.96 each on the 25-pack</span>
             <span>·</span>
             <span>🔒 30-Day Money-Back Guarantee</span>
           </div>
@@ -670,7 +670,7 @@
           <div class="step-num">1</div>
           <div class="step-body">
             <h3>Upload your photo</h3>
-            <p>Snap with your iPhone or drag any JPG/PNG. We accept up to 35 MB and auto-correct perspective and exposure.</p>
+            <p>Use the JPG or PNG you already shot. Files up to 10 MB.</p>
           </div>
           <div class="step-time">~5 seconds</div>
         </div>
@@ -681,7 +681,7 @@
           <div class="step-num">2</div>
           <div class="step-body">
             <h3>Choose a style</h3>
-            <p>Pick from Modern, Scandinavian, Farmhouse, Coastal, Luxury, and more. Switch instantly with one click.</p>
+            <p>Pick a furniture style that has its own photo of that room. A style is not offered when it would reuse the same picture.</p>
           </div>
           <div class="step-time">~3 seconds</div>
         </div>
@@ -699,127 +699,20 @@
       </div>
 
       <div class="steps-cta">
-        <a href="#demo" class="btn btn-primary btn-lg" onclick="scrollToSection('demo'); return false;">Upload image for free</a>
+        <a href="/dashboard" class="btn btn-primary btn-lg">Upload image for free</a>
         <span class="steps-cta-note">No credit card · Results in 15 seconds</span>
       </div>
     </div>
   </section>
 
-  <!-- ===== INTERACTIVE STUDIO ===== -->
+  <!-- ===== STUDIO HANDOFF ===== -->
   <section class="studio-section" id="demo">
     <div class="container">
-      <div class="section-eyebrow reveal">Studio</div>
-      <h2 class="section-title reveal">Upload a listing photo</h2>
-        <p class="section-subtitle reveal reveal-delay-1">Log in and the render is saved on your account, with the plan and the older versions.</p>
-
-      <div class="studio-layout reveal reveal-delay-2">
-        <div class="studio-sidebar">
-          <div class="sidebar-group">
-            <label class="sidebar-label">Room type</label>
-            <div class="sidebar-pills">
-              <button class="pill active" data-room="living" onclick="loadSample('living', this)">Living</button>
-              <button class="pill" data-room="bedroom" onclick="loadSample('bedroom', this)">Bedroom</button>
-              <button class="pill" data-room="dining" onclick="loadSample('dining', this)">Dining</button>
-              <button class="pill" data-room="office" onclick="loadSample('office', this)">Office</button>
-              <button class="pill" data-room="twilight" onclick="loadSample('twilight', this)">Twilight</button>
-              <button class="pill" data-room="declutter" onclick="loadSample('declutter', this)">Declutter</button>
-              <button class="pill" data-room="patio" onclick="loadSample('patio', this)">Patio</button>
-              <button class="pill" data-room="renovation" onclick="loadSample('renovation', this)">Remodel</button>
-            </div>
-          </div>
-
-          <div class="sidebar-group">
-            <label class="sidebar-label">Design style</label>
-            <div class="style-grid">
-              <button class="style-option active" onclick="selectStyle('modern', this)">
-                <strong>Modern</strong>
-                <span>Clean lines, neutral palette</span>
-              </button>
-              <button class="style-option" onclick="selectStyle('scandinavian', this)">
-                <strong>Scandinavian</strong>
-                <span>Light oak, organic tones</span>
-              </button>
-              <button class="style-option" onclick="selectStyle('farmhouse', this)">
-                <strong>Farmhouse</strong>
-                <span>Warm timber, cozy feel</span>
-              </button>
-              <button class="style-option" onclick="selectStyle('coastal', this)">
-                <strong>Coastal</strong>
-                <span>White, linen, sea tones</span>
-              </button>
-              <button class="style-option" onclick="selectStyle('luxury', this)">
-                <strong>Luxury</strong>
-                <span>Marble, brass, velvet</span>
-              </button>
-              <button class="style-option" onclick="selectStyle('midcentury', this)">
-                <strong>Mid-Century</strong>
-                <span>Walnut, tapered legs</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="sidebar-group">
-            <label class="sidebar-label" for="customPrompt">Custom prompt <span class="sidebar-optional">optional</span></label>
-            <textarea id="customPrompt" class="sidebar-textarea" maxlength="400" placeholder="e.g. walnut desk, linen sofa, keep the window view"></textarea>
-          </div>
-
-          <div class="sidebar-group">
-            <label class="mls-check active" id="mlsCheckLabel">
-              <input type="checkbox" id="mlsComplianceSwitch" checked onchange="toggleMLSStamp()">
-              <span>Auto-add MLS compliance watermark</span>
-            </label>
-          </div>
-
-          <div class="sidebar-group">
-            <div class="upload-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload your own photo">
-              <input type="file" id="fileInput" accept="image/*" style="display:none;" aria-label="Choose image file">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span><strong>Upload your own photo</strong></span>
-              <span class="upload-hint">JPG, PNG, WEBP — up to 35 MB</span>
-            </div>
-          </div>
-
-          <button class="btn btn-primary full-w btn-stage" id="stageButton" onclick="runStagingSimulation()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Stage this room
-          </button>
-          <div class="studio-history" id="studioHistory" hidden>
-            <p class="studio-history-label">Saved on this account</p>
-            <div class="studio-history-row" id="studioHistoryRow"></div>
-          </div>
-        </div>
-
-        <div class="studio-canvas">
-          <div class="canvas-frame" id="previewArea">
-            <div class="render-overlay" id="renderOverlay" aria-live="polite">
-              <div class="spinner"></div>
-              <div class="render-status" id="renderStatus">Analyzing room layout…</div>
-              <div class="render-bar"><div class="render-bar-fill" id="progressFill"></div></div>
-            </div>
-
-            <div class="canvas-image-wrap style-filter-modern" id="resultBox">
-              <div class="studio-status-tag" id="studioStatusTag" aria-live="polite">Staged · Modern</div>
-              <div class="watermark" id="watermark" aria-hidden="true">VIRTUALSTAGE.AI · PREVIEW</div>
-              <div class="mls-stamp visible" id="mlsStamp" aria-label="MLS Compliant">✓ Virtually Staged · NAR 12-10</div>
-              <img id="stagedImageDisplay" src="assets/hero_coastal.jpg" alt="Staged room preview" loading="lazy">
-            </div>
-
-            <div class="canvas-toolbar">
-              <button class="toolbar-btn" id="studioCompareBtn" onclick="toggleStudioCompare()" aria-label="Toggle before/after comparison">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                Before / After
-              </button>
-              <button class="toolbar-btn" id="studioCertBtn" onclick="openCertModal()" aria-label="Official NAR 12-10 MLS Compliance Certificate">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                MLS Certificate
-              </button>
-              <button class="toolbar-btn btn-unlock-cta" onclick="requestStudioDownload()" aria-label="Download full 4K image">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span id="downloadBtnLabel">Download 4K — $2.99</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="section-eyebrow reveal">Your photo</div>
+      <h2 class="section-title reveal">The examples stay on this page</h2>
+      <p class="section-subtitle reveal reveal-delay-1">Upload the picture you shot. Stage, declutter, or twilight happens in your studio, and an example is never saved as your listing photo.</p>
+      <div class="steps-cta">
+        <a href="/dashboard" class="btn btn-primary btn-lg">Upload your photo</a>
       </div>
     </div>
   </section>
@@ -846,8 +739,8 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div class="feature-body">
-            <h3>MLS & NAR compliant</h3>
-            <p>Automatic C2PA metadata and NAR Standard 12-10 disclosure watermarks. Accepted by CRMLS, Bright MLS, Stellar MLS, HAR, FMLS, and all major boards.</p>
+            <h3>Disclosure on the file</h3>
+            <p>The file can carry a virtually staged note. NAR Standard of Practice 12-10 asks for that disclosure. This site does not issue a certificate from NAR or from an MLS.</p>
           </div>
         </div>
         <div class="feature">
@@ -921,7 +814,7 @@
             <tr>
               <th>Features &amp; Benchmarks</th>
               <th class="col-highlight">
-                VirtualStage
+                Staging Photo
               </th>
               <th>BoxBrownie</th>
               <th>Physical Staging</th>
@@ -936,7 +829,7 @@
             </tr>
             <tr>
               <td><strong>Cost Per Image</strong></td>
-              <td class="col-highlight"><span class="check-green">From $1.96</span></td>
+              <td class="col-highlight"><span class="check-green">$2.99, or $1.96 on the 25-pack</span></td>
               <td>$24 – $32 per image</td>
               <td>$2,500 – $4,800 / home</td>
             </tr>
@@ -981,7 +874,7 @@
       </div>
 
       <div class="comparison-cta">
-        <a href="#demo" class="btn btn-primary btn-lg" onclick="scrollToSection('demo'); return false;">Upload a photo</a>
+        <a href="/dashboard" class="btn btn-primary btn-lg">Upload a photo</a>
       </div>
     </div>
   </section>
@@ -1012,7 +905,7 @@
           </div>
 
           <p class="roi-footnote">
-            * Based on NAR average physical staging cost ($2,500/home) vs VirtualStage AI Pro pack ($1.96/image).
+            * Based on NAR average physical staging cost ($2,500/home) vs Staging Photo Pro pack ($1.96/image).
           </p>
         </div>
 
@@ -1027,7 +920,7 @@
               <strong class="roi-stat-bad" id="roiPhysicalCost">$30,000</strong>
             </div>
             <div class="roi-stat-row">
-              <span>VirtualStage AI cost</span>
+              <span>Staging Photo cost</span>
               <strong class="roi-stat-good" id="roiVirtualCost">$94.08</strong>
             </div>
             <div class="roi-stat-row">
@@ -1104,7 +997,7 @@
             <li>All styles + custom prompts</li>
             <li>AI item removal &amp; declutter</li>
             <li>Priority processing queue</li>
-            <li>MLS compliance certification</li>
+            <li>Disclosure note on the file</li>
           </ul>
           <button class="btn btn-primary full-w" onclick="checkout('pro')">Get Pro pack</button>
           <p class="price-guarantee">
@@ -1179,7 +1072,7 @@
             <li><strong>Free Day-to-Dusk conversions</strong></li>
             <li>AI decluttering &amp; virtual remodeling</li>
             <li>Unused credits rollover indefinitely</li>
-            <li>Official MLS compliance certificate</li>
+            <li>Disclosure note on the file</li>
           </ul>
           <button class="btn btn-primary full-w" onclick="checkout('power_monthly')">Get Power Membership</button>
           <p class="price-guarantee">
@@ -1214,7 +1107,7 @@
       <div class="payment-trust-row">
         <div class="payment-trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span>Stripe secured · 256-bit SSL</span>
+          <span>Card checkout when Stripe is connected</span>
         </div>
         <div class="payment-trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1222,7 +1115,7 @@
         </div>
         <div class="payment-trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span>Credits never expire</span>
+          <span>Pack credits stay on the account</span>
         </div>
         <div class="payment-trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -1249,7 +1142,7 @@
         </div>
         <div class="testimonial">
           <h3>Noon exterior</h3>
-          <p>If the hero shot was taken at midday, a dusk version is a $14 add-on. Brokerage plans include it. It is still the same house.</p>
+          <p>If the hero shot was taken at midday, a dusk version is a $14 add-on. It is still the same house.</p>
         </div>
       </div>
     </div>
@@ -1297,7 +1190,7 @@
               <div class="zillow-email-preview" id="sniperEmailPreview"></div>
             </div>
             <div style="font-size: 11.5px; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
-              💡 <strong>Execution Protocol:</strong> Save the vacant living room photo from Zillow, stage it on VirtualStage.ai in 8 seconds, attach the image to your email, and paste the text above.
+              💡 <strong>Execution Protocol:</strong> Save the vacant living room photo from Zillow, stage it on stagingphoto.com in 8 seconds, attach the image to your email, and paste the text above.
             </div>
           </div>
         </div>
@@ -1312,7 +1205,7 @@
         <div class="faq-left">
           <div class="section-eyebrow">FAQ</div>
           <h2 class="faq-title">Common questions</h2>
-          <p>Email <a href="mailto:support@virtualstage.ai" class="faq-email-link">support@virtualstage.ai</a> if something here does not cover it.</p>
+          <p>Email <a href="mailto:support@stagingphoto.com" class="faq-email-link">support@stagingphoto.com</a> if something here does not cover it.</p>
           <a href="#pricing" class="btn btn-primary" onclick="scrollToSection('pricing'); return false;" style="margin-top: 24px; display: inline-flex;">See pricing</a>
         </div>
         <div class="faq-list" id="faqList">
@@ -1321,14 +1214,14 @@
               <span>Is virtual staging compliant with my MLS board?</span>
               <span class="faq-arrow" aria-hidden="true">+</span>
             </button>
-            <div class="faq-a"><p>Yes. VirtualStage AI adheres to NAR Standard of Practice 12-10. We automatically embed disclosure watermarks and C2PA metadata. Compatible with CRMLS, Bright MLS, Stellar MLS, FMLS, HAR, and all major boards nationwide.</p></div>
+            <div class="faq-a"><p>Yes. Staging Photo adheres to NAR Standard of Practice 12-10. We automatically embed disclosure watermarks and C2PA metadata. Compatible with CRMLS, Bright MLS, Stellar MLS, FMLS, HAR, and all major boards nationwide.</p></div>
           </div>
           <div class="faq-item" onclick="toggleFaq(this)">
             <button class="faq-q" aria-expanded="false">
               <span>Can I use smartphone photos?</span>
               <span class="faq-arrow" aria-hidden="true">+</span>
             </button>
-            <div class="faq-a"><p>Absolutely. Upload from any iPhone, Android, or DSLR. Our system auto-corrects perspective and exposure and exports in 4K (3840×2160) at 300 DPI — Zillow and MLS ready.</p></div>
+            <div class="faq-a"><p>Upload a JPG, PNG, or WEBP up to 10 MB from a phone or a camera. The download is the staged file with a virtually staged note.</p></div>
           </div>
           <div class="faq-item" onclick="toggleFaq(this)">
             <button class="faq-q" aria-expanded="false">
@@ -1342,7 +1235,7 @@
               <span>What if my client doesn't like the furniture style?</span>
               <span class="faq-arrow" aria-hidden="true">+</span>
             </button>
-            <div class="faq-a"><p>Switch styles instantly with one click — Modern, Scandinavian, Farmhouse, Coastal, Luxury, and Mid-Century. No extra charge, no re-upload. If you're still unsatisfied, our 30-day guarantee covers you completely.</p></div>
+            <div class="faq-a"><p>A style is shown only when that room has its own photo for it. Pack credits stay on the account. Unused credits can be refunded within 30 days of the purchase.</p></div>
           </div>
           <div class="faq-item" onclick="toggleFaq(this)">
             <button class="faq-q" aria-expanded="false">
@@ -1371,7 +1264,7 @@
         <h2 class="reveal">Try it on the next<br>vacant room</h2>
         <p class="reveal reveal-delay-1">The preview is free. A download uses a credit, from $2.99 for one photo.</p>
         <div class="final-cta-buttons reveal reveal-delay-2">
-          <a href="#demo" class="btn btn-white btn-lg" onclick="scrollToSection('demo'); return false;">
+          <a href="/dashboard" class="btn btn-white btn-lg">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Upload image for free
           </a>
@@ -1394,18 +1287,18 @@
   <footer class="footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <a href="#" class="nav-brand footer-logo" aria-label="VirtualStage AI">
+        <a href="#" class="nav-brand footer-logo" aria-label="Staging Photo">
           <svg class="brand-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <span class="brand-name">VirtualStage<span class="brand-ai">AI</span></span>
+          <span class="brand-name">Staging<span class="brand-ai">Photo</span></span>
         </a>
         <p>Furniture for empty listing photos. The architecture in the picture stays as shot.</p>
-        <p class="footer-contact">support@virtualstage.ai</p>
+        <p class="footer-contact">support@stagingphoto.com</p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
-        <a href="#demo">Virtual Staging</a>
-        <a href="#demo" onclick="openStudioRoom('declutter'); return false;">Item Removal</a>
-        <a href="#demo" onclick="openStudioRoom('twilight'); return false;">Day to Dusk</a>
+        <a href="/dashboard">Virtual Staging</a>
+        <a href="/dashboard" onclick="openStudioRoom('declutter'); return false;">Item Removal</a>
+        <a href="/dashboard" onclick="openStudioRoom('twilight'); return false;">Day to Dusk</a>
         <a href="#pricing">Pricing</a>
       </div>
       <div class="footer-col">
@@ -1424,7 +1317,7 @@
       </div>
     </div>
     <div class="container footer-bottom">
-      <p>© 2026 VirtualStage AI Inc. All rights reserved. Not affiliated with any MLS board.</p>
+      <p>© 2026 Staging Photo. All rights reserved. Not affiliated with any MLS board.</p>
       <div class="footer-badges">
         <span class="footer-badge">NAR 12-10</span>
         <span class="footer-badge">SOC 2</span>
@@ -1441,7 +1334,7 @@
         <strong>Furniture for the empty photo</strong>
         <span>From $1.96 on Pro</span>
       </div>
-      <a href="#demo" class="btn btn-primary btn-sm" onclick="scrollToSection('demo'); return false;">Upload Free</a>
+      <a href="/dashboard" class="btn btn-primary btn-sm">Upload Free</a>
     </div>
   </div>
 
@@ -1507,13 +1400,7 @@
         </div>
       </label>
 
-      <label class="bump-box">
-        <input type="checkbox" id="bumpCertCheckbox" onchange="updateModalTotal()" aria-label="Add official MLS compliance certificate and social promo kit">
-        <div>
-          <strong>Add Official MLS Certificate &amp; Social Flyer Kit — $9 <span class="bump-tag">NAR 12-10</span></strong>
-          <span>Signed architectural integrity certificate (PDF) + ready-to-post Instagram/Facebook flyer</span>
-        </div>
-      </label>
+      <input type="checkbox" id="bumpCertCheckbox" hidden>
 
       <div class="modal-total">
         <span>Total</span>
@@ -1539,12 +1426,12 @@
       <div class="cert-sheet" id="printableCert">
         <div class="cert-header">
           <div class="cert-title-group">
-            <h3 id="certModalTitle">Certificate of Architectural Integrity &amp; MLS Compliance</h3>
-            <p>National Association of Realtors® (NAR) Code of Ethics Standard of Practice 12-10</p>
+            <h3 id="certModalTitle">Disclosure note for a virtually staged photo</h3>
+            <p>A reminder of NAR Standard of Practice 12-10. Not a certificate issued by NAR or by an MLS.</p>
           </div>
           <div class="cert-seal">
             <span>NAR 12-10</span>
-            <span style="font-size: 7px; color: #fff;">VERIFIED</span>
+            <span style="font-size: 7px; color: #fff;">NOTE</span>
           </div>
         </div>
 
@@ -1555,7 +1442,7 @@
           </div>
           <div class="cert-field">
             <label>Verification Token &amp; MLS Timestamp</label>
-            <span id="certTimestamp">VS-MLS-2026-94812 · Live Certified</span>
+            <span id="certTimestamp">Not a board verification number</span>
           </div>
           <div class="cert-field">
             <label>Transformation Type</label>
@@ -1569,7 +1456,7 @@
 
         <div class="cert-body-clauses">
           <p><strong>Affirmation of Architectural Integrity:</strong></p>
-          <p>This certifies that the digital virtual staging applied to <strong id="certAddressText">1042 Ocean Avenue, Santa Monica, CA</strong> strictly complies with NAR Standard 12-10. VirtualStage AI certifies that:</p>
+          <p>This certifies that the digital virtual staging applied to <strong id="certAddressText">1042 Ocean Avenue, Santa Monica, CA</strong> strictly complies with NAR Standard 12-10. Staging Photo certifies that:</p>
           <ul>
             <li><strong>Permanent Structures Preserved:</strong> Load-bearing walls, window positions, ceiling heights, doorways, and existing fixtures were NOT moved, resized, or digitally removed.</li>
             <li><strong>Permissible Staging:</strong> Digital additions are restricted entirely to movable furniture, rugs, wall art, lamps, and decorative interior objects.</li>
@@ -1579,7 +1466,7 @@
 
         <div class="cert-footer-row">
           <div>
-            <strong>VirtualStage AI Compliance Directorate</strong><br>
+            <strong>Staging Photo Compliance Directorate</strong><br>
             <span>Cryptographic C2PA Manifest ID: VS-NAR-84920-VERIFIED</span>
           </div>
           <div style="text-align: right;">
@@ -1622,26 +1509,26 @@
           <h2 id="legalModalTitle">MLS Compliance &amp; Ethics Guide</h2>
           <p class="legal-meta">Updated September 2026 · NAR Standard 12-10</p>
           <div class="legal-body">
-            <div class="legal-note note-green"><strong>Virtual staging is 100% legal and approved</strong> under NAR Code of Ethics Standard 12-10, provided it represents a "true and accurate picture" of the property.</div>
+            <div class="legal-note note-green"><strong>Put a virtually staged note on the file.</strong> NAR Standard of Practice 12-10 asks for a disclosure when a photo was altered. This page is not a certificate from NAR or from any MLS.</div>
             <h3>What's allowed</h3>
             <ul><li>Adding furniture, rugs, art to vacant rooms</li><li>Removing tenant clutter, boxes, unmade beds</li><li>Day-to-dusk exterior conversion</li><li>Outdoor patio staging</li></ul>
             <h3>What requires a disclaimer</h3>
             <ul><li>Virtual wall repainting</li><li>Virtual flooring replacement</li><li>Repurposing rooms (bedroom as office)</li></ul>
             <h3>What's prohibited</h3>
             <ul><li>Removing power lines, hydrants, utilities</li><li>Hiding water damage, mold, cracks</li><li>Falsifying views or surroundings</li><li>Distorting room dimensions</li></ul>
-            <h3>Supported MLS boards</h3>
-            <p>CRMLS, Bright MLS, Stellar MLS, FMLS, HAR, and all boards accepting NAR 12-10 disclosures.</p>
+            <h3>What this page is not</h3>
+            <p>It is not an approval letter from CRMLS, Bright MLS, Stellar MLS, FMLS, HAR, or any other board.</p>
           </div>
         </div>
         <!-- Terms -->
         <div class="legal-tab-pane" id="tabPane_terms">
           <h2>Terms of Service</h2>
-          <p class="legal-meta">Effective September 30, 2026 · VirtualStage AI Inc.</p>
+          <p class="legal-meta">Effective September 30, 2026 · Staging Photo</p>
           <div class="legal-body">
             <div class="legal-note note-blue"><strong>You own your photos.</strong> We grant you an irrevocable, perpetual, worldwide commercial license to all rendered images.</div>
             <h3>License &amp; ownership</h3><p>You retain 100% copyright of uploaded photos. Rendered images are licensed to you for unrestricted commercial use across MLS, Zillow, Redfin, social media, and print.</p>
             <h3>Permitted use</h3><p>Real estate marketing, architectural visualization, and property presentation only. Do not use to conceal structural damage or violate Fair Housing laws.</p>
-            <h3>Pricing</h3><p>Single unlocks: $2.99. Starter: $29/10 images. Pro Pack: $49/25 images. Brokerage: $99/month unlimited. Payments via Stripe when connected. Pack credits never expire.</p>
+            <h3>Pricing</h3><p>One photo is $2.99. Starter is $29 for 10. Pro is $49 for 25, which is $1.96 each. The team plan is $149 a month for 150 photos and 5 people. A card is charged only when Stripe is connected. Pack credits stay on the account.</p>
             <h3>Guarantee</h3><p>30-day unconditional money-back guarantee on all purchases.</p>
             <h3>Liability</h3><p>Limited to fees paid in the preceding 12 months. Disputes under Delaware law via AAA arbitration.</p>
           </div>
@@ -1655,7 +1542,7 @@
             <h3>What we collect</h3><p>Name, email, brokerage, and uploaded images — strictly for staging. Stripe handles payments (PCI-DSS Level 1).</p>
             <h3>Security</h3><ul><li>TLS 1.3 in-transit encryption</li><li>AES-256 at-rest encryption</li><li>Ephemeral GPU processing containers</li></ul>
             <h3>Data retention</h3><p>Uploads auto-purged after 30 days. Instant deletion available via dashboard.</p>
-            <h3>Your rights</h3><p>We don't sell your data. Access, export, or delete anytime via <a href="mailto:privacy@virtualstage.ai">privacy@virtualstage.ai</a>.</p>
+            <h3>Your rights</h3><p>We don't sell your data. Access, export, or delete anytime via <a href="mailto:privacy@stagingphoto.com">privacy@stagingphoto.com</a>.</p>
           </div>
         </div>
         <!-- Refund -->
@@ -1667,7 +1554,7 @@
             <h3>What's covered</h3>
             <ul><li>Seller doesn't like the result → full refund</li><li>MLS flags a photo → reformat in 2 hours or refund + 5 credits</li><li>Quality issue → free re-stage or instant refund</li></ul>
             <h3>How to request</h3>
-            <ol><li>Click "Refund" in your Stripe receipt email</li><li>Or use the refund button in your dashboard</li><li>Or email <a href="mailto:support@virtualstage.ai">support@virtualstage.ai</a></li></ol>
+            <ol><li>Click "Refund" in your Stripe receipt email</li><li>Or use the refund button in your dashboard</li><li>Or email <a href="mailto:support@stagingphoto.com">support@stagingphoto.com</a></li></ol>
             <p>Approved within 4 hours. Funds returned in 2–4 business days.</p>
           </div>
         </div>
@@ -1680,8 +1567,8 @@
     <div class="modal-box">
       <div class="modal-head">
         <div>
-          <h2 id="brokerageModalTitle">Start 7-Day Brokerage Trial</h2>
-          <p class="modal-sub">Centralized billing, unlimited 4K renders, and automated MLS compliance for your team.</p>
+          <h2 id="brokerageModalTitle">Team plan</h2>
+          <p class="modal-sub">$149 a month for 150 photos and 5 people. Twilight is a $14 add-on, not included. Self-serve checkout for this plan is not open yet.</p>
         </div>
         <button class="modal-x" onclick="closeBrokerageModal()" aria-label="Close modal">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1716,13 +1603,13 @@
 
         <div class="checkout-guarantee">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Includes Full Broker Indemnity Protection &amp; Centralized Stripe Billing</span>
+          <span>Same price as the brokerage card. No separate trial and no indemnity policy.</span>
         </div>
 
         <button class="btn btn-primary full-w btn-pay" onclick="submitBrokerageTrial()">
-          Activate 7-Day Free Team Trial →
+          See the $149 team plan
         </button>
-        <p class="pay-note">Zero charge today. Cancel anytime with 1 click from your admin dashboard.</p>
+        <p class="pay-note">This form does not create an account or start a trial.</p>
       </div>
     </div>
   </div>
@@ -1889,6 +1776,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=5.2"></script>
+  <script src="app.js?v=5.9"></script>
 </body>
 </html>

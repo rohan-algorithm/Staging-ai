@@ -1943,9 +1943,9 @@ function switchAuthTab(tab) {
     signupTab?.classList.add('active');
     if (nameGrp) nameGrp.style.display = 'block';
     if (brokerGrp) brokerGrp.style.display = 'block';
-    if (submitBtn) submitBtn.textContent = 'Create Free Account (3 Credits) →';
+    if (submitBtn) submitBtn.textContent = 'Create account';
     if (titleEl) titleEl.textContent = 'Create your account';
-    if (subEl) subEl.textContent = 'Get 3 free 4K staging credits immediately. No credit card required.';
+    if (subEl) subEl.textContent = 'Generating a photo uses one credit. A new account starts with none.';
     document.getElementById('authName')?.setAttribute('required', 'required');
   } else {
     loginTab?.classList.add('active');
@@ -2054,7 +2054,7 @@ async function handleAuthSubmit(event) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = submitBtn.dataset.origText || (authMode === 'signup' ? 'Create Free Account' : 'Log In');
+      submitBtn.textContent = submitBtn.dataset.origText || (authMode === 'signup' ? 'Create account' : 'Log In');
     }
   }
 }
@@ -2345,7 +2345,7 @@ async function trackUsageEvent(eventType, propertyAddress = '', metadata = {}) {
 function formatPlanName(plan) {
   const plans = {
     none: 'No pack yet',
-    free_trial: 'Free Trial (3 Credits)',
+    free_trial: 'Account',
     single: 'Single Photo Unlock',
     listing: 'Single Listing Pass',
     starter: 'Starter Pack',

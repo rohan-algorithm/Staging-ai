@@ -154,13 +154,36 @@ function userFolder(userId, kind) {
   return `virtualstage/${userId}/${kind || 'uploads'}`;
 }
 
-const FURNITURE = {
-  modern: 'a low sofa, a light wood table, and one neutral rug',
-  scandinavian: 'a pale wood bed or sofa, linen upholstery, and a simple rug',
-  farmhouse: 'a wood table, soft linen seating, and a woven rug',
-  coastal: 'a light sofa, a natural-fiber rug, and a little pale blue',
-  luxury: 'tailored upholstery, a low table, and a quiet rug',
-  midcentury: 'low wood-leg seating and a single rug'
+const ROOM_FURNITURE = {
+  living: {
+    name: 'living room',
+    pieces: 'a sofa, a coffee table, and one rug',
+    avoid: 'Do not add a bed or a dining table.'
+  },
+  bedroom: {
+    name: 'bedroom',
+    pieces: 'a bed, two nightstands, and a small rug',
+    avoid: 'Do not add a sofa or a dining table.'
+  },
+  dining: {
+    name: 'dining room',
+    pieces: 'a dining table and dining chairs, with a rug under the table',
+    avoid: 'Do not add a sofa, a bed, or a coffee table.'
+  },
+  office: {
+    name: 'home office',
+    pieces: 'a desk, a desk chair, and a small rug',
+    avoid: 'Do not add a sofa, a bed, or a dining table.'
+  }
+};
+
+const STYLE_LOOK = {
+  modern: 'a modern look, with low profiles, light wood, and neutral fabric',
+  scandinavian: 'a Scandinavian look, with pale wood, linen, and simple shapes',
+  farmhouse: 'a farmhouse look, with warm wood, soft linen, and a woven texture',
+  coastal: 'a coastal look, with light fabric, a natural-fiber rug, and a little pale blue',
+  luxury: 'a quiet luxury look, with tailored upholstery and a low profile',
+  midcentury: 'a mid-century look, with wood legs and simple shapes'
 };
 
 function editPrompt(style, room, prompt) {
@@ -177,14 +200,13 @@ function editPrompt(style, room, prompt) {
   if (room === 'patio') {
     return `Add a teak sectional, two chairs, a coffee table, and an outdoor rug on this patio. Keep the house, doors, fence, lawn, and daylight exactly the same. No fire and no string lights.${extra}`;
   }
-  const furniture = FURNITURE[style] || FURNITURE.modern;
-  const roomName = {
-    living: 'living room',
-    bedroom: 'bedroom',
-    dining: 'dining room',
-    office: 'home office'
-  }[room] || 'room';
-  return `Add ${furniture} to this empty ${roomName}. Keep the same walls, windows, doors, floors, ceiling, and camera. Change only the furniture. Match the daylight already in the photo.${extra}`;
+  const furniture = ROOM_FURNITURE[room] || {
+    name: 'room',
+    pieces: 'furniture that belongs in this room',
+    avoid: 'Do not turn it into a different kind of room.'
+  };
+  const look = STYLE_LOOK[style] || STYLE_LOOK.modern;
+  return `Add ${furniture.pieces} to this empty ${furniture.name}. Use ${look}. ${furniture.avoid} Keep the same walls, windows, doors, floors, ceiling, and camera. Change only the furniture. Match the daylight already in the photo.${extra}`;
 }
 
 function dataUri(buffer, mime) {

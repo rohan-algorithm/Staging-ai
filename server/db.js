@@ -20,6 +20,7 @@ async function connect() {
 
   await db.collection('users').createIndex({ email: 1 }, { unique: true });
   await db.collection('users').createIndex({ session_token: 1 });
+  await db.collection('users').createIndex({ google_sub: 1 }, { unique: true, sparse: true });
   await db.collection('jobs').createIndex({ user_id: 1, created_at: -1 });
   await db.collection('transactions').createIndex({ user_id: 1, created_at: -1 });
   await db.collection('events').createIndex({ user_id: 1, event_type: 1 });

@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   hidePublicDemo();
   initNavbar();
   initHamburger();
+  initHeroCompare();
   initSlider();
   initUploadZone();
   initModalClickOutside();
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyStudioQuery();
     confirmCheckoutReturn();
   });
+  initGoogleAuth();
   initCheckoutRadios();
   initConcierge();
   refreshDownloadButton();
@@ -256,6 +258,25 @@ function initNavbar() {
   update();
 }
 
+function initHeroCompare() {
+  const card = document.getElementById('heroCompare');
+  const btn = document.getElementById('heroHold');
+  if (!card || !btn) return;
+
+  const showEmpty = (on) => {
+    card.classList.toggle('is-before', on);
+    btn.textContent = on ? 'Empty room' : 'Hold to see empty';
+  };
+
+  btn.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    showEmpty(true);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((type) => {
+    btn.addEventListener(type, () => showEmpty(false));
+  });
+}
+
 // --- HAMBURGER ---
 function initHamburger() {
   const btn = document.getElementById('hamburger');
@@ -266,12 +287,18 @@ function initHamburger() {
     drawer.classList.remove('open');
     btn.classList.remove('open');
     btn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('menu-open');
   };
 
   btn.addEventListener('click', () => {
     const isOpen = drawer.classList.toggle('open');
     btn.classList.toggle('open', isOpen);
-    btn.setAttribute('aria-expanded', isOpen);
+    btn.setAttribute('aria-expanded', String(isOpen));
+    document.body.classList.toggle('menu-open', isOpen);
+  });
+
+  drawer.addEventListener('click', (e) => {
+    if (e.target === drawer) closeDrawer();
   });
 
   drawer.querySelectorAll('a').forEach(link => {
@@ -1030,6 +1057,11 @@ function runStagingSimulation() {
     showToast('Upload your photo first. The picture on screen is an example.', 'info', 4000);
     return;
   }
+  if (getCredits() < 1) {
+    openPricingModal('single');
+    showToast('Add a credit to generate this photo.', 'info');
+    return;
+  }
   const overlay = document.getElementById('renderOverlay');
   const status = document.getElementById('renderStatus');
   const fill = document.getElementById('progressFill');
@@ -1375,6 +1407,9 @@ async function confirmCheckoutReturn() {
     }
     params.delete('checkout');
     params.delete('session_id');
+    params.delete('payment_id');
+    params.delete('status');
+    params.delete('email');
     const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
     window.history.replaceState({}, '', next);
   } catch (_) {}
@@ -1422,7 +1457,7 @@ async function downloadStudioJob(jobId) {
   }
   const id = jobId || currentStudioJob;
   if (!id) {
-    showToast('Stage a room first. The preview is saved, then a download uses one credit.', 'info');
+    showToast('Generate a photo first. That uses one credit. Downloading the file is included.', 'info');
     return;
   }
   try {
@@ -1488,6 +1523,12 @@ async function requestLiveStage() {
       body: form
     });
     const data = await res.json().catch(() => ({}));
+    if (data.user) setCurrentUser(data.user);
+    if (res.status === 402) {
+      openPricingModal('single');
+      showToast(data.message || 'Add a credit to generate this photo.', 'info');
+      return null;
+    }
     if (!res.ok) {
       if (res.status === 401) openLoginModal('login');
       showToast(data.message || 'Staging could not be saved.', 'error');
@@ -1924,6 +1965,7 @@ function openLoginModal(tab = 'login') {
   switchAuthTab(tab);
   modal.classList.add('active');
   lockPageScroll(true);
+  mountGoogleButton();
 }
 
 function closeLoginModal() {
@@ -2014,6 +2056,87 @@ async function handleAuthSubmit(event) {
       submitBtn.disabled = false;
       submitBtn.textContent = submitBtn.dataset.origText || (authMode === 'signup' ? 'Create Free Account' : 'Log In');
     }
+  }
+}
+
+let googleClientId = '';
+
+function initGoogleAuth() {
+  const wrap = document.getElementById('googleAuthWrap');
+  if (!wrap) return;
+  fetch('/api/auth/config')
+    .then(res => res.ok ? res.json() : {})
+    .then(data => {
+      googleClientId = data.google_client_id || '';
+      if (!googleClientId) return;
+      wrap.hidden = false;
+      if (document.getElementById('loginModal')?.classList.contains('active')) mountGoogleButton();
+    })
+    .catch(() => {});
+}
+
+function mountGoogleButton() {
+  const slot = document.getElementById('googleAuthSlot');
+  if (!slot || !googleClientId || slot.dataset.ready === '1') return;
+  const start = () => {
+    if (!window.google?.accounts?.id) return;
+    google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleGoogleCredential,
+      auto_select: false
+    });
+    google.accounts.id.renderButton(slot, {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'rectangular',
+      width: Math.min(slot.clientWidth || 360, 400)
+    });
+    slot.dataset.ready = '1';
+  };
+  if (window.google?.accounts?.id) {
+    start();
+    return;
+  }
+  if (document.getElementById('googleIdentityScript')) return;
+  const script = document.createElement('script');
+  script.id = 'googleIdentityScript';
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.async = true;
+  script.onload = start;
+  document.head.appendChild(script);
+}
+
+async function handleGoogleCredential(response) {
+  const credential = response && response.credential;
+  if (!credential) {
+    showToast('Google did not finish sign-in.', 'error');
+    return;
+  }
+  try {
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential })
+    });
+    const data = await res.json();
+    if (!res.ok || data.status !== 'success') {
+      showToast(data.message || 'Google sign-in failed.', 'error', 4500);
+      return;
+    }
+    setAuthToken(data.token);
+    setCurrentUser(data.user);
+    closeLoginModal();
+    if (isDashboardPage()) {
+      showAccount();
+      loadDashboardData();
+      showToast(data.message || `Welcome, ${data.user.name}!`, 'success', 5000);
+      return;
+    }
+    window.location.href = '/dashboard';
+  } catch (_) {
+    showToast('Google sign-in could not reach the server.', 'error');
   }
 }
 
@@ -2221,6 +2344,7 @@ async function trackUsageEvent(eventType, propertyAddress = '', metadata = {}) {
 // --- HELPERS ---
 function formatPlanName(plan) {
   const plans = {
+    none: 'No pack yet',
     free_trial: 'Free Trial (3 Credits)',
     single: 'Single Photo Unlock',
     listing: 'Single Listing Pass',
@@ -2445,15 +2569,17 @@ function initAnimatedCounters() {
 function initStickyCta() {
   const cta = document.getElementById('stickyCta');
   if (!cta) return;
-  const pricing = document.getElementById('pricing');
+  const targets = [...document.querySelectorAll('.hero-cta-row, .gallery-action-bar, .steps-cta, .comparison-cta, #pricing, .final-cta')];
 
   const check = () => {
-    const pricingTop = pricing ? pricing.getBoundingClientRect().top : Infinity;
-    const shouldHide = pricingTop < window.innerHeight * 0.35;
-    cta.style.transform = shouldHide ? 'translateY(120%)' : 'translateY(0)';
-    cta.style.transition = 'transform .35s cubic-bezier(.215,.61,.355,1)';
+    const hide = document.body.classList.contains('menu-open') || targets.some((el) => {
+      const r = el.getBoundingClientRect();
+      return r.bottom > 70 && r.top < window.innerHeight - 8;
+    });
+    cta.classList.toggle('is-hidden', hide);
   };
 
   window.addEventListener('scroll', check, { passive: true });
+  window.addEventListener('resize', check);
   check();
 }

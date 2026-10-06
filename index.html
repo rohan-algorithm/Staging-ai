@@ -59,7 +59,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6.9">
+  <link rel="stylesheet" href="style.css?v=6.16">
 </head>
 <body>
 
@@ -97,14 +97,20 @@
 
   <!-- Mobile Drawer -->
   <div class="mobile-drawer" id="mobileDrawer" role="navigation" aria-label="Mobile navigation">
-    <a href="#gallery">Gallery</a>
-    <a href="/dashboard">Try Free</a>
-    <a href="#comparison">vs. BoxBrownie</a>
-    <a href="#chatgpt">vs. ChatGPT</a>
-    <a href="#pricing">Pricing</a>
-    <a href="how-to.html">How to use</a>
-    <a href="#account" class="drawer-login" onclick="openLoginModal(); return false;">Log in</a>
-    <a href="/dashboard" class="btn btn-primary">Upload Image for Free</a>
+    <div class="drawer-panel">
+      <a class="drawer-link" href="#gallery">Gallery</a>
+      <a class="drawer-link" href="#pricing">Pricing</a>
+      <a class="drawer-link" href="how-to.html">How to use</a>
+      <a class="drawer-link" href="/dashboard">Try the studio</a>
+      <div class="drawer-compare">
+        <a href="#comparison">vs. BoxBrownie</a>
+        <a href="#chatgpt">vs. ChatGPT</a>
+      </div>
+      <div class="drawer-actions">
+        <a href="#account" class="btn btn-outline drawer-login" onclick="openLoginModal(); return false;">Log in</a>
+        <a href="/dashboard" class="btn btn-primary">Upload Free</a>
+      </div>
+    </div>
   </div>
 
   <!-- ===== HERO — SPLIT LAYOUT ===== -->
@@ -146,8 +152,10 @@
 
       <!-- Right: Visual -->
       <div class="hero-visual">
-        <div class="hero-image-card">
-          <img src="assets/hero_coastal.jpg" alt="The same living room after furniture is added" loading="eager" fetchpriority="high" width="700" height="440">
+        <div class="hero-image-card" id="heroCompare">
+          <img class="hero-shot hero-shot-after" src="assets/hero_coastal.jpg" alt="Living room with furniture added" loading="eager" fetchpriority="high" width="700" height="440">
+          <img class="hero-shot hero-shot-before" src="assets/hero_empty.jpg" alt="" width="700" height="440">
+          <button type="button" class="hero-hold" id="heroHold">Hold to see empty</button>
           <div class="hero-badge hero-badge-time">
             About 15 seconds
           </div>
@@ -213,7 +221,7 @@
       <div class="gallery-header reveal">
         <div class="section-eyebrow">What buyers see on the listing</div>
         <h2 class="section-title">The first photo decides<br>whether they book a showing</h2>
-        <p class="section-subtitle">Empty and staged, both on screen. On a phone they stack. The walls stay. Furniture is there so a buyer can judge the size.</p>
+        <p class="section-subtitle">The empty room and the furnished room. The walls stay. Furniture is there so a buyer can judge the size.</p>
       </div>
 
       <div class="gallery-controls-bar">
@@ -346,7 +354,7 @@
           <span class="step-num">3</span>
           <div class="step-body">
             <h3>Download the file</h3>
-            <p>A living room is usually ready in about 15 seconds. A download uses a credit.</p>
+            <p>A living room is usually ready in about 15 seconds. Generating the photo uses one credit.</p>
           </div>
         </article>
       </div>
@@ -635,7 +643,7 @@
       <div class="final-cta-inner">
         <div class="section-eyebrow" style="color: rgba(255,255,255,0.7)">Next listing</div>
         <h2 class="reveal">Try it on the next<br>vacant room</h2>
-        <p class="reveal reveal-delay-1">The preview is free. A download uses a credit, from $2.99 for one photo.</p>
+        <p class="reveal reveal-delay-1">Generating a photo uses one credit, from $2.99. Downloading that file again is free.</p>
         <div class="final-cta-buttons reveal reveal-delay-2">
           <a href="/dashboard" class="btn btn-white btn-lg">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -850,6 +858,11 @@
       <h2 id="loginModalTitle" style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Welcome back</h2>
       <p class="modal-sub" id="loginModalSub">Log in to access your staged photos, 4K downloads, and account credits.</p>
 
+      <div class="auth-google" id="googleAuthWrap" hidden>
+        <div id="googleAuthSlot"></div>
+        <p class="auth-or">or use email</p>
+      </div>
+
       <form id="authForm" onsubmit="handleAuthSubmit(event)">
         <div class="form-field-group" id="groupAuthName" style="display: none;">
           <label class="form-field-label" for="authName">Full Name</label>
@@ -882,6 +895,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=6.12"></script>
+  <script src="app.js?v=6.19"></script>
 </body>
 </html>

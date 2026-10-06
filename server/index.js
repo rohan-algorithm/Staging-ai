@@ -20,6 +20,7 @@ const PORT = parseInt(process.env.PORT || '8080', 10);
 const ROOT = path.join(__dirname, '..');
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN || '';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const GOOGLE_CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || '').trim();
 const GA_MEASUREMENT_ID = (process.env.GA_MEASUREMENT_ID || '').trim();
 const GA_SNIPPET = /^G-[A-Z0-9]+$/i.test(GA_MEASUREMENT_ID)
   ? `<!-- Google tag (gtag.js) -->
@@ -395,9 +396,99 @@ async function main() {
       mongo: true,
       images: storage.configured() ? 'cloudinary' : 'local',
       render: REPLICATE_API_TOKEN ? 'kontext-dev' : 'off',
-      checkout: dodo.configured() ? 'dodo' : (STRIPE_SECRET_KEY ? 'stripe' : 'demo')
+      checkout: dodo.configured() ? `dodo-${dodo.mode()}` : (STRIPE_SECRET_KEY ? 'stripe' : 'demo'),
+      google: GOOGLE_CLIENT_ID ? 'on' : 'off'
     });
   });
+
+  app.get('/api/auth/config', (_req, res) => {
+    res.json({ google_client_id: GOOGLE_CLIENT_ID });
+  });
+
+  async function verifyGoogleIdToken(credential) {
+    if (!GOOGLE_CLIENT_ID) {
+      const err = new Error('Google sign-in is not configured on this server.');
+      err.status = 503;
+      throw err;
+    }
+    const token = String(credential || '').trim();
+    if (!token || token.length > 4096) {
+      const err = new Error('Google did not return a sign-in token.');
+      err.status = 400;
+      throw err;
+    }
+    const googleRes = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(token));
+    const payload = await googleRes.json().catch(() => ({}));
+    const issuer = payload.iss;
+    const verified = String(payload.email_verified) === 'true';
+    const fresh = !payload.exp || Number(payload.exp) * 1000 > Date.now();
+    if (!googleRes.ok || payload.aud !== GOOGLE_CLIENT_ID || !verified || !fresh || (issuer !== 'accounts.google.com' && issuer !== 'https://accounts.google.com')) {
+      const err = new Error('Google could not confirm this sign-in. Try again.');
+      err.status = 401;
+      throw err;
+    }
+    const email = String(payload.email || '').trim().toLowerCase();
+    const sub = String(payload.sub || '');
+    if (!email || !sub) {
+      const err = new Error('Google did not share an email for this account.');
+      err.status = 401;
+      throw err;
+    }
+    return { sub, email, name: String(payload.name || '').trim() };
+  }
+
+  app.post('/api/auth/google', asyncRoute(async (req, res) => {
+    const profile = await verifyGoogleIdToken(req.body.credential);
+    const users = db().collection('users');
+    let user = await users.findOne({ google_sub: profile.sub });
+    let created = false;
+    if (!user) {
+      user = await users.findOne({ email: profile.email });
+      if (user && user.google_sub && user.google_sub !== profile.sub) {
+        return res.status(409).json({ status: 'error', message: 'This email is already linked to a different Google account.' });
+      }
+    }
+    const token = crypto.randomBytes(32).toString('hex');
+    if (!user) {
+      const name = profile.name || profile.email.split('@')[0];
+      const doc = {
+        email: profile.email,
+        name,
+        brokerage: '',
+        plan: 'none',
+        credits_balance: 0,
+        google_sub: profile.sub,
+        session_token: token,
+        created_at: new Date()
+      };
+      try {
+        const result = await users.insertOne(doc);
+        doc._id = result.insertedId;
+      } catch (err) {
+        if (err.code === 11000) {
+          return res.status(409).json({ status: 'error', message: 'An account with this email already exists. Log in with email, then use Google again.' });
+        }
+        throw err;
+      }
+      user = doc;
+      created = true;
+      await db().collection('events').insertOne({
+        user_id: user._id, event_type: 'signup', property_address: '', metadata: { plan: 'none', provider: 'google' }, created_at: new Date()
+      });
+    } else {
+      const updates = { session_token: token, google_sub: profile.sub };
+      if (!user.name && profile.name) updates.name = profile.name;
+      await users.updateOne({ _id: user._id }, { $set: updates });
+      Object.assign(user, updates);
+    }
+    const first = (user.name || 'there').split(' ')[0];
+    res.json({
+      status: 'success',
+      message: created ? `Account created. Generating a photo uses one credit.` : `Welcome back, ${first}.`,
+      user: publicUser(user),
+      token: user.session_token
+    });
+  }));
 
   app.get('/api/auth/me', asyncRoute(async (req, res) => {
     const user = await requireUser(req, res);
@@ -421,8 +512,8 @@ async function main() {
       password_hash: bcrypt.hashSync(password, 10),
       name,
       brokerage,
-      plan: 'free_trial',
-      credits_balance: 3,
+      plan: 'none',
+      credits_balance: 0,
       session_token: crypto.randomBytes(32).toString('hex'),
       created_at: new Date()
     };
@@ -436,11 +527,11 @@ async function main() {
       throw err;
     }
     await db().collection('events').insertOne({
-      user_id: doc._id, event_type: 'signup', property_address: '', metadata: { plan: 'free_trial' }, created_at: new Date()
+      user_id: doc._id, event_type: 'signup', property_address: '', metadata: { plan: 'none' }, created_at: new Date()
     });
     res.json({
       status: 'success',
-      message: `Account created. 3 preview credits are on ${name.split(' ')[0]}'s account.`,
+      message: `Account created. Generating a photo uses one credit.`,
       user: publicUser(doc),
       token: doc.session_token
     });
@@ -450,8 +541,12 @@ async function main() {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
     const user = await db().collection('users').findOne({ email });
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-      return res.status(401).json({ status: 'error', message: 'Email or password does not match.' });
+    const passwordOk = user && user.password_hash && bcrypt.compareSync(password, user.password_hash);
+    if (!passwordOk) {
+      const message = user && user.google_sub && !user.password_hash
+        ? 'This account uses Google. Continue with Google.'
+        : 'Email or password does not match.';
+      return res.status(401).json({ status: 'error', message });
     }
     const token = crypto.randomBytes(32).toString('hex');
     await db().collection('users').updateOne({ _id: user._id }, { $set: { session_token: token } });
@@ -578,12 +673,31 @@ async function main() {
         message: 'Furniture rendering is not connected on this server yet. Your photo was not replaced with an example.'
       });
     }
+    let imageInput;
+    try {
+      imageInput = imageForReplicate(req, before);
+    } catch (err) {
+      return res.status(400).json({ status: 'error', message: err.message || 'The photo could not be sent.' });
+    }
+    const reserved = await db().collection('users').updateOne(
+      { _id: user._id, credits_balance: { $gte: 1 } },
+      { $inc: { credits_balance: -1 } }
+    );
+    if (!reserved.matchedCount) {
+      const fresh = await db().collection('users').findOne({ _id: user._id });
+      return res.status(402).json({
+        status: 'error',
+        message: 'Add a credit to generate this photo.',
+        credits_balance: fresh ? fresh.credits_balance : 0,
+        user: fresh ? publicUser(fresh) : publicUser(user)
+      });
+    }
 
     let imageUrl = '';
     let imagePublicId = '';
     let source = 'replicate';
     try {
-      const staged = await callReplicate(imageForReplicate(req, before), style, room, prompt);
+      const staged = await callReplicate(imageInput, style, room, prompt);
       const persisted = await storage.persistRemote(staged, { folder: userFolder(user._id, 'staged') });
       imageUrl = persisted.url;
       imagePublicId = persisted.public_id || '';
@@ -591,11 +705,17 @@ async function main() {
       const detail = String(err && err.message || '');
       console.error('Render failed:', detail || err);
       const billing = /insufficient credit/i.test(detail);
+      if (billing) {
+        await db().collection('users').updateOne({ _id: user._id }, { $inc: { credits_balance: 1 } });
+      }
+      const fresh = await db().collection('users').findOne({ _id: user._id });
       return res.status(502).json({
         status: 'error',
         message: billing
           ? 'Replicate has no credit left. Add credit in the Replicate billing page, wait a few minutes, then try this photo again.'
-          : 'The render did not finish. Your photo was not replaced with an example.'
+          : 'The render was started and one credit was used. It did not finish.',
+        credits_balance: fresh.credits_balance,
+        user: publicUser(fresh)
       });
     }
 
@@ -609,6 +729,7 @@ async function main() {
       image_url: imageUrl,
       image_public_id: imagePublicId,
       status: 'preview',
+      credit_spent: true,
       source,
       created_at: new Date()
     };
@@ -629,9 +750,7 @@ async function main() {
       source,
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh),
-      message: source === 'replicate'
-        ? 'Preview saved to your studio. A download uses one credit.'
-        : 'Preview saved to your studio. A live furniture render needs a Replicate token. A download uses one credit.'
+      message: 'Photo saved. One credit was used. Downloading this file again is free.'
     });
   }));
 
@@ -650,16 +769,18 @@ async function main() {
     }
 
     if (job.status !== 'downloaded') {
-      if (user.credits_balance < 1) {
-        return res.status(402).json({
-          status: 'error',
-          message: 'Add a credit to download this render.',
-          credits_balance: user.credits_balance,
-          user: publicUser(user)
-        });
+      if (!job.credit_spent) {
+        if (user.credits_balance < 1) {
+          return res.status(402).json({
+            status: 'error',
+            message: 'Add a credit to download this render.',
+            credits_balance: user.credits_balance,
+            user: publicUser(user)
+          });
+        }
+        await db().collection('users').updateOne({ _id: user._id }, { $inc: { credits_balance: -1 } });
       }
-      await db().collection('users').updateOne({ _id: user._id }, { $inc: { credits_balance: -1 } });
-      await db().collection('jobs').updateOne({ _id: job._id }, { $set: { status: 'downloaded', downloaded_at: new Date() } });
+      await db().collection('jobs').updateOne({ _id: job._id }, { $set: { status: 'downloaded', downloaded_at: new Date(), credit_spent: true } });
       await db().collection('events').insertOne({
         user_id: user._id, event_type: 'download', property_address: '', metadata: { job_id: String(job._id) }, created_at: new Date()
       });

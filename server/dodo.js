@@ -86,7 +86,8 @@ async function ensureProducts(db, catalog) {
     cents: cents(tier.price)
   }));
 
-  const saved = await db.collection('settings').findOne({ _id: 'dodo_catalog' });
+  const catalogId = `dodo_catalog_${mode()}`;
+  const saved = await db.collection('settings').findOne({ _id: catalogId });
   const products = { ...(saved && saved.products) };
 
   for (const spec of specs) {
@@ -101,8 +102,8 @@ async function ensureProducts(db, catalog) {
   }
 
   await db.collection('settings').updateOne(
-    { _id: 'dodo_catalog' },
-    { $set: { products, updated_at: new Date() } },
+    { _id: catalogId },
+    { $set: { products, mode: mode(), updated_at: new Date() } },
     { upsert: true }
   );
   return products;

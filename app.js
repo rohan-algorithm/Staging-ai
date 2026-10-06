@@ -1091,7 +1091,7 @@ function runStagingSimulation() {
     { pct: 35, text: `Detecting boundaries, wall planes & flooring…`, delay: 650 },
     { pct: 55, text: `Arranging ${styleCapitalized} architectural furniture to scale…`, delay: 750 },
     { pct: 75, text: 'Calibrating ray-traced window illumination & shadows…', delay: 650 },
-    { pct: 90, text: 'Rendering 4K HDR MLS-compliant export…', delay: 550 },
+    { pct: 90, text: 'Saving the staged photo…', delay: 550 },
     { pct: 100, text: 'Staging Complete', delay: 250 }
   ];
 
@@ -1260,7 +1260,7 @@ function toggleMLSStamp(isSilent = false) {
 
   if (!isSilent) {
     showToast(
-      isChecked ? 'Auto-add MLS watermark enabled ("Virtually Staged · NAR 12-10")' : 'MLS watermark disabled',
+      isChecked ? 'The staged photo has the words Virtually staged in the corner.' : 'Corner note hidden on this screen.',
       isChecked ? 'success' : 'info',
       3000
     );
@@ -1285,7 +1285,7 @@ function toggleFaq(item) {
 // --- PRICING PACKS ---
 let selectedTier = 'pro';
 const tierPrices = {
-  single:         { name: 'Single Photo 4K Unlock', price: 2.99, credits: 1, type: 'pack' },
+  single:         { name: 'Single photo', price: 2.99, credits: 1, type: 'pack' },
   listing:        { name: 'Single Listing Pass (8 Photos)', price: 19.00, credits: 8, type: 'pack' },
   starter:        { name: 'Starter Pack (10 Images)', price: 29.00, credits: 10, type: 'pack' },
   pro:            { name: 'Pro Agent Pack (25 Images)', price: 49.00, credits: 25, type: 'pack' },
@@ -1333,7 +1333,7 @@ function selectModalTier(tier) {
   const title = document.getElementById('checkoutModalTitle');
   if (title) {
     title.textContent = selectedTier === 'single'
-      ? 'Unlock 4K download'
+      ? 'Buy one photo'
       : tierPrices[selectedTier].name;
   }
 
@@ -1457,7 +1457,7 @@ async function downloadStudioJob(jobId) {
   }
   const id = jobId || currentStudioJob;
   if (!id) {
-    showToast('Generate a photo first. That uses one credit. Downloading the file is included.', 'info');
+    showToast('Generate a photo first. That uses one credit. Downloading that file again does not.', 'info');
     return;
   }
   try {
@@ -1831,8 +1831,8 @@ function refreshDownloadButton() {
   if (!label) return;
   const credits = getCredits();
   label.textContent = credits > 0
-    ? `Download 4K · ${credits} credit${credits === 1 ? '' : 's'}`
-    : 'Download 4K — $2.99';
+    ? `Download · ${credits} credit${credits === 1 ? '' : 's'}`
+    : 'Download — $2.99';
 }
 
 async function initAuth() {
@@ -1954,7 +1954,7 @@ function switchAuthTab(tab) {
     if (brokerGrp) brokerGrp.style.display = 'none';
     if (submitBtn) submitBtn.textContent = 'Log In';
     if (titleEl) titleEl.textContent = 'Welcome back';
-    if (subEl) subEl.textContent = 'Log in to access your staged photos, 4K downloads, and account credits.';
+    if (subEl) subEl.textContent = 'Log in to open your staged photos and credits.';
     document.getElementById('authName')?.removeAttribute('required');
   }
 }
@@ -2346,7 +2346,7 @@ function formatPlanName(plan) {
   const plans = {
     none: 'No pack yet',
     free_trial: 'Account',
-    single: 'Single Photo Unlock',
+    single: 'Single photo',
     listing: 'Single Listing Pass',
     starter: 'Starter Pack',
     pro: 'Pro Agent Pack',

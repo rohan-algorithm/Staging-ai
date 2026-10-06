@@ -37,7 +37,7 @@
       <div class="legal-page-hero">
         <span class="legal-shield-badge">Enterprise Client Privacy</span>
         <h1>Privacy Policy & Data Security</h1>
-        <p>Your seller's private residential interiors are sacred. We guarantee 100% confidentiality, zero foundation AI training, and automatic data purging.</p>
+        <p>Listing photos stay on the account so you can download the staged file again. We do not use them to train a model. Email support@roomgenix.com to delete the account and the photos.</p>
         
         <!-- Document Switcher Pills -->
         <div class="legal-switcher-pills">
@@ -56,7 +56,7 @@
               <h2>Client Confidentiality & Privacy Framework</h2>
               <div class="legal-doc-meta">
                 <span><strong>Last Updated:</strong> October 5, 2026</span>
-                <span><strong>Compliance:</strong> CCPA / CPRA, GDPR, SOC 2 Type II Certified Hosting</span>
+                <span><strong>Last reviewed:</strong> October 6, 2026</span>
                 <span><strong>Training Status:</strong> Zero Public Model Training</span>
               </div>
             </div>
@@ -67,7 +67,7 @@
         <div class="legal-prose">
           <div class="legal-callout callout-green">
             <strong>The Roomgenix "Zero Foundation Training" Pledge:</strong><br>
-            We recognize that real estate photography frequently captures private homeowner residences, expensive artwork, family heirlooms, children's bedrooms, and security hardware. <strong>We unconditionally promise: Roomgenix never uses your uploaded listing photos or rendered staging output to train, fine-tune, or contribute to public or commercial foundation AI models.</strong> Your images are processed in isolated GPU worker containers and purged according to our strict retention schedule.
+            Listing photos can show a private home. <strong>We do not use your uploaded photos or staged files to train or fine-tune a model.</strong> The photo is sent to the render service to make the staged file, then saved on your account so a later download does not use another credit.
           </div>
 
           <h3>1. Information We Collect</h3>
@@ -93,55 +93,13 @@
 
           <h3>2. How We Protect Your Listing Photography</h3>
           <p>
-            To provide maximum security for luxury brokerages and high-profile home sellers, we implement enterprise-grade technical safeguards:
+            The site is served over HTTPS. Passwords are stored as bcrypt hashes. Cards are handled by Dodo Payments, and we do not store the card number. Photos are stored on Cloudinary so you can download them again.
           </p>
-          <div class="legal-callout callout-blue">
-            <strong>Security Infrastructure Highlights:</strong>
-            <ul style="margin-top:8px; margin-bottom:0;">
-              <li><strong>In-Transit Encryption:</strong> All uploads and API communications are secured via TLS 1.3 with forward secrecy.</li>
-              <li><strong>At-Rest Encryption:</strong> All stored files are encrypted using military-grade AES-256 with automatically rotated encryption keys.</li>
-              <li><strong>Ephemeral GPU Memory:</strong> Inpainting rendering models execute inside isolated micro-containers. Raw tensor weights in GPU memory are immediately wiped upon job completion.</li>
-              <li><strong>Access Control:</strong> Internal engineering staff have zero access to customer photo buckets without explicit audit-logged elevation and customer ticket authorization.</li>
-            </ul>
-          </div>
 
-          <h3>3. Data Retention & Automatic Purge Schedule</h3>
+          <h3>3. How long we keep photos</h3>
           <p>
-            We believe in data minimization. Your property photography is not held indefinitely:
+            The upload and the staged file stay on the account so you can download that file again without another credit. There is no purge button in the dashboard. Email support@roomgenix.com and we will delete the account and the photos. Payment records may be kept for accounting.
           </p>
-          <div class="legal-table-wrapper">
-            <table class="legal-table">
-              <thead>
-                <tr>
-                  <th>Data Category</th>
-                  <th>Retention Period</th>
-                  <th>Disposal Method</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Unstaged Raw Uploads</strong></td>
-                  <td>30 Days from upload</td>
-                  <td>Permanent automated cryptographic wipe from active storage</td>
-                </tr>
-                <tr>
-                  <td><strong>Rendered 4K Staged Photos</strong></td>
-                  <td>30 Days (Active Gallery)</td>
-                  <td>Available for re-download; archived after 30 days unless saved to Pro Library</td>
-                </tr>
-                <tr>
-                  <td><strong>On-Demand "Purge Now"</strong></td>
-                  <td>Instant (< 60 seconds)</td>
-                  <td>Click "Purge Listing Assets" in dashboard for immediate hard deletion</td>
-                </tr>
-                <tr>
-                  <td><strong>Billing Records</strong></td>
-                  <td>7 Years (Tax Compliance)</td>
-                  <td>Encrypted financial ledgers required by IRS and state corporate laws</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
 
           <h3>4. Your Rights Under CCPA/CPRA & GDPR</h3>
           <p>
@@ -149,30 +107,31 @@
           </p>
           <ul>
             <li><strong>Right to Know:</strong> You may request a complete export of all personal data and image logs associated with your account.</li>
-            <li><strong>Right to Delete:</strong> You can request immediate erasure of your account, billing history, and all stored property images.</li>
+            <li><strong>Right to Delete:</strong> Email support@roomgenix.com and we will delete the account and the stored photos.</li>
             <li><strong>Zero Sale of Data:</strong> We do NOT sell, rent, monetize, or broker your personal information or listing photography to data brokers, ad networks, or marketing aggregators.</li>
             <li><strong>Non-Discrimination:</strong> Exercising your privacy rights will never alter the price, speed, or quality of your staging services.</li>
           </ul>
 
           <h3>5. Third-Party Subprocessors</h3>
           <p>
-            We partner exclusively with SOC 2 Type II certified cloud and infrastructure vendors:
+            These companies handle parts of the service:
           </p>
           <ul>
-            <li><strong>Dodo Payments</strong>: Card checkout and payment receipts.</li>
-            <li><strong>Amazon Web Services (AWS)</strong> (USA): Secure cloud file storage (S3) and isolated GPU computing clusters.</li>
-            <li><strong>Cloudflare Inc.</strong> (USA): Global content delivery network (CDN), DDoS mitigation, and SSL termination.</li>
-            <li><strong>Google LLC</strong> (USA): Google Analytics, for page-visit measurement. Listing photos are not included.</li>
+            <li><strong>Cloudinary</strong>: stores the uploaded photo and the staged file.</li>
+            <li><strong>Replicate</strong>: runs the model that makes the staged photo.</li>
+            <li><strong>MongoDB Atlas</strong>: stores the account, credits, and job records.</li>
+            <li><strong>Railway</strong>: hosts the application.</li>
+            <li><strong>Cloudflare</strong>: sits in front of roomgenix.com.</li>
+            <li><strong>Dodo Payments</strong>: card checkout and receipts. We do not store the card number.</li>
+            <li><strong>Google</strong>: sign-in, and page-visit measurement when Google Analytics is turned on. Listing photos are not sent to Google Analytics.</li>
           </ul>
 
           <h3>6. Data Protection Officer & Privacy Inquiries</h3>
           <p>
-            If you have questions regarding this Privacy Policy, wish to execute a GDPR Data Processing Addendum (DPA) for your brokerage, or want to submit an instant data erasure request, contact our Privacy Office:
+            Questions about this page, or a request to delete an account, go to:
           </p>
           <div class="legal-callout callout-blue">
-            <strong>Roomgenix — Data Privacy Office</strong><br>
-            Attn: Data Protection Officer<br>
-            100 Montgomery St, Suite 1800, San Francisco, CA 94104<br>
+            <strong>Roomgenix</strong><br>
             Email: <a href="mailto:privacy@roomgenix.com" style="color:var(--primary); font-weight:600;">privacy@roomgenix.com</a>
           </div>
         </div>
@@ -181,10 +140,10 @@
       <!-- Bottom Conversion Card -->
       <div class="legal-bottom-cta">
         <div>
-          <h3>Enterprise Privacy for Luxury Brokerages</h3>
-          <p>Protect your high-net-worth clients with guaranteed zero-training AI staging.</p>
+          <h3>Photos stay on the account</h3>
+          <p>A later download of the same file does not use another credit. We do not use the photos to train a model.</p>
         </div>
-        <a href="index.html#demo" class="btn btn-primary btn-large">Try Private Staging Free →</a>
+        <a href="/dashboard" class="btn btn-primary btn-large">Open the studio →</a>
       </div>
     </div>
   </main>

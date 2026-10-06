@@ -111,7 +111,8 @@ async function persistRemote(url, { folder } = {}) {
       folder: folder || 'virtualstage',
       resource_type: 'image'
     });
-    return { url: result.secure_url, public_id: result.public_id, provider: 'cloudinary' };
+    const savedUrl = (folder || '').includes('staged') ? withDisclosure(result.secure_url) : result.secure_url;
+    return { url: savedUrl, public_id: result.public_id, provider: 'cloudinary' };
   }
   if (/^https?:\/\//i.test(url)) {
     const res = await fetch(url);
@@ -121,6 +122,14 @@ async function persistRemote(url, { folder } = {}) {
     return uploadBuffer(buffer, { folder, mime, maxBytes: 25 * 1024 * 1024 });
   }
   return { url, public_id: '', provider: url.startsWith('/uploads/') ? 'local' : 'remote' };
+}
+
+function withDisclosure(url) {
+  if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/') || url.includes('l_text:')) {
+    return url;
+  }
+  const layer = 'l_text:Arial_36_bold:Virtually%20staged,co_white,g_south_east,x_28,y_28';
+  return url.replace('/upload/', `/upload/${layer}/`);
 }
 
 function downloadUrl(url, filename) {

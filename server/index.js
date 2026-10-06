@@ -995,8 +995,12 @@ async function main() {
     if (err && err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ status: 'error', message: 'Photo is larger than 10 MB.' });
     }
+    const raw = String(err && err.message || '');
+    if (/invalid image|unsupported image|file format/i.test(raw)) {
+      return res.status(400).json({ status: 'error', message: 'That file is not a photo we can use. Upload a JPG, PNG, or WEBP.' });
+    }
     const status = err.status || 500;
-    res.status(status).json({ status: 'error', message: err.message || 'Something went wrong.' });
+    res.status(status).json({ status: 'error', message: raw || 'Something went wrong.' });
   });
 
   app.listen(PORT, '0.0.0.0', () => {

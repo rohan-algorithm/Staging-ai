@@ -232,7 +232,7 @@ function imageForReplicate(req, before) {
 }
 
 async function callReplicate(imageInput, style, room, prompt) {
-  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-dev/predictions', {
+  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
@@ -245,9 +245,8 @@ async function callReplicate(imageInput, style, room, prompt) {
         input_image: imageInput,
         aspect_ratio: 'match_input_image',
         output_format: 'jpg',
-        output_quality: 90,
-        guidance: 2.5,
-        num_inference_steps: 28
+        prompt_upsampling: false,
+        safety_tolerance: 2
       }
     })
   });
@@ -417,7 +416,7 @@ async function main() {
       status: 'ok',
       mongo: true,
       images: storage.configured() ? 'cloudinary' : 'local',
-      render: REPLICATE_API_TOKEN ? 'kontext-dev' : 'off',
+      render: REPLICATE_API_TOKEN ? 'kontext-pro' : 'off',
       checkout: dodo.configured() ? `dodo-${dodo.mode()}` : (STRIPE_SECRET_KEY ? 'stripe' : 'demo'),
       google: GOOGLE_CLIENT_ID ? 'on' : 'off'
     });

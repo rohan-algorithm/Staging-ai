@@ -15,6 +15,7 @@ const { ObjectId } = require('mongodb');
 const { connect, getDb } = require('./db');
 const storage = require('./storage');
 const dodo = require('./dodo');
+const mail = require('./mail');
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const ROOT = path.join(__dirname, '..');
@@ -415,7 +416,8 @@ async function main() {
       images: storage.configured() ? 'cloudinary' : 'local',
       render: REPLICATE_API_TOKEN ? 'flux-2-pro' : 'off',
       checkout: dodo.configured() ? `dodo-${dodo.mode()}` : (STRIPE_SECRET_KEY ? 'stripe' : 'demo'),
-      google: GOOGLE_CLIENT_ID ? 'on' : 'off'
+      google: GOOGLE_CLIENT_ID ? 'on' : 'off',
+      email: mail.configured() ? 'resend' : 'off'
     });
   });
 
@@ -810,6 +812,25 @@ async function main() {
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh)
     });
+  }));
+
+  app.post('/api/send-email', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const sent = await mail.sendForUser(db(), user, req.body || {});
+    res.json({ status: 'success', id: sent.id });
+  }));
+
+  app.post('/api/send-email/test', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const sent = await mail.sendForUser(db(), user, {
+      to: user.email,
+      subject: 'RoomGenix email is working',
+      text: 'This is a test from RoomGenix. Mail from info@roomgenix.com is connected.',
+      html: '<p>This is a test from RoomGenix. Mail from info@roomgenix.com is connected.</p>'
+    });
+    res.json({ status: 'success', id: sent.id, to: user.email });
   }));
 
   app.post('/api/user/track-event', asyncRoute(async (req, res) => {

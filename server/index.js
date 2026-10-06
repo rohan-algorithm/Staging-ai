@@ -157,23 +157,19 @@ function userFolder(userId, kind) {
 const ROOM_FURNITURE = {
   living: {
     name: 'living room',
-    pieces: 'a sofa, a coffee table, and one rug',
-    avoid: 'Do not add a bed or a dining table.'
+    pieces: 'a sofa, a coffee table, and one rug'
   },
   bedroom: {
     name: 'bedroom',
-    pieces: 'a bed, two nightstands, and a small rug',
-    avoid: 'Do not add a sofa or a dining table.'
+    pieces: 'a bed, two nightstands, and a small rug'
   },
   dining: {
     name: 'dining room',
-    pieces: 'a dining table and dining chairs, with a rug under the table',
-    avoid: 'Do not add a sofa, a bed, or a coffee table.'
+    pieces: 'a dining table and dining chairs, with a rug under the table'
   },
   office: {
     name: 'home office',
-    pieces: 'a desk, a desk chair, and a small rug',
-    avoid: 'Do not add a sofa, a bed, or a dining table.'
+    pieces: 'a desk, a desk chair, and a small rug'
   }
 };
 
@@ -195,18 +191,17 @@ function editPrompt(style, room, prompt) {
     return `Remove boxes, clutter, and laundry from this photo. Keep the real furniture, walls, windows, floors, and camera exactly as they are.${extra}`;
   }
   if (room === 'renovation') {
-    return `Refresh the wall color and floor finish so the room looks updated. Keep the same windows, doors, ceiling height, and camera. Do not move walls.${extra}`;
+    return `Refresh the wall color and floor finish so the room looks updated. Keep the same walls, windows, doors, ceiling height, and camera.${extra}`;
   }
   if (room === 'patio') {
-    return `Add a teak sectional, two chairs, a coffee table, and an outdoor rug on this patio. Keep the house, doors, fence, lawn, and daylight exactly the same. No fire and no string lights.${extra}`;
+    return `Add a teak sectional, two chairs, a coffee table, and an outdoor rug on this patio. Keep the house, doors, fence, lawn, and daylight exactly the same.${extra}`;
   }
   const furniture = ROOM_FURNITURE[room] || {
     name: 'room',
-    pieces: 'furniture that belongs in this room',
-    avoid: 'Do not turn it into a different kind of room.'
+    pieces: 'furniture that belongs in this room'
   };
   const look = STYLE_LOOK[style] || STYLE_LOOK.modern;
-  return `Add ${furniture.pieces} to this empty ${furniture.name}. Use ${look}. ${furniture.avoid} Keep the same walls, windows, doors, floors, ceiling, and camera. Change only the furniture. Match the daylight already in the photo.${extra}`;
+  return `Add ${furniture.pieces} to this empty ${furniture.name}. Use ${look}. The only new objects are that furniture. Keep the same walls, windows, doors, floors, ceiling, and camera. Change only the furniture. Match the daylight already in the photo.${extra}`;
 }
 
 function dataUri(buffer, mime) {
@@ -232,7 +227,7 @@ function imageForReplicate(req, before) {
 }
 
 async function callReplicate(imageInput, style, room, prompt) {
-  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions', {
+  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-2-pro/predictions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
@@ -242,9 +237,11 @@ async function callReplicate(imageInput, style, room, prompt) {
     body: JSON.stringify({
       input: {
         prompt: editPrompt(style, room, prompt),
-        input_image: imageInput,
+        input_images: [imageInput],
         aspect_ratio: 'match_input_image',
+        resolution: 'match_input_image',
         output_format: 'jpg',
+        output_quality: 100,
         prompt_upsampling: false,
         safety_tolerance: 2
       }
@@ -416,7 +413,7 @@ async function main() {
       status: 'ok',
       mongo: true,
       images: storage.configured() ? 'cloudinary' : 'local',
-      render: REPLICATE_API_TOKEN ? 'kontext-pro' : 'off',
+      render: REPLICATE_API_TOKEN ? 'flux-2-pro' : 'off',
       checkout: dodo.configured() ? `dodo-${dodo.mode()}` : (STRIPE_SECRET_KEY ? 'stripe' : 'demo'),
       google: GOOGLE_CLIENT_ID ? 'on' : 'off'
     });

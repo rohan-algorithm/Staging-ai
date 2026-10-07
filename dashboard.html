@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6.18">
+  <link rel="stylesheet" href="style.css?v=6.28">
 </head>
 <body data-page="dashboard">
 
@@ -221,6 +221,11 @@
           <div class="modal-opt-body"><strong>Pro pack</strong><span>25 credits</span></div>
           <span class="modal-opt-price">$49</span>
         </label>
+        <label class="modal-opt" id="tierAgency" onclick="selectModalTier('agency_pack')">
+          <input type="radio" name="modalOption" id="optAgency" value="agency_pack">
+          <div class="modal-opt-body"><strong>Agency bulk pack</strong><span>60 credits</span></div>
+          <span class="modal-opt-price">$99</span>
+        </label>
       </div>
       <div class="modal-total">
         <span>Total</span>
@@ -231,6 +236,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=6.21"></script>
+  <script src="app.js?v=6.27"></script>
 </body>
 </html>

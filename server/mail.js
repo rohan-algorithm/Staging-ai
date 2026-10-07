@@ -90,8 +90,8 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
     throw fail('Email could not be sent.', 502);
   }
   if (!result || result.error) {
-    const statusCode = result && result.error && result.error.statusCode;
-    console.error('email send failed', statusCode || 'error');
+    const detail = result && result.error && result.error.message;
+    console.error('email send failed', (result && result.error && result.error.statusCode) || 'error', detail || '');
     throw fail('Email could not be sent.', 502);
   }
   return { id: (result.data && result.data.id) || '' };

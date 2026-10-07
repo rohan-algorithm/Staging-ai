@@ -269,21 +269,55 @@ function initNavbar() {
 
 function initHeroCompare() {
   const card = document.getElementById('heroCompare');
-  const btn = document.getElementById('heroHold');
-  if (!card || !btn) return;
+  const clip = document.getElementById('heroBeforeClip');
+  const handle = document.getElementById('heroSliderHandle');
+  if (!card || !clip || !handle) return;
 
-  const showEmpty = (on) => {
-    card.classList.toggle('is-before', on);
-    btn.textContent = on ? 'Empty room' : 'Hold to see empty';
+  let pct = 50;
+  let dragging = false;
+
+  function setPct(next) {
+    pct = Math.max(0, Math.min(100, next));
+    clip.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    handle.style.left = pct + '%';
+    handle.setAttribute('aria-valuenow', String(Math.round(pct)));
+  }
+
+  function fromClientX(clientX) {
+    const rect = card.getBoundingClientRect();
+    if (!rect.width) return;
+    setPct(((clientX - rect.left) / rect.width) * 100);
+  }
+
+  card.addEventListener('pointerdown', (event) => {
+    dragging = true;
+    try { card.setPointerCapture(event.pointerId); } catch (_) {}
+    fromClientX(event.clientX);
+  });
+  card.addEventListener('pointermove', (event) => {
+    if (!dragging) return;
+    fromClientX(event.clientX);
+    if (event.cancelable) event.preventDefault();
+  });
+  const stop = (event) => {
+    if (!dragging) return;
+    dragging = false;
+    try { card.releasePointerCapture(event.pointerId); } catch (_) {}
   };
+  card.addEventListener('pointerup', stop);
+  card.addEventListener('pointercancel', stop);
 
-  btn.addEventListener('pointerdown', (event) => {
-    event.preventDefault();
-    showEmpty(true);
+  handle.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      setPct(pct - 4);
+      event.preventDefault();
+    } else if (event.key === 'ArrowRight') {
+      setPct(pct + 4);
+      event.preventDefault();
+    }
   });
-  ['pointerup', 'pointercancel', 'pointerleave'].forEach((type) => {
-    btn.addEventListener(type, () => showEmpty(false));
-  });
+
+  setPct(50);
 }
 
 // --- HAMBURGER ---
@@ -728,7 +762,7 @@ function downloadActiveGallerySample() {
   const data = roomImages[galleryRoom] || roomImages['living'];
   const a = document.createElement('a');
   a.href = data.after;
-  a.download = `Roomgenix_example_${currentRoom}.jpg`;
+  a.download = `Roomgenix_example_${galleryRoom}.jpg`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1326,11 +1360,13 @@ function selectModalTier(tier) {
   const listingR = document.getElementById('optListing');
   const starterR = document.getElementById('optStarter');
   const proR = document.getElementById('optPro');
+  const agencyR = document.getElementById('optAgency');
 
   if (singleR) singleR.checked = (selectedTier === 'single');
   if (listingR) listingR.checked = (selectedTier === 'listing');
   if (starterR) starterR.checked = (selectedTier === 'starter');
   if (proR) proR.checked = (selectedTier === 'pro');
+  if (agencyR) agencyR.checked = (selectedTier === 'agency_pack');
 
   document.querySelectorAll('.modal-opt').forEach(el => el.classList.remove('selected'));
   const activeInput = document.querySelector(`input[name="modalOption"][value="${selectedTier}"]`);
@@ -1769,10 +1805,12 @@ function initContactForm() {
         })
       });
       const data = await res.json().catch(() => ({}));
-      if (status) status.textContent = data.message || (res.ok ? 'Sent.' : 'Email could not be sent.');
+      if (status) {
+        status.textContent = data.message || (res.ok ? 'Sent.' : 'The message did not go through. Try again in a moment.');
+      }
       if (res.ok) form.reset();
     } catch (_) {
-      if (status) status.textContent = 'Email could not be sent.';
+      if (status) status.textContent = 'The message did not go through. Try again in a moment.';
     } finally {
       if (button) button.disabled = false;
     }
@@ -1987,7 +2025,7 @@ function switchAuthTab(tab) {
     if (brokerGrp) brokerGrp.style.display = 'block';
     if (submitBtn) submitBtn.textContent = 'Create account';
     if (titleEl) titleEl.textContent = 'Create your account';
-    if (subEl) subEl.textContent = 'Generating a photo uses one credit. A new account starts with none.';
+    if (subEl) subEl.textContent = 'A new account includes 3 watermarked previews. No card.';
     document.getElementById('authName')?.setAttribute('required', 'required');
   } else {
     loginTab?.classList.add('active');

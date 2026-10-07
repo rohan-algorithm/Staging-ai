@@ -939,6 +939,12 @@ async function main() {
         text: `${name} <${email}>\n\n${message}`,
         html: `<p>${safe(name)} &lt;${safe(email)}&gt;</p><p>${safe(message).replace(/\n/g, '<br>')}</p>`
       });
+      await mail.sendEmail({
+        to: email,
+        subject: 'We got your note — RoomGenix',
+        text: `Hi ${name},\n\nWe received your message and will reply within 2 hours during business hours.\n\n— RoomGenix`,
+        html: `<p>Hi ${safe(name)},</p><p>We received your message and will reply within 2 hours during business hours.</p><p>— RoomGenix</p>`
+      });
     } catch (err) {
       await log.deleteOne({ _id: inserted.insertedId });
       throw err;

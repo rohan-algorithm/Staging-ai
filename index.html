@@ -84,24 +84,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6.21">
+  <link rel="stylesheet" href="style.css?v=6.28">
 </head>
 <body>
 
   <!-- ===== NAVIGATION ===== -->
   <nav class="navbar" id="navbar">
     <div class="nav-container">
-      <a href="#" class="nav-brand" aria-label="RoomGenixAI home">
+      <a href="/" class="nav-brand" aria-label="RoomGenixAI home">
         <img class="brand-mark" src="/assets/logo-mark.png" alt="" width="36" height="36">
         <span class="brand-name">RoomGenix<span class="brand-ai">AI</span></span>
       </a>
 
       <div class="nav-links" id="navLinks">
         <a href="/gallery">Gallery</a>
-        <a href="/dashboard">Studio</a>
-        <a href="/comparison">vs. BoxBrownie</a>
-        <a href="/chatgpt">vs. ChatGPT</a>
         <a href="/pricing">Pricing</a>
+        <a href="/how-it-works">How it works</a>
         <a href="/how-to">How to use</a>
       </div>
 
@@ -125,8 +123,8 @@
     <div class="drawer-panel">
       <a class="drawer-link" href="/gallery">Gallery</a>
       <a class="drawer-link" href="/pricing">Pricing</a>
+      <a class="drawer-link" href="/how-it-works">How it works</a>
       <a class="drawer-link" href="/how-to">How to use</a>
-      <a class="drawer-link" href="/dashboard">Try the studio</a>
       <div class="drawer-compare">
         <a href="/comparison">vs. BoxBrownie</a>
         <a href="/chatgpt">vs. ChatGPT</a>
@@ -144,12 +142,12 @@
 
       <!-- Left: Copy -->
       <div class="hero-copy">
-        <div class="hero-eyebrow">Virtual staging</div>
+        <div class="hero-eyebrow">Virtual staging for listing photos</div>
 
         <h1 class="hero-title">Furnish the photo<br>you already shot.</h1>
 
         <p class="hero-desc">
-          The furniture goes in. Walls, windows, and floors stay. Usually a minute or two. A new account includes 3 watermarked previews. No card.
+          Furniture goes into the listing photo. Walls, windows, and floors stay as photographed. A new account includes 3 watermarked previews, and no card is required.
         </p>
 
         <div class="hero-cta-row">
@@ -162,63 +160,29 @@
           </a>
         </div>
 
-        <div class="hero-trust-row">
-          <div class="trust-item">
-            <span>Look at the examples first</span>
-          </div>
-          <div class="trust-item">
-            <span>Disclosure stamped on the file</span>
-          </div>
-          <div class="trust-item">
-            <span>Email us within 30 days for a refund</span>
-          </div>
-        </div>
+        <p class="hero-meta"><span>Ready in a minute or two</span><span>Disclosure on the file</span><span>Credits never expire</span></p>
       </div>
 
       <!-- Right: Visual -->
       <div class="hero-visual">
         <div class="hero-image-card" id="heroCompare">
           <img class="hero-shot hero-shot-after" src="assets/hero_coastal.jpg" alt="Living room with furniture added" loading="eager" fetchpriority="high" width="700" height="440">
-          <img class="hero-shot hero-shot-before" src="assets/hero_empty.jpg" alt="" width="700" height="440">
-          <button type="button" class="hero-hold" id="heroHold">Hold to see empty</button>
-          <div class="hero-badge hero-badge-time">
-            Usually a minute or two
+          <div class="hero-before-clip" id="heroBeforeClip">
+            <img class="hero-shot hero-shot-before" src="assets/hero_empty.jpg" alt="The same living room before furniture" width="700" height="440">
+            <span class="hero-compare-label hero-compare-before">Before</span>
           </div>
-          <div class="hero-badge hero-badge-mls">
-            Virtually staged
+          <span class="hero-compare-label hero-compare-after">After</span>
+          <div class="hero-slider-handle" id="heroSliderHandle" role="slider" tabindex="0" aria-label="Drag to compare before and after" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <span class="hero-slider-knob" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg>
+            </span>
           </div>
-        </div>
-
-        <!-- Mini before/after preview -->
-        <div class="hero-mini-pair">
-          <div class="mini-card mini-card-before">
-            <img src="assets/hero_empty.jpg" alt="Empty room before staging" loading="lazy" width="160" height="100">
-            <span class="mini-label">Before</span>
-          </div>
-          <div class="mini-arrow">→</div>
-          <div class="mini-card mini-card-after">
-            <img src="assets/hero_coastal.jpg" alt="The same room with furniture" loading="lazy" width="160" height="100">
-            <span class="mini-label mini-label-after">After · 1–2 min</span>
-          </div>
+          <div class="hero-badge hero-badge-mls">Virtually staged</div>
         </div>
       </div>
     </div>
   </header>
 
-  <section class="press-bar">
-    <div class="container">
-      <p class="press-label">What stays true</p>
-      <div class="press-logos">
-        <span class="press-logo">Same walls and windows</span>
-        <span class="press-sep">·</span>
-        <span class="press-logo">Furniture is added</span>
-        <span class="press-sep">·</span>
-        <span class="press-logo">File says virtually staged</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== ANIMATED METRICS BAR ===== -->
   <section class="metrics-bar" id="metrics">
     <div class="container metrics-grid">
       <div class="metric">
@@ -307,7 +271,7 @@
         <!-- Aesthetic Preset Studio Panel -->
         <div class="gallery-style-box">
           <div class="style-row">
-            <span class="style-row-label">Aesthetic Preset:</span>
+            <span class="style-row-label">Style</span>
             <button class="style-chip active" onclick="selectGalleryStyle('modern', this)">Modern</button>
             <button class="style-chip" onclick="selectGalleryStyle('scandinavian', this)">Scandinavian</button>
             <button class="style-chip" onclick="selectGalleryStyle('farmhouse', this)">Farmhouse</button>
@@ -341,13 +305,7 @@
               Download this example
             </button>
           </div>
-          <div class="gallery-action-trust">
-            <span>Disclosure note on the file</span>
-            <span>·</span>
-            <span>$2.99 a photo, $1.96 each on the 25-pack</span>
-            <span>·</span>
-            <span>Email us within 30 days for a refund</span>
-          </div>
+          <p class="gallery-action-trust">Disclosure on the file · From $2.99 a photo</p>
         </div>
 
       </div>
@@ -481,7 +439,7 @@
           </ul>
         </article>
         <article class="why-chat-card why-chat-card-us">
-          <p class="why-chat-kicker">Roomgenix</p>
+          <p class="why-chat-kicker">RoomGenixAI</p>
           <h3>The listing photo, with furniture in it</h3>
           <ul>
             <li>Furniture goes into the photo you uploaded</li>
@@ -515,7 +473,7 @@
             <span class="price-dollar">$</span><span class="price-num">19</span>
             <span class="price-per">for 8 images</span>
           </div>
-          <p class="price-unit">$2.37 / image · bill directly to seller</p>
+          <p class="price-unit">$2.37 a photo · one listing</p>
           <ul class="price-list">
             <li><strong>8 staged photos, up to 4 megapixels</strong></li>
             <li>All 7 furniture styles</li>
@@ -527,10 +485,7 @@
 
         <!-- Pro Pack — Featured -->
         <div class="price-card price-card-featured">
-          <div class="featured-badge">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Most popular
-          </div>
+          <div class="featured-badge">Most popular</div>
           <div class="price-card-header">
             <h3>Pro Agent Pack</h3>
             <p class="price-desc">For active listing agents</p>
@@ -605,8 +560,7 @@
         <div class="faq-left">
           <div class="section-eyebrow">FAQ</div>
           <h2 class="faq-title">Common questions</h2>
-          <p>Email <!--email_off--><a href="mailto:support@roomgenix.com" class="faq-email-link">support@roomgenix.com</a><!--/email_off--> if something here does not cover it. We reply within 2 hours during business hours.</p>
-          <a href="#pricing" class="btn btn-primary" onclick="scrollToSection('pricing'); return false;" style="margin-top: 24px; display: inline-flex;">See pricing</a>
+          <p>If none of these cover it, send a note below.</p>
         </div>
         <div class="faq-list" id="faqList">
           <div class="faq-item open" onclick="toggleFaq(this)">
@@ -674,18 +628,32 @@
           </div>
         </div>
       </div>
-      <form class="contact-form" id="contactForm">
-        <h3>Email support</h3>
-        <p class="contact-lead">We reply within 2 hours during business hours.</p>
-        <label for="contactName">Name</label>
-        <input class="form-field-input" id="contactName" name="name" type="text" maxlength="80" required autocomplete="name">
-        <label for="contactEmail">Email</label>
-        <input class="form-field-input" id="contactEmail" name="email" type="email" maxlength="254" required autocomplete="email">
-        <label for="contactMessage">Message</label>
-        <textarea class="form-field-input" id="contactMessage" name="message" maxlength="2000" required></textarea>
-        <button class="btn btn-primary" type="submit">Send</button>
-        <p class="contact-status" id="contactStatus" role="status"></p>
-      </form>
+      <div class="support-panel">
+        <div class="support-copy">
+          <div class="section-eyebrow">Support</div>
+          <h3>Email support</h3>
+          <p>We reply within 2 hours during business hours.</p>
+          <a class="support-mail" href="mailto:support@roomgenix.com"><!--email_off-->support@roomgenix.com<!--/email_off--></a>
+        </div>
+        <form class="contact-form" id="contactForm">
+          <div class="contact-field">
+            <label for="contactName">Name</label>
+            <input class="form-field-input" id="contactName" name="name" type="text" maxlength="80" required autocomplete="name">
+          </div>
+          <div class="contact-field">
+            <label for="contactEmail">Email</label>
+            <input class="form-field-input" id="contactEmail" name="email" type="email" maxlength="254" required autocomplete="email">
+          </div>
+          <div class="contact-field contact-field-wide">
+            <label for="contactMessage">Message</label>
+            <textarea class="form-field-input" id="contactMessage" name="message" maxlength="2000" required></textarea>
+          </div>
+          <div class="contact-actions">
+            <button class="btn btn-primary" type="submit">Send message</button>
+            <p class="contact-status" id="contactStatus" role="status"></p>
+          </div>
+        </form>
+      </div>
     </div>
   </section>
 
@@ -693,9 +661,9 @@
   <section class="final-cta">
     <div class="container">
       <div class="final-cta-inner">
-        <div class="section-eyebrow" style="color: rgba(255,255,255,0.7)">Next listing</div>
-        <h2 class="reveal">Try it on the next<br>vacant room</h2>
-        <p class="reveal reveal-delay-1">A new account includes 3 watermarked previews. No card. A photo you publish is from $2.99. Downloading that file again is free.</p>
+        <div class="section-eyebrow final-eyebrow">Next listing</div>
+        <h2 class="reveal">Stage the next<br>vacant room</h2>
+        <p class="reveal reveal-delay-1">Three watermarked previews on a new account. No card. A photo you publish starts at $2.99.</p>
         <div class="final-cta-buttons reveal reveal-delay-2">
           <a href="/dashboard" class="btn btn-white btn-lg">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -703,15 +671,7 @@
           </a>
           <a href="#pricing" class="btn btn-white-outline btn-lg" onclick="scrollToSection('pricing'); return false;">View pricing →</a>
         </div>
-        <div class="final-trust">
-          <span>Usually a minute or two</span>
-          <span>·</span>
-          <span>$1.96 on Pro</span>
-          <span>·</span>
-          <span>Email us within 30 days</span>
-          <span>·</span>
-          <span>Disclosure on the file</span>
-        </div>
+        <p class="final-trust">Ready in a minute or two · Refund within 30 days · Disclosure on the file</p>
       </div>
     </div>
   </section>
@@ -720,12 +680,12 @@
   <footer class="footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <a href="#" class="nav-brand footer-logo" aria-label="RoomGenixAI">
+        <a href="/" class="nav-brand footer-logo" aria-label="RoomGenixAI">
           <img class="brand-mark" src="/assets/logo-mark.png" alt="" width="30" height="30">
           <span class="brand-name">RoomGenix<span class="brand-ai">AI</span></span>
         </a>
         <p>Furnish the photo you already shot.</p>
-        <p class="footer-contact"><!--email_off-->support@roomgenix.com<!--/email_off--></p>
+        <p class="footer-contact"><a href="mailto:support@roomgenix.com"><!--email_off-->support@roomgenix.com<!--/email_off--></a></p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
@@ -739,6 +699,7 @@
         <a href="/how-to">How to use</a>
         <a href="/how-it-works">How it works</a>
         <a href="/gallery">Gallery</a>
+        <a href="/comparison">vs. BoxBrownie</a>
         <a href="/chatgpt">vs. ChatGPT</a>
         <a href="/faq">FAQ</a>
         <a href="/blog">Guides</a>
@@ -752,7 +713,7 @@
       </div>
     </div>
     <div class="container footer-bottom">
-      <p>© 2026 Roomgenix. All rights reserved. Not affiliated with any MLS board.</p>
+      <p>© 2026 RoomGenixAI. All rights reserved. Not affiliated with any MLS board.</p>
     </div>
   </footer>
 
@@ -760,8 +721,8 @@
   <div class="sticky-cta" id="stickyCta" aria-label="Sticky call to action">
     <div class="sticky-cta-inner">
       <div class="sticky-cta-copy">
-        <strong>Furniture for the empty photo</strong>
-        <span>From $1.96 on Pro</span>
+        <strong>Stage a listing photo</strong>
+        <span>3 free previews</span>
       </div>
       <a href="/dashboard" class="btn btn-primary btn-sm">Open studio</a>
     </div>
@@ -809,6 +770,14 @@
             <span>$1.96/image · item removal uses one credit</span>
           </div>
           <span class="modal-opt-price">$49</span>
+        </label>
+        <label class="modal-opt" id="tierAgency" onclick="selectModalTier('agency_pack')">
+          <input type="radio" name="modalOption" id="optAgency" value="agency_pack" aria-label="Agency bulk pack 60 images for $99">
+          <div class="modal-opt-body">
+            <strong>Agency bulk pack — 60 images</strong>
+            <span>$1.65/image · credits stay on your account</span>
+          </div>
+          <span class="modal-opt-price">$99</span>
         </label>
       </div>
 
@@ -890,7 +859,7 @@
         <button class="btn btn-outline" onclick="closeCertModal()">Close</button>
         <button class="btn btn-primary" onclick="printCert()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Print / Save Official PDF
+          Print this note
         </button>
       </div>
     </div>
@@ -943,11 +912,11 @@
       </form>
 
       <button class="demo-quick-auth-btn" type="button" onclick="fillDemoCredentials()">
-        1-Click Instant Demo Login (Sarah Jenkins · KW Beverly Hills)
+        Use the demo account
       </button>
     </div>
   </div>
 
-  <script src="app.js?v=6.23"></script>
+  <script src="app.js?v=6.27"></script>
 </body>
 </html>

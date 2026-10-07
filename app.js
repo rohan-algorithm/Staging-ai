@@ -1759,15 +1759,20 @@ function initCostCalc() {
     if (String(count) !== input.value) input.value = String(count);
     const room = count * 2.99;
     const box = count * 30;
-    const usd = (amount) => amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    const usd = (amount) => amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: Math.round(amount * 100) % 100 ? 2 : 0,
+      maximumFractionDigits: 2
+    });
     const roomEl = document.getElementById('costRoom');
     const boxEl = document.getElementById('costBox');
     const subEl = document.getElementById('costSub');
     if (roomEl) {
-      roomEl.textContent = `RoomGenix, ${count} published photo${count === 1 ? '' : 's'} at $2.99: ${usd(room)}. The 25-pack is $1.96 a photo. Three watermarked previews are included and are not these files. No monthly fee.`;
+      roomEl.innerHTML = `<strong>${usd(room)}</strong><span>RoomGenix at $2.99 a photo. The 25-pack is $1.96.</span>`;
     }
-    if (boxEl) boxEl.textContent = `BoxBrownie at $30 a photo: ${usd(box)}.`;
-    if (subEl) subEl.textContent = 'A $35 a month plan is $420 a year, even if you only publish two photos.';
+    if (boxEl) boxEl.innerHTML = `<strong>${usd(box)}</strong><span>BoxBrownie at $30 a photo.</span>`;
+    if (subEl) subEl.innerHTML = `<strong>${usd(420)}</strong><span>A $35 a month plan for the year, even for two photos.</span>`;
   };
   input.addEventListener('input', paint);
   paint();

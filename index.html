@@ -84,7 +84,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6.17">
+  <link rel="stylesheet" href="style.css?v=6.19">
 </head>
 <body>
 
@@ -502,11 +502,16 @@
       <h2 class="section-title reveal">No subscription. Credits never expire.</h2>
       <p class="section-subtitle reveal reveal-delay-1">A new account includes 3 watermarked previews. No card. A paid photo is not watermarked. Prices are in US dollars. Credits stay while the account is open.</p>
       <div class="cost-calc reveal" id="costCalc">
-        <label for="costPhotos">Photos you would publish</label>
-        <input id="costPhotos" type="number" min="1" max="200" value="8">
-        <p id="costRoom"></p>
-        <p id="costBox"></p>
-        <p id="costSub"></p>
+        <div class="cost-calc-field">
+          <label for="costPhotos">Photos you would publish</label>
+          <input id="costPhotos" type="number" min="1" max="200" value="8">
+        </div>
+        <div class="cost-compare">
+          <p id="costRoom"></p>
+          <p id="costBox"></p>
+          <p id="costSub"></p>
+        </div>
+        <p class="cost-note">The 3 watermarked previews are included. They are not these files.</p>
       </div>
 
       <!-- PAY-AS-YOU-GO PACKS ROW -->
@@ -954,6 +959,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=6.21"></script>
+  <script src="app.js?v=6.22"></script>
 </body>
 </html>

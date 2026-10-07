@@ -2907,14 +2907,31 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 .contact-form {
   display: grid;
   gap: 8px;
-  max-width: 480px;
-  margin-top: 36px;
+  max-width: 520px;
+  margin: 48px auto 0;
+  padding: 28px 28px 24px;
+  background: #fffdf9;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-align: left;
 }
-.contact-form h3 { margin: 0 0 4px; font-size: 20px; }
+.contact-form h3 {
+  margin: 0 0 2px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -.02em;
+}
+.contact-form .contact-lead {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
 .contact-form label { font-size: 13px; font-weight: 600; }
 .contact-form input, .contact-form textarea { width: 100%; }
 .contact-form textarea { min-height: 120px; resize: vertical; }
-.contact-status { min-height: 1.4em; font-size: 14px; color: var(--text-muted); }
+.contact-form .btn { width: 100%; justify-content: center; margin-top: 4px; }
+.contact-status { min-height: 1.4em; margin: 0; font-size: 14px; color: var(--text-muted); }
 
 .faq-list {
   display: flex;

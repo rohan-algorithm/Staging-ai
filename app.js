@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initConcierge();
   refreshDownloadButton();
   initContactForm();
-  initCostCalc();
   const section = window.location.pathname.replace(/^\/+|\/+$/g, '');
   if (section && document.getElementById(section)) scrollToSection(section, 'auto');
 });
@@ -1748,34 +1747,6 @@ function initModalClickOutside() {
       if (e.target === dashBackdrop) closeDashboardModal();
     });
   }
-}
-
-// --- SMOOTH SCROLL ---
-function initCostCalc() {
-  const input = document.getElementById('costPhotos');
-  if (!input) return;
-  const paint = () => {
-    const count = Math.min(200, Math.max(1, parseInt(input.value, 10) || 1));
-    if (String(count) !== input.value) input.value = String(count);
-    const room = count * 2.99;
-    const box = count * 30;
-    const usd = (amount) => amount.toLocaleString('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: Math.round(amount * 100) % 100 ? 2 : 0,
-      maximumFractionDigits: 2
-    });
-    const roomEl = document.getElementById('costRoom');
-    const boxEl = document.getElementById('costBox');
-    const subEl = document.getElementById('costSub');
-    if (roomEl) {
-      roomEl.innerHTML = `<strong>${usd(room)}</strong><span>RoomGenix at $2.99 a photo. The 25-pack is $1.96.</span>`;
-    }
-    if (boxEl) boxEl.innerHTML = `<strong>${usd(box)}</strong><span>BoxBrownie at $30 a photo.</span>`;
-    if (subEl) subEl.innerHTML = `<strong>${usd(420)}</strong><span>A $35 a month plan for the year, even for two photos.</span>`;
-  };
-  input.addEventListener('input', paint);
-  paint();
 }
 
 function initContactForm() {

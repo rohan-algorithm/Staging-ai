@@ -2510,68 +2510,6 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 /* ==========================================================================
    PRICING
    ========================================================================== */
-.cost-calc {
-  max-width: 760px;
-  margin: 0 auto 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.cost-calc-field {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-.cost-calc label { font-size: 15px; font-weight: 600; color: var(--text); }
-.cost-calc input {
-  width: 72px;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 650;
-  text-align: center;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
-}
-.cost-compare {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.cost-compare p {
-  margin: 0;
-  background: #fffdf9;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px 14px 14px;
-}
-.cost-compare p:first-child { border-color: var(--text); }
-.cost-compare strong {
-  display: block;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -.04em;
-  line-height: 1;
-  color: var(--text);
-}
-.cost-compare span {
-  display: block;
-  margin-top: 8px;
-  font-size: 13.5px;
-  line-height: 1.45;
-  color: var(--text-muted);
-}
-.cost-note {
-  margin: 0;
-  max-width: 460px;
-  font-size: 13.5px;
-  line-height: 1.45;
-  color: var(--text-muted);
-}
 .preview-note { margin: 10px 0 0; font-size: 13.5px; color: var(--text-muted); }
 .pricing-section {
   padding: 64px 0;
@@ -3879,7 +3817,6 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 .legal-page-body .navbar { border-bottom-color: var(--border); }
 .legal-page-content { padding: 110px 0 72px; }
 @media (max-width: 640px) {
-  .cost-compare { grid-template-columns: 1fr; }
   .navbar .nav-actions .btn-primary { display: none; }
   .legal-page-body .navbar .nav-actions .btn-primary {
     display: inline-flex;

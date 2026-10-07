@@ -25,8 +25,8 @@
       <span class="brand-name">RoomGenix<span class="brand-ai">AI</span></span>
     </a>
     <div class="account-bar-actions">
-      <a href="/#pricing">Pricing</a>
-      <a href="/how-to.html">How to use</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/how-to">How to use</a>
       <div id="navAuthSlot"></div>
       <button class="btn btn-outline btn-sm" id="accountLogout" type="button" onclick="handleLogout()" hidden>Log out</button>
     </div>
@@ -84,6 +84,9 @@
               <button class="style-option" type="button" onclick="selectStyle('scandinavian', this)"><strong>Scandinavian</strong></button>
               <button class="style-option" type="button" onclick="selectStyle('farmhouse', this)"><strong>Farmhouse</strong></button>
               <button class="style-option" type="button" onclick="selectStyle('coastal', this)"><strong>Coastal</strong></button>
+              <button class="style-option" type="button" onclick="selectStyle('luxury', this)"><strong>Luxury</strong></button>
+              <button class="style-option" type="button" onclick="selectStyle('midcentury', this)"><strong>Mid-century</strong></button>
+              <button class="style-option" type="button" onclick="selectStyle('traditional', this)"><strong>Traditional</strong></button>
             </div>
           </div>
           <label class="editor-field" for="customPrompt">
@@ -93,6 +96,7 @@
         </div>
 
         <button class="btn btn-primary btn-stage" id="stageButton" type="button" onclick="runStagingSimulation()">Make this photo</button>
+        <p class="preview-note" id="previewNote" hidden>Your included previews are watermarked. A paid photo is not.</p>
       </div>
     </section>
 

@@ -101,7 +101,7 @@ async function uploadDataUrl(dataUrl, opts) {
   return uploadBuffer(parsed.buffer, { ...opts, mime: parsed.mime });
 }
 
-async function persistRemote(url, { folder } = {}) {
+async function persistRemote(url, { folder, preview } = {}) {
   if (!url) return null;
   if (url.startsWith('assets/') || url.startsWith('/assets/')) {
     return { url, public_id: '', provider: 'sample' };
@@ -111,25 +111,47 @@ async function persistRemote(url, { folder } = {}) {
       folder: folder || 'virtualstage',
       resource_type: 'image'
     });
-    const savedUrl = (folder || '').includes('staged') ? withDisclosure(result.secure_url) : result.secure_url;
-    return { url: savedUrl, public_id: result.public_id, provider: 'cloudinary' };
+    return stampStaged({ url: result.secure_url, public_id: result.public_id, provider: 'cloudinary' }, folder, preview);
   }
   if (/^https?:\/\//i.test(url)) {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Could not save the staged photo.');
     const buffer = Buffer.from(await res.arrayBuffer());
     const mime = (res.headers.get('content-type') || 'image/jpeg').split(';')[0];
-    return uploadBuffer(buffer, { folder, mime, maxBytes: 25 * 1024 * 1024 });
+    const saved = await uploadBuffer(buffer, { folder, mime, maxBytes: 25 * 1024 * 1024 });
+    return stampStaged(saved, folder, preview);
   }
   return { url, public_id: '', provider: url.startsWith('/uploads/') ? 'local' : 'remote' };
 }
 
-function withDisclosure(url) {
+function stampStaged(saved, folder, preview) {
+  if (!saved || !(folder || '').includes('staged')) return saved;
+  if (saved.provider !== 'cloudinary') {
+    if (preview) {
+      const err = new Error('The preview watermark could not be added.');
+      err.refund = true;
+      throw err;
+    }
+    return saved;
+  }
+  saved.url = withDisclosure(saved.url, { preview });
+  if (preview && !String(saved.url).includes('RoomGenix')) {
+    const err = new Error('The preview watermark could not be added.');
+    err.refund = true;
+    throw err;
+  }
+  return saved;
+}
+
+function withDisclosure(url, options = {}) {
   if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/') || url.includes('l_text:')) {
     return url;
   }
-  const layer = 'l_text:Arial_36_bold:Virtually%20staged,co_white,g_south_east,x_28,y_28';
-  return url.replace('/upload/', `/upload/${layer}/`);
+  const layers = ['l_text:Arial_36_bold:Virtually%20staged,co_white,g_south_east,x_28,y_28'];
+  if (options.preview) {
+    layers.push('l_text:Arial_72_bold:RoomGenix%20preview,co_white,g_center,o_60,a_-30');
+  }
+  return url.replace('/upload/', `/upload/${layers.join('/')}/`);
 }
 
 function downloadUrl(url, filename) {
@@ -149,5 +171,6 @@ module.exports = {
   uploadBuffer,
   uploadDataUrl,
   persistRemote,
-  downloadUrl
+  downloadUrl,
+  withDisclosure
 };

@@ -46,13 +46,84 @@ function pageFile(urlPath) {
   return file;
 }
 
-function sendPage(res, file) {
+const SITE = 'https://roomgenix.com';
+
+const PAGE_ROUTES = {
+  '/how-to': 'how-to.html',
+  '/terms': 'terms.html',
+  '/privacy': 'privacy.html',
+  '/mls-compliance': 'mls-compliance.html',
+  '/refund': 'refund-guarantee.html',
+  '/blog': 'blog.html'
+};
+
+const PAGE_ALIASES = {
+  '/index.html': '/',
+  '/how-to.html': '/how-to',
+  '/howto': '/how-to',
+  '/terms.html': '/terms',
+  '/tos': '/terms',
+  '/privacy.html': '/privacy',
+  '/mls-compliance.html': '/mls-compliance',
+  '/mls': '/mls-compliance',
+  '/refund-guarantee.html': '/refund',
+  '/refund-guarantee': '/refund',
+  '/guarantee': '/refund',
+  '/dashboard.html': '/dashboard'
+};
+
+const HOME_SECTIONS = {
+  pricing: 'Pricing',
+  gallery: 'Gallery',
+  'how-it-works': 'How it works',
+  comparison: 'Comparison',
+  chatgpt: 'Vs. ChatGPT',
+  faq: 'FAQ'
+};
+
+function sendPage(res, file, options = {}) {
   let html = fs.readFileSync(file, 'utf8');
+  if (options.canonical) {
+    html = html.replace(
+      /<link rel="canonical" href="[^"]*">/,
+      `<link rel="canonical" href="${options.canonical}">`
+    );
+    html = html.replace(
+      /<meta property="og:url" content="[^"]*">/,
+      `<meta property="og:url" content="${options.canonical}">`
+    );
+  }
+  if (options.title) {
+    html = html.replace(/<title>[^<]*<\/title>/, `<title>${options.title}</title>`);
+  }
   if (GA_SNIPPET && !html.includes('googletagmanager.com/gtag/js')) {
     html = html.replace('</head>', `${GA_SNIPPET}\n</head>`);
   }
   res.set('Cache-Control', 'no-cache');
   res.type('html').send(html);
+}
+
+function routePage(req, res, next) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  let p = req.path;
+  try { p = decodeURIComponent(p); } catch { return next(); }
+  if (p.includes('..') || p.includes('\0')) return next();
+  if (p.length > 1 && p.endsWith('/')) {
+    const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, p.slice(0, -1) + query);
+  }
+  if (PAGE_ALIASES[p]) return res.redirect(301, PAGE_ALIASES[p]);
+  const section = HOME_SECTIONS[p.slice(1)];
+  if (section) {
+    return sendPage(res, path.join(ROOT, 'index.html'), {
+      canonical: `${SITE}${p}`,
+      title: `${section} — RoomGenixAI`
+    });
+  }
+  if (PAGE_ROUTES[p]) return sendPage(res, path.join(ROOT, PAGE_ROUTES[p]));
+  const file = pageFile(p);
+  if (!file) return next();
+  sendPage(res, file);
 }
 
 const CATALOG = {
@@ -104,6 +175,7 @@ function publicUser(user) {
     brokerage: user.brokerage || '',
     plan: user.plan,
     credits_balance: user.credits_balance,
+    welcome_credits: Number(user.welcome_credits) || 0,
     created_at: user.created_at
   };
 }
@@ -117,6 +189,7 @@ function publicJob(job) {
     before_url: job.before_url,
     prompt: job.prompt || '',
     status: job.status,
+    watermarked: Boolean(job.watermarked),
     source: job.source || (String(job.image_url || '').includes('assets/') ? 'sample' : ''),
     created_at: job.created_at
   };
@@ -179,8 +252,9 @@ const STYLE_LOOK = {
   scandinavian: 'a Scandinavian look, with pale wood, linen, and simple shapes',
   farmhouse: 'a farmhouse look, with warm wood, soft linen, and a woven texture',
   coastal: 'a coastal look, with light fabric, a natural-fiber rug, and a little pale blue',
-  luxury: 'a quiet luxury look, with tailored upholstery and a low profile',
-  midcentury: 'a mid-century look, with wood legs and simple shapes'
+  luxury: 'a quiet luxury look, with tailored upholstery, a low profile, and a stone or wood table',
+  midcentury: 'a mid-century look, with walnut, tapered legs, and a wool rug',
+  traditional: 'a traditional look, with a rolled-arm sofa, a wood table, and a patterned rug'
 };
 
 function editPrompt(style, room, prompt) {
@@ -359,6 +433,7 @@ async function main() {
   }
 
   const app = express();
+  app.set('trust proxy', 1);
   app.post('/api/webhooks/dodo', express.raw({ type: '*/*' }), asyncRoute(async (req, res) => {
     const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
     let event;
@@ -401,12 +476,7 @@ async function main() {
     sendPage(res, path.join(ROOT, 'dashboard.html'));
   });
   app.get('/dashboard/', (_req, res) => res.redirect('/dashboard'));
-  app.use((req, res, next) => {
-    if (req.method !== 'GET') return next();
-    const file = pageFile(req.path);
-    if (!file) return next();
-    sendPage(res, file);
-  });
+  app.use(routePage);
   app.use(express.static(ROOT, { index: 'index.html', etag: false, maxAge: 0 }));
 
   app.get('/api/health', (_req, res) => {
@@ -476,7 +546,8 @@ async function main() {
         name,
         brokerage: '',
         plan: 'none',
-        credits_balance: 0,
+        credits_balance: 3,
+        welcome_credits: 3,
         google_sub: profile.sub,
         session_token: token,
         created_at: new Date()
@@ -504,7 +575,7 @@ async function main() {
     const first = (user.name || 'there').split(' ')[0];
     res.json({
       status: 'success',
-      message: created ? `Account created. Generating a photo uses one credit.` : `Welcome back, ${first}.`,
+      message: created ? 'Account created. Three watermarked previews are included. No card.' : `Welcome back, ${first}.`,
       user: publicUser(user),
       token: user.session_token
     });
@@ -533,7 +604,8 @@ async function main() {
       name,
       brokerage,
       plan: 'none',
-      credits_balance: 0,
+      credits_balance: 3,
+      welcome_credits: 3,
       session_token: crypto.randomBytes(32).toString('hex'),
       created_at: new Date()
     };
@@ -551,7 +623,7 @@ async function main() {
     });
     res.json({
       status: 'success',
-      message: `Account created. Generating a photo uses one credit.`,
+      message: 'Account created. Three watermarked previews are included. No card.',
       user: publicUser(doc),
       token: doc.session_token
     });
@@ -699,18 +771,31 @@ async function main() {
     } catch (err) {
       return res.status(400).json({ status: 'error', message: err.message || 'The photo could not be sent.' });
     }
-    const reserved = await db().collection('users').updateOne(
-      { _id: user._id, credits_balance: { $gte: 1 } },
-      { $inc: { credits_balance: -1 } }
+    let spentWelcome = false;
+    const welcomeSpend = await db().collection('users').findOneAndUpdate(
+      { _id: user._id, credits_balance: { $gte: 1 }, welcome_credits: { $gte: 1 } },
+      { $inc: { credits_balance: -1, welcome_credits: -1 } },
+      { returnDocument: 'before' }
     );
-    if (!reserved.matchedCount) {
-      const fresh = await db().collection('users').findOne({ _id: user._id });
-      return res.status(402).json({
-        status: 'error',
-        message: 'Add a credit to generate this photo.',
-        credits_balance: fresh ? fresh.credits_balance : 0,
-        user: fresh ? publicUser(fresh) : publicUser(user)
-      });
+    const welcomeDoc = welcomeSpend && Object.prototype.hasOwnProperty.call(welcomeSpend, 'value')
+      ? welcomeSpend.value
+      : welcomeSpend;
+    if (welcomeDoc && welcomeDoc._id) {
+      spentWelcome = true;
+    } else {
+      const reserved = await db().collection('users').updateOne(
+        { _id: user._id, credits_balance: { $gte: 1 } },
+        { $inc: { credits_balance: -1 } }
+      );
+      if (!reserved.matchedCount) {
+        const fresh = await db().collection('users').findOne({ _id: user._id });
+        return res.status(402).json({
+          status: 'error',
+          message: 'Add a credit to generate this photo.',
+          credits_balance: fresh ? fresh.credits_balance : 0,
+          user: fresh ? publicUser(fresh) : publicUser(user)
+        });
+      }
     }
 
     let imageUrl = '';
@@ -718,15 +803,20 @@ async function main() {
     let source = 'replicate';
     try {
       const staged = await callReplicate(imageInput, style, room, prompt);
-      const persisted = await storage.persistRemote(staged, { folder: userFolder(user._id, 'staged') });
+      const persisted = await storage.persistRemote(staged, {
+        folder: userFolder(user._id, 'staged'),
+        preview: spentWelcome
+      });
       imageUrl = persisted.url;
       imagePublicId = persisted.public_id || '';
     } catch (err) {
       const detail = String(err && err.message || '');
       console.error('Render failed:', detail || err);
       const billing = /insufficient credit/i.test(detail);
-      if (billing) {
-        await db().collection('users').updateOne({ _id: user._id }, { $inc: { credits_balance: 1 } });
+      if (billing || err.refund) {
+        const inc = { credits_balance: 1 };
+        if (spentWelcome) inc.welcome_credits = 1;
+        await db().collection('users').updateOne({ _id: user._id }, { $inc: inc });
       }
       const fresh = await db().collection('users').findOne({ _id: user._id });
       return res.status(502).json({
@@ -750,6 +840,7 @@ async function main() {
       image_public_id: imagePublicId,
       status: 'preview',
       credit_spent: true,
+      watermarked: spentWelcome,
       source,
       created_at: new Date()
     };
@@ -770,7 +861,9 @@ async function main() {
       source,
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh),
-      message: 'Photo saved. One credit was used. Downloading this file again is free.'
+      message: spentWelcome
+        ? 'Preview saved. It has a RoomGenix watermark. A paid photo does not. Downloading this file again is free.'
+        : 'Photo saved. One credit was used. Downloading this file again is free.'
     });
   }));
 
@@ -812,6 +905,45 @@ async function main() {
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh)
     });
+  }));
+
+  app.post('/api/contact', asyncRoute(async (req, res) => {
+    const name = String(req.body.name || '').replace(/[\r\n]+/g, ' ').trim();
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const message = String(req.body.message || '').trim();
+    if (!name || name.length > 80) {
+      return res.status(400).json({ status: 'error', message: 'Enter your name.' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      return res.status(400).json({ status: 'error', message: 'Enter a valid email.' });
+    }
+    if (message.length < 2 || message.length > 2000) {
+      return res.status(400).json({ status: 'error', message: 'Write a short message.' });
+    }
+    const ip = String(req.ip || 'unknown').slice(0, 80);
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const log = db().collection('contact_log');
+    if (await log.countDocuments({ ip, created_at: { $gte: since } }) >= 5) {
+      return res.status(429).json({ status: 'error', message: 'Too many messages from this network. Try again tomorrow.' });
+    }
+    if (await log.countDocuments({ created_at: { $gte: since } }) >= 100) {
+      return res.status(429).json({ status: 'error', message: 'Support is at the daily message limit. Email support@roomgenix.com.' });
+    }
+    const safe = (value) => String(value).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
+    const inserted = await log.insertOne({ ip, email, created_at: new Date() });
+    try {
+      await mail.sendEmail({
+        to: 'support@roomgenix.com',
+        replyTo: email,
+        subject: `RoomGenix note from ${name}`.slice(0, 200),
+        text: `${name} <${email}>\n\n${message}`,
+        html: `<p>${safe(name)} &lt;${safe(email)}&gt;</p><p>${safe(message).replace(/\n/g, '<br>')}</p>`
+      });
+    } catch (err) {
+      await log.deleteOne({ _id: inserted.insertedId });
+      throw err;
+    }
+    res.json({ status: 'success', message: 'Sent. We reply within 2 hours during business hours.' });
   }));
 
   app.post('/api/send-email', asyncRoute(async (req, res) => {

@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initCheckoutRadios();
   initConcierge();
   refreshDownloadButton();
+  initContactForm();
+  initCostCalc();
+  const section = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  if (section && document.getElementById(section)) scrollToSection(section, 'auto');
 });
 
 // --- SCROLL REVEAL ---
@@ -218,8 +222,8 @@ const stylePresets = {
     bestFor: "Houses with a view"
   },
   luxury: {
-    title: "Darker living room",
-    desc: "A dark sofa, a stone table, brass lamp. For listings where the finish level is already high.",
+    title: "Luxury",
+    desc: "Tailored upholstery and a low profile. For listings where the finish level is already high.",
     palette: ["#111827", "#F8FAFC", "#CA8A04", "#713F12"],
     bestFor: "Higher-finish listings"
   },
@@ -228,6 +232,12 @@ const stylePresets = {
     desc: "Walnut, a tapered sofa, a wool rug. Fits houses from the 1950s through the 1970s.",
     palette: ["#4A2E18", "#E69A39", "#2E5244", "#EAE6DF"],
     bestFor: "Mid-century houses"
+  },
+  traditional: {
+    title: "Traditional",
+    desc: "A rolled-arm sofa, a wood table, and a patterned rug. For houses that already have classic trim.",
+    palette: ["#F4EFE6", "#6B3A2A", "#1F3A2E", "#C4A574"],
+    bestFor: "Classic houses"
   }
 };
 
@@ -1741,10 +1751,62 @@ function initModalClickOutside() {
 }
 
 // --- SMOOTH SCROLL ---
-function scrollToSection(id) {
+function initCostCalc() {
+  const input = document.getElementById('costPhotos');
+  if (!input) return;
+  const paint = () => {
+    const count = Math.min(200, Math.max(1, parseInt(input.value, 10) || 1));
+    if (String(count) !== input.value) input.value = String(count);
+    const room = count * 2.99;
+    const box = count * 30;
+    const usd = (amount) => amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    const roomEl = document.getElementById('costRoom');
+    const boxEl = document.getElementById('costBox');
+    const subEl = document.getElementById('costSub');
+    if (roomEl) {
+      roomEl.textContent = `RoomGenix, ${count} published photo${count === 1 ? '' : 's'} at $2.99: ${usd(room)}. The 25-pack is $1.96 a photo. Three watermarked previews are included and are not these files. No monthly fee.`;
+    }
+    if (boxEl) boxEl.textContent = `BoxBrownie at $30 a photo: ${usd(box)}.`;
+    if (subEl) subEl.textContent = 'A $35 a month plan is $420 a year, even if you only publish two photos.';
+  };
+  input.addEventListener('input', paint);
+  paint();
+}
+
+function initContactForm() {
+  const form = document.getElementById('contactForm');
+  if (!form) return;
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.getElementById('contactStatus');
+    const button = form.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+    if (status) status.textContent = 'Sending…';
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name.value,
+          email: form.email.value,
+          message: form.message.value
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (status) status.textContent = data.message || (res.ok ? 'Sent.' : 'Email could not be sent.');
+      if (res.ok) form.reset();
+    } catch (_) {
+      if (status) status.textContent = 'Email could not be sent.';
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+}
+
+function scrollToSection(id, behavior = 'smooth') {
   const el = document.getElementById(id);
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.scrollIntoView({ behavior, block: 'start' });
     const drawer = document.getElementById('mobileDrawer');
     const burger = document.getElementById('hamburger');
     if (drawer) drawer.classList.remove('open');
@@ -1892,16 +1954,20 @@ function renderUserStatus() {
         <button class="nav-user-badge" id="navUserBadgeBtn" type="button"${homeLink} title="${homeLabel}" aria-label="${homeLabel}">
           <span class="nav-avatar-circle">${initials}</span>
           <span>${escapeHtml(firstName)}</span>
-          <span class="nav-credits-chip">
+          <span class="nav-credits-chip"${Number(user.welcome_credits) > 0 ? ' title="Included previews are watermarked"' : ''}>
             <svg width="10" height="10" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             ${user.credits_balance}
           </span>
         </button>
       `;
+      const previewNote = document.getElementById('previewNote');
+      if (previewNote) previewNote.hidden = !(Number(user.welcome_credits) > 0);
     } else {
       navSlot.innerHTML = `
         <a href="#account" class="nav-login" id="navLoginBtn" onclick="handleNavAuthClick(); return false;">Log in</a>
       `;
+      const previewNote = document.getElementById('previewNote');
+      if (previewNote) previewNote.hidden = true;
     }
   }
 
@@ -2420,10 +2486,10 @@ function showToast(message, type = 'success', duration = 3500) {
 
 // --- LEGAL MODAL ---
 const legalPageUrls = {
-  mls: 'mls-compliance.html',
-  terms: 'terms.html',
-  privacy: 'privacy.html',
-  refund: 'refund-guarantee.html'
+  mls: '/mls-compliance',
+  terms: '/terms',
+  privacy: '/privacy',
+  refund: '/refund'
 };
 
 function openLegalModal(tab = 'mls') {
@@ -2481,13 +2547,13 @@ function initLegalModal() {
   // Deep linking
   const hash = window.location.hash.toLowerCase();
   const legalHash = {
-    '#mls-guide': 'mls-compliance.html',
-    '#mls': 'mls-compliance.html',
-    '#terms': 'terms.html',
-    '#tos': 'terms.html',
-    '#privacy': 'privacy.html',
-    '#refund': 'refund-guarantee.html',
-    '#guarantee': 'refund-guarantee.html'
+    '#mls-guide': '/mls-compliance',
+    '#mls': '/mls-compliance',
+    '#terms': '/terms',
+    '#tos': '/terms',
+    '#privacy': '/privacy',
+    '#refund': '/refund',
+    '#guarantee': '/refund'
   };
   if (legalHash[hash]) window.location.replace(legalHash[hash]);
 }

@@ -64,7 +64,7 @@ async function enforceLimit(database, userId) {
   }
 }
 
-async function sendEmail({ to, subject, html, text }) {
+async function sendEmail({ to, subject, html, text, replyTo }) {
   const message = messageFrom({ to, subject, html, text });
   const api = resend();
   if (!api) throw fail('Email is not connected yet.', 503);
@@ -74,6 +74,11 @@ async function sendEmail({ to, subject, html, text }) {
     to: [message.to],
     subject: message.subject
   };
+  if (replyTo) {
+    const reply = String(replyTo).trim().toLowerCase();
+    if (!isEmail(reply)) throw fail('Enter a valid reply address.', 400);
+    payload.replyTo = reply;
+  }
   if (message.html.trim()) payload.html = message.html;
   if (message.text.trim()) payload.text = message.text;
 

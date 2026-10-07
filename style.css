@@ -2510,6 +2510,25 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 /* ==========================================================================
    PRICING
    ========================================================================== */
+.cost-calc {
+  max-width: 640px;
+  margin: 0 auto 28px;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+.cost-calc label { font-size: 14px; font-weight: 600; }
+.cost-calc input {
+  width: 96px;
+  font: inherit;
+  font-size: 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+.cost-calc p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--text-muted); }
+.preview-note { margin: 10px 0 0; font-size: 13.5px; color: var(--text-muted); }
 .pricing-section {
   padding: 64px 0;
   background: var(--bg-alt);
@@ -2804,6 +2823,9 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 /* ==========================================================================
    FAQ
    ========================================================================== */
+#pricing, #gallery, #how-it-works, #comparison, #chatgpt, #faq {
+  scroll-margin-top: 74px;
+}
 .faq-section {
   padding: 64px 0;
   background: var(--bg-alt);
@@ -2831,7 +2853,24 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   color: var(--text-muted);
   line-height: 1.7;
 }
-.faq-email-link { color: var(--accent); font-weight: 600; }
+.faq-email-link { color: var(--accent); font-weight: 600; overflow-wrap: anywhere; }
+.style-more {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.contact-form {
+  display: grid;
+  gap: 8px;
+  max-width: 480px;
+  margin-top: 36px;
+}
+.contact-form h3 { margin: 0 0 4px; font-size: 20px; }
+.contact-form label { font-size: 13px; font-weight: 600; }
+.contact-form input, .contact-form textarea { width: 100%; }
+.contact-form textarea { min-height: 120px; resize: vertical; }
+.contact-status { min-height: 1.4em; font-size: 14px; color: var(--text-muted); }
 
 .faq-list {
   display: flex;
@@ -3554,7 +3593,6 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .style-row-label { flex: 1 0 100%; }
   .steps-cta { flex-direction: column; gap: 4px; }
   .steps-guide-link { display: inline-flex; align-items: center; min-height: 44px; }
-  .faq-email-link { display: inline-flex; align-items: center; min-height: 44px; }
   .compare-label { font-size: 20px; }
   .compare-row { padding: 12px 14px 4px; }
   .footer-col a { display: flex; align-items: center; min-height: 40px; }

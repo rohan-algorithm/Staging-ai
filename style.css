@@ -207,7 +207,12 @@ button { font-family: var(--font); cursor: pointer; }
   color: var(--amber);
   letter-spacing: -.03em;
 }
-.footer-logo .brand-mark { width: 30px; height: 30px; }
+.footer-logo .brand-mark {
+  width: 30px;
+  height: 30px;
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
 .footer-logo .brand-name { font-size: 20px; }
 .footer-logo .brand-ai { color: #e7c7a2; }
 
@@ -2987,6 +2992,7 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
 .contact-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 14px;
   flex-wrap: wrap;
 }
@@ -3729,6 +3735,8 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
     padding-top: 28px;
   }
   .contact-form { grid-template-columns: 1fr; padding: 18px; }
+  .contact-actions { justify-content: stretch; }
+  .contact-form .btn { width: 100%; }
   .support-copy p { max-width: none; }
 
   .compare-board {
@@ -3838,8 +3846,9 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .gallery-help { margin-top: 12px; }
   #galleryBuyerLine { font-size: 14.5px; }
 
-  .footer-grid { grid-template-columns: 1fr 1fr; }
-  .footer-bottom { flex-direction: column; text-align: center; }
+  .footer-grid { grid-template-columns: 1fr 1fr; align-items: start; }
+  .footer-brand { grid-column: 1 / -1; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; text-align: left; }
 
   .sticky-cta {
     display: block;
@@ -3935,8 +3944,15 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .legal-page-body .navbar .nav-actions .btn-outline { padding: 8px 10px; font-size: 13.5px; }
   .legal-page-content { padding: 86px 0 48px; }
   .navbar .nav-user-badge > span:not(.nav-avatar-circle) { display: none; }
-  .navbar .nav-user-badge { padding: 4px; gap: 0; }
-  .hamburger { margin-left: auto; flex-shrink: 0; }
+  .navbar .nav-user-badge {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
+  }
+  .nav-actions { margin-left: auto; align-items: center; }
+  .hamburger { margin-left: 8px; flex-shrink: 0; }
   .nav-brand { min-width: 0; }
   .legal-page-body .brand-name { font-size: 18px; }
   .legal-page-body .nav-container { padding-left: 16px; padding-right: 16px; gap: 10px; }

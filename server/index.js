@@ -259,24 +259,25 @@ const STYLE_LOOK = {
 
 function editPrompt(style, room, prompt) {
   const extra = prompt ? ` Also follow this note: ${prompt}` : '';
+  const sharp = ' Keep the original photograph sharp. Match its focus, color, and grain. Do not blur, repaint, or soften the room.';
+  let instruction;
   if (room === 'twilight') {
-    return `Turn this daytime exterior into dusk. Add warm light in the windows that already exist and a deep blue sky. Keep the same house, yard, landscaping, and camera.${extra}`;
+    instruction = `Turn this daytime exterior into dusk. Add warm light in the windows that already exist and a deep blue sky. Keep the same house, yard, landscaping, and camera.${extra}`;
+  } else if (room === 'declutter') {
+    instruction = `Remove boxes, clutter, and laundry from this photo. Keep the real furniture, walls, windows, floors, and camera exactly as they are.${extra}`;
+  } else if (room === 'renovation') {
+    instruction = `Refresh the wall color and floor finish so the room looks updated. Keep the same walls, windows, doors, ceiling height, and camera.${extra}`;
+  } else if (room === 'patio') {
+    instruction = `Add a teak sectional, two chairs, a coffee table, and an outdoor rug on this patio. Keep the house, doors, fence, lawn, and daylight exactly the same.${extra}`;
+  } else {
+    const furniture = ROOM_FURNITURE[room] || {
+      name: 'room',
+      pieces: 'furniture that belongs in this room'
+    };
+    const look = STYLE_LOOK[style] || STYLE_LOOK.modern;
+    instruction = `Add ${furniture.pieces} to this empty ${furniture.name}. Use ${look}. The only new objects are that furniture. Keep the same walls, windows, doors, floors, ceiling, and camera. Change only the furniture. Match the daylight already in the photo.${extra}`;
   }
-  if (room === 'declutter') {
-    return `Remove boxes, clutter, and laundry from this photo. Keep the real furniture, walls, windows, floors, and camera exactly as they are.${extra}`;
-  }
-  if (room === 'renovation') {
-    return `Refresh the wall color and floor finish so the room looks updated. Keep the same walls, windows, doors, ceiling height, and camera.${extra}`;
-  }
-  if (room === 'patio') {
-    return `Add a teak sectional, two chairs, a coffee table, and an outdoor rug on this patio. Keep the house, doors, fence, lawn, and daylight exactly the same.${extra}`;
-  }
-  const furniture = ROOM_FURNITURE[room] || {
-    name: 'room',
-    pieces: 'furniture that belongs in this room'
-  };
-  const look = STYLE_LOOK[style] || STYLE_LOOK.modern;
-  return `Add ${furniture.pieces} to this empty ${furniture.name}. Use ${look}. The only new objects are that furniture. Keep the same walls, windows, doors, floors, ceiling, and camera. Change only the furniture. Match the daylight already in the photo.${extra}`;
+  return instruction + sharp;
 }
 
 function dataUri(buffer, mime) {
@@ -302,7 +303,7 @@ function imageForReplicate(req, before) {
 }
 
 async function callReplicate(imageInput, style, room, prompt) {
-  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-2-pro/predictions', {
+  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-2-max/predictions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
@@ -315,7 +316,7 @@ async function callReplicate(imageInput, style, room, prompt) {
         input_images: [imageInput],
         aspect_ratio: 'match_input_image',
         resolution: 'match_input_image',
-        output_format: 'jpg',
+        output_format: 'png',
         output_quality: 100,
         prompt_upsampling: false,
         safety_tolerance: 2
@@ -484,7 +485,7 @@ async function main() {
       status: 'ok',
       mongo: true,
       images: storage.configured() ? 'cloudinary' : 'local',
-      render: REPLICATE_API_TOKEN ? 'flux-2-pro' : 'off',
+      render: REPLICATE_API_TOKEN ? 'flux-2-max' : 'off',
       checkout: dodo.configured() ? `dodo-${dodo.mode()}` : (STRIPE_SECRET_KEY ? 'stripe' : 'demo'),
       google: GOOGLE_CLIENT_ID ? 'on' : 'off',
       email: mail.configured() ? 'resend' : 'off'

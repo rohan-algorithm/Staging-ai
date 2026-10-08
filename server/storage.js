@@ -147,7 +147,7 @@ function withDisclosure(url, options = {}) {
   if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/') || url.includes('l_text:')) {
     return url;
   }
-  const layers = ['l_text:Arial_36_bold:Virtually%20staged,co_white,g_south_east,x_28,y_28'];
+  const layers = ['f_jpg', 'q_auto:best', 'l_text:Arial_36_bold:Virtually%20staged,co_white,g_south_east,x_28,y_28'];
   if (options.preview) {
     layers.push('l_text:Arial_72_bold:RoomGenix%20preview,co_white,g_center,o_60,a_-30');
   }

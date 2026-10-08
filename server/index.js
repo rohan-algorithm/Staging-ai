@@ -69,6 +69,7 @@ const PAGE_ALIASES = {
   '/refund-guarantee.html': '/refund',
   '/refund-guarantee': '/refund',
   '/guarantee': '/refund',
+  '/comparison': '/',
   '/dashboard.html': '/dashboard'
 };
 
@@ -76,7 +77,6 @@ const HOME_SECTIONS = {
   pricing: 'Pricing',
   gallery: 'Gallery',
   'how-it-works': 'How it works',
-  comparison: 'Comparison',
   chatgpt: 'Vs. ChatGPT',
   faq: 'FAQ'
 };
@@ -185,7 +185,7 @@ function publicJob(job) {
     id: String(job._id),
     room_type: job.room_type,
     style: job.style,
-    image_url: job.image_url,
+    image_url: storage.stripDisclosure(job.image_url),
     before_url: job.before_url,
     prompt: job.prompt || '',
     status: job.status,
@@ -856,7 +856,7 @@ async function main() {
     const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({
       status: 'success',
-      staged_url: imageUrl,
+      staged_url: storage.stripDisclosure(imageUrl),
       before_url: beforeUrl,
       job_id: String(result.insertedId),
       source,

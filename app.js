@@ -1303,7 +1303,7 @@ function toggleMLSStamp(isSilent = false) {
 
   if (!isSilent) {
     showToast(
-      isChecked ? 'The staged photo has the words Virtually staged in the corner.' : 'Corner note hidden on this screen.',
+      isChecked ? 'This screen note is not printed on the photo.' : 'Screen note hidden.',
       isChecked ? 'success' : 'info',
       3000
     );

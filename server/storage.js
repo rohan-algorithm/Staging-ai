@@ -147,15 +147,23 @@ function withDisclosure(url, options = {}) {
   if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/') || url.includes('l_text:')) {
     return url;
   }
-  const layers = ['f_jpg', 'q_auto:best', 'l_text:Arial_36_bold:Virtually%20staged,co_white,g_south_east,x_28,y_28'];
+  const layers = ['f_jpg', 'q_auto:best'];
   if (options.preview) {
     layers.push('l_text:Arial_72_bold:RoomGenix%20preview,co_white,g_center,o_60,a_-30');
   }
   return url.replace('/upload/', `/upload/${layers.join('/')}/`);
 }
 
+function stripDisclosure(url) {
+  if (!url) return url;
+  return String(url).replace(/\/?l_text:Arial_36_bold:Virtually%20staged,co_white,g_south_east,x_28,y_28\/?/g, (match) => {
+    return match.startsWith('/') && match.endsWith('/') ? '/' : '';
+  });
+}
+
 function downloadUrl(url, filename) {
   if (!url) return '';
+  url = stripDisclosure(url);
   if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
     const safe = String(filename || 'virtualstage').replace(/[^a-zA-Z0-9._-]/g, '_');
     return url.replace('/upload/', `/upload/fl_attachment:${safe}/`);
@@ -172,5 +180,6 @@ module.exports = {
   uploadDataUrl,
   persistRemote,
   downloadUrl,
-  withDisclosure
+  withDisclosure,
+  stripDisclosure
 };

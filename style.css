@@ -199,31 +199,44 @@ button { font-family: var(--font); cursor: pointer; }
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
 }
 .brand-mark {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: block;
   object-fit: contain;
   flex-shrink: 0;
 }
 .brand-name {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0;
   font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 400;
-  letter-spacing: -.03em;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -.028em;
   color: var(--text);
-}
-.brand-name em {
-  font-style: italic;
-  font-weight: 400;
-  margin-right: .04em;
+  line-height: 1;
+  font-optical-sizing: auto;
+  font-variation-settings: "opsz" 20, "SOFT" 0, "WONK" 0;
+  white-space: nowrap;
 }
 .brand-ai {
-  color: var(--text);
-  letter-spacing: -.03em;
+  display: inline;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-transform: none;
+  margin: 0;
+  padding: 0;
+  height: auto;
+  border: none;
+  line-height: inherit;
 }
 .footer-logo .brand-mark {
   width: 30px;
@@ -231,8 +244,8 @@ button { font-family: var(--font); cursor: pointer; }
   filter: invert(1);
   mix-blend-mode: screen;
 }
-.footer-logo .brand-name { font-size: 20px; }
-.footer-logo .brand-ai { color: #e7c7a2; }
+.footer-logo .brand-name { font-size: 18px; }
+.footer-logo .brand-ai { color: inherit; }
 
 .nav-links {
   display: flex;
@@ -320,6 +333,27 @@ body.menu-open .sticky-cta { visibility: hidden; }
   border-radius: 14px;
   box-shadow: 0 18px 40px rgba(28, 25, 21, .16);
   padding: 6px;
+}
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 14px 12px 12px;
+  margin: 0 2px 4px;
+  background: transparent;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(17,17,17,.08);
+}
+.drawer-brand .brand-mark {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+.drawer-brand .brand-name {
+  font-size: 20px;
+  gap: 0;
+  font-variation-settings: "opsz" 20, "SOFT" 0, "WONK" 0;
 }
 .drawer-link {
   display: flex;
@@ -3730,7 +3764,6 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .hero-grid { grid-template-columns: 1fr; gap: 28px; }
   .hero-copy { order: 1; text-align: center; }
   .hero-stage-wrap { order: 2; }
-  .brand-mark { display: none; }
   .hero-promises { grid-template-columns: 1fr; gap: 6px; }
   .btn-nav { height: 36px; padding: 0 14px; font-size: 13px; }
   .hero-inner { grid-template-columns: 1fr; gap: 28px; text-align: center; }
@@ -3757,8 +3790,8 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .hero-promises li { font-size: 13px; }
   .hero-stage { border-radius: 20px; }
   .hero-stage-btn { padding: 0 12px; font-size: 14px; }
-  .brand-name { font-size: 18px; }
-  .brand-mark { width: 28px; height: 28px; }
+  .brand-name { font-size: 18px; gap: 0; }
+  .brand-mark { width: 30px; height: 30px; }
   .btn-nav { height: 36px; padding: 0 14px; font-size: 13px; }
   .hamburger { min-width: 40px; min-height: 40px; }
   .hero-desc { font-size: 15px; margin-bottom: 14px; }
@@ -3981,7 +4014,6 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .hero-cta-row { flex-direction: column; align-items: center; }
   .btn-hero { width: auto; justify-content: center; }
   .hero .hero-title { font-size: 28px; }
-  .brand-mark { display: none; }
   .hero-promises { grid-template-columns: 1fr; gap: 6px; width: max-content; }
   .nav-container { gap: 4px; }
   .hamburger { min-width: 36px; min-height: 36px; padding: 4px; }
@@ -4037,7 +4069,7 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   .nav-actions { margin-left: auto; align-items: center; }
   .hamburger { margin-left: 8px; flex-shrink: 0; }
   .nav-brand { min-width: 0; }
-  .legal-page-body .brand-name { font-size: 18px; }
+  .legal-page-body .brand-name { font-size: 17px; }
   .legal-page-body .nav-container { padding-left: 16px; padding-right: 16px; gap: 10px; }
   .account-bar .nav-credits-chip { display: none; }
 }
@@ -5401,8 +5433,22 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
     gap: 6px;
   }
   .hero .hero-title { font-size: clamp(26px, 7vw, 36px); }
-  .brand-mark { display: none; }
+  .navbar .brand-mark {
+    display: block;
+    width: 30px;
+    height: 30px;
+  }
   .navbar .nav-actions .btn-nav { display: none; }
+  .navbar .nav-actions .nav-login {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(17,17,17,.75);
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+  .drawer-actions { grid-template-columns: 1fr; }
   .hamburger { min-width: 36px; min-height: 36px; margin-left: auto; }
   .example-grid,
   .examples-grid,

@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initNavbar();
   initHamburger();
   initHeroCompare();
+  initHeroStage();
+  initCompareCards();
+  initSceneMotion();
   initSlider();
   initUploadZone();
   initModalClickOutside();
@@ -192,6 +195,22 @@ const roomImages = {
     agentName: 'Robert Sterling',
     agentBrokerage: 'Berkshire Hathaway HomeServices',
     agentQuote: 'A virtual refresh shows what the room could become. The listing still needs to say the work is not done.'
+  },
+  kitchen: {
+    title: 'Kitchen',
+    category: 'Vacant Staging · Kitchen',
+    badge: 'Kitchen',
+    buyerLine: 'Two stools and a bowl on the island. Cabinets, window, and floor stay as shot.',
+    before: 'assets/kitchen_empty.jpg?v=4',
+    after: 'assets/kitchen_staged.jpg?v=4'
+  },
+  bath: {
+    title: 'Bathroom',
+    category: 'Vacant Staging · Bath',
+    badge: 'Bathroom',
+    buyerLine: 'Towels, a tray, and a small stool. The vanity, shower, and window stay.',
+    before: 'assets/bath_empty.jpg?v=4',
+    after: 'assets/bath_staged.jpg?v=4'
   }
 };
 
@@ -318,6 +337,403 @@ function initHeroCompare() {
   });
 
   setPct(50);
+}
+
+function initHeroStage() {
+  const stage = document.getElementById('heroStage');
+  const layerA = document.getElementById('heroLayerA');
+  const layerB = document.getElementById('heroLayerB');
+  const showBtn = document.getElementById('heroShowOriginal');
+  const restageBtn = document.getElementById('heroRestage');
+  const styleName = document.getElementById('heroStyleName');
+  if (!stage || !layerA || !layerB || !showBtn || !restageBtn) return;
+
+  const styles = [
+    { src: 'assets/hero_coastal.jpg', name: 'Coastal', alt: 'Living room after coastal furniture is added' },
+    { src: 'assets/hero_farmhouse.jpg', name: 'Farmhouse', alt: 'Living room after farmhouse furniture is added' },
+    { src: 'assets/hero_scandinavian.jpg', name: 'Scandinavian', alt: 'Living room after Scandinavian furniture is added' }
+  ];
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let index = 0;
+  let original = false;
+  let front = layerA;
+  let back = layerB;
+  let timer = 0;
+  let visible = false;
+  let welcomed = false;
+
+  function label(style) {
+    if (styleName) styleName.textContent = style.name;
+  }
+
+  function crossfadeTo(nextIndex) {
+    const style = styles[nextIndex];
+    if (back.getAttribute('src') !== style.src) {
+      back.src = style.src;
+    }
+    back.alt = style.alt;
+    back.classList.add('is-front');
+    front.classList.remove('is-front');
+    front.alt = '';
+    front.setAttribute('aria-hidden', 'true');
+    back.removeAttribute('aria-hidden');
+    const swap = front;
+    front = back;
+    back = swap;
+    index = nextIndex;
+    label(style);
+  }
+
+  function stopAuto() {
+    if (timer) window.clearInterval(timer);
+    timer = 0;
+  }
+
+  function startAuto() {
+    if (timer || reduce || original || !visible) return;
+    timer = window.setInterval(() => {
+      playAiScan(() => crossfadeTo((index + 1) % styles.length));
+    }, 4600);
+  }
+
+  function setOriginal(next) {
+    original = next;
+    stage.classList.toggle('is-original', original);
+    showBtn.textContent = original ? 'Show staged' : 'Show original';
+    showBtn.setAttribute('aria-pressed', String(original));
+    if (original) stopAuto();
+    else startAuto();
+  }
+
+  let scanTimer = 0;
+  let revealTimer = 0;
+
+  function playAiScan(onReveal) {
+    window.clearTimeout(scanTimer);
+    window.clearTimeout(revealTimer);
+    stage.classList.remove('is-scanning');
+    void stage.offsetWidth;
+    stage.classList.add('is-scanning');
+    restageBtn.setAttribute('aria-busy', 'true');
+    if (reduce) {
+      onReveal();
+      scanTimer = window.setTimeout(() => {
+        stage.classList.remove('is-scanning');
+        restageBtn.removeAttribute('aria-busy');
+      }, 700);
+      return;
+    }
+    revealTimer = window.setTimeout(onReveal, 520);
+    scanTimer = window.setTimeout(() => {
+      stage.classList.remove('is-scanning');
+      restageBtn.removeAttribute('aria-busy');
+    }, 1700);
+  }
+
+  function restageOnce() {
+    if (original) setOriginal(false);
+    stopAuto();
+    playAiScan(() => crossfadeTo((index + 1) % styles.length));
+    window.setTimeout(startAuto, 1900);
+  }
+
+  showBtn.addEventListener('click', () => setOriginal(!original));
+  restageBtn.addEventListener('click', restageOnce);
+
+  const startBtn = document.getElementById('heroUploadBtn');
+  if (startBtn) {
+    startBtn.addEventListener('click', (event) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      event.preventDefault();
+      if (original) setOriginal(false);
+      stopAuto();
+      playAiScan(() => {});
+      window.setTimeout(() => {
+        window.location.href = startBtn.getAttribute('href') || '/dashboard';
+      }, 1500);
+    });
+  }
+
+  function inView() {
+    const rect = stage.getBoundingClientRect();
+    if (!rect.height) return false;
+    const shown = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+    return shown / rect.height >= 0.3;
+  }
+
+  function syncVisibility() {
+    const next = inView();
+    if (next === visible) return;
+    visible = next;
+    if (!visible) {
+      stopAuto();
+      return;
+    }
+    if (!welcomed) {
+      welcomed = true;
+      playAiScan(() => {});
+      window.setTimeout(startAuto, 1900);
+      return;
+    }
+    startAuto();
+  }
+
+  window.addEventListener('scroll', syncVisibility, { passive: true });
+  window.addEventListener('resize', syncVisibility);
+  syncVisibility();
+}
+
+function initSceneMotion() {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function whenVisible(el, start) {
+    if (!el) return;
+    if (reduce) return;
+    let stop = function () {};
+    let on = false;
+    function sync() {
+      const rect = el.getBoundingClientRect();
+      const shown = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      const next = rect.height > 0 && shown / rect.height > 0.28;
+      if (next === on) return;
+      on = next;
+      stop();
+      stop = function () {};
+      if (on) stop = start() || function () {};
+    }
+    window.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    sync();
+  }
+
+  function later(bag, ms, fn) {
+    const id = window.setTimeout(() => {
+      if (!bag.stopped) fn();
+    }, ms);
+    bag.ids.push(id);
+  }
+
+  whenVisible(document.querySelector('[data-play="remove"]'), () => {
+    const root = document.querySelector('[data-play="remove"]');
+    const empty = root.querySelector('[data-layer="empty"]');
+    const staged = root.querySelector('[data-layer="staged"]');
+    const status = root.querySelector('.play-status');
+    const button = root.querySelector('.play-action');
+    const cursor = root.querySelector('.play-cursor');
+    const bag = { stopped: false, ids: [] };
+
+    function cycle() {
+      if (bag.stopped) return;
+      empty.classList.remove('is-on');
+      staged.classList.remove('is-on');
+      status.hidden = true;
+      status.textContent = '';
+      button.textContent = 'Remove furniture';
+      cursor.classList.remove('is-click');
+      cursor.style.left = '22%';
+      cursor.style.top = '68%';
+      later(bag, 700, () => {
+        cursor.style.left = '50%';
+        cursor.style.top = '84%';
+      });
+      later(bag, 1500, () => cursor.classList.add('is-click'));
+      later(bag, 1680, () => {
+        cursor.classList.remove('is-click');
+        status.hidden = false;
+        status.textContent = 'Removing furniture…';
+        empty.classList.add('is-on');
+      });
+      later(bag, 3000, () => {
+        status.textContent = 'Staging the room…';
+        button.textContent = 'Stage';
+        cursor.classList.add('is-click');
+      });
+      later(bag, 3180, () => {
+        cursor.classList.remove('is-click');
+        staged.classList.add('is-on');
+      });
+      later(bag, 4800, () => { status.hidden = true; });
+      later(bag, 6400, cycle);
+    }
+    cycle();
+    return () => {
+      bag.stopped = true;
+      bag.ids.forEach((id) => window.clearTimeout(id));
+    };
+  });
+
+  whenVisible(document.querySelector('[data-play="styles"]'), () => {
+    const root = document.querySelector('[data-play="styles"]');
+    const frames = [...root.querySelectorAll('.play-stage img')];
+    const dots = [...root.querySelectorAll('.play-dots i')];
+    const count = root.querySelector('[data-count]');
+    let index = 0;
+    function paint() {
+      frames.forEach((img, i) => img.classList.toggle('is-on', i === index));
+      dots.forEach((dot, i) => dot.classList.toggle('is-on', i === index));
+      if (count) count.textContent = (index + 1) + ' / ' + frames.length;
+    }
+    paint();
+    const id = window.setInterval(() => {
+      index = (index + 1) % frames.length;
+      paint();
+    }, 1800);
+    return () => window.clearInterval(id);
+  });
+
+  whenVisible(document.querySelector('[data-play="type"]'), () => {
+    const root = document.querySelector('[data-play="type"]');
+    const typed = root.querySelector('[data-typed]');
+    const dusk = root.querySelector('[data-layer="dusk"]');
+    const status = root.querySelector('.play-status');
+    const phrase = 'Day to dusk';
+    const bag = { stopped: false, ids: [] };
+
+    function type(n) {
+      if (bag.stopped) return;
+      typed.textContent = phrase.slice(0, n);
+      if (n < phrase.length) {
+        later(bag, 85, () => type(n + 1));
+        return;
+      }
+      later(bag, 450, () => {
+        status.hidden = false;
+        later(bag, 900, () => {
+          dusk.classList.add('is-on');
+          status.hidden = true;
+          later(bag, 2000, () => {
+            dusk.classList.remove('is-on');
+            typed.textContent = '';
+            later(bag, 700, () => type(0));
+          });
+        });
+      });
+    }
+    type(0);
+    return () => {
+      bag.stopped = true;
+      bag.ids.forEach((id) => window.clearTimeout(id));
+    };
+  });
+
+  whenVisible(document.querySelector('[data-play="download"]'), () => {
+    const root = document.querySelector('[data-play="download"]');
+    const frames = [...root.querySelectorAll('img')];
+    const dots = [...root.querySelectorAll('.play-dots i')];
+    let index = 0;
+    function paint() {
+      frames.forEach((img, i) => img.classList.toggle('is-on', i === index));
+      dots.forEach((dot, i) => dot.classList.toggle('is-on', i === index));
+    }
+    paint();
+    const id = window.setInterval(() => {
+      index = (index + 1) % frames.length;
+      paint();
+    }, 2000);
+    return () => window.clearInterval(id);
+  });
+}
+
+function initCompareCards() {
+  document.querySelectorAll('[data-compare]').forEach((card) => {
+    const clip = card.querySelector('.compare-before-clip');
+    const handle = card.querySelector('.compare-handle');
+    if (!clip || !handle) return;
+
+    let pct = 50;
+    let dragging = false;
+    let sweep = 0;
+
+    function setPct(next) {
+      pct = Math.max(0, Math.min(100, next));
+      clip.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+      handle.style.left = pct + '%';
+      handle.setAttribute('aria-valuenow', String(Math.round(pct)));
+    }
+
+    function fromClientX(clientX) {
+      const rect = card.getBoundingClientRect();
+      if (!rect.width) return;
+      setPct(((clientX - rect.left) / rect.width) * 100);
+    }
+
+    card.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('.style-switch')) return;
+      if (sweep) {
+        window.cancelAnimationFrame(sweep);
+        sweep = 0;
+      }
+      dragging = true;
+      try { card.setPointerCapture(event.pointerId); } catch (_) {}
+      fromClientX(event.clientX);
+    });
+    card.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      fromClientX(event.clientX);
+      if (event.cancelable) event.preventDefault();
+    });
+    const stop = (event) => {
+      if (!dragging) return;
+      dragging = false;
+      try { card.releasePointerCapture(event.pointerId); } catch (_) {}
+    };
+    card.addEventListener('pointerup', stop);
+    card.addEventListener('pointercancel', stop);
+
+    handle.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        setPct(pct - 4);
+        event.preventDefault();
+      } else if (event.key === 'ArrowRight') {
+        setPct(pct + 4);
+        event.preventDefault();
+      }
+    });
+
+    setPct(50);
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting) || card.dataset.swept) return;
+      card.dataset.swept = '1';
+      observer.disconnect();
+      const from = 72;
+      const to = 28;
+      const duration = 1400;
+      const start = performance.now();
+      setPct(from);
+      const step = (now) => {
+        if (dragging) return;
+        const t = Math.min(1, (now - start) / duration);
+        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        setPct(from + (to - from) * eased);
+        if (t < 1) sweep = window.requestAnimationFrame(step);
+      };
+      sweep = window.requestAnimationFrame(step);
+    }, { threshold: 0.45 });
+    observer.observe(card);
+  });
+}
+
+function initStyleSwitch() {
+  const after = document.getElementById('livingAfter');
+  const group = document.querySelector('.style-switch');
+  if (!after || !group) return;
+
+  group.addEventListener('click', (event) => {
+    const btn = event.target.closest('.style-switch-btn');
+    if (!btn) return;
+    const src = btn.getAttribute('data-after');
+    if (!src) return;
+    after.src = src;
+    const alt = btn.getAttribute('data-alt');
+    if (alt) after.alt = alt;
+    group.querySelectorAll('.style-switch-btn').forEach((el) => {
+      el.classList.toggle('active', el === btn);
+    });
+  });
 }
 
 // --- HAMBURGER ---
@@ -776,7 +1192,7 @@ const styleImages = {
     scandinavian: 'assets/hero_scandinavian.jpg',
     farmhouse: 'assets/hero_farmhouse.jpg',
     coastal: 'assets/hero_coastal.jpg',
-    luxury: 'assets/hero_coastal.jpg',
+    luxury: 'assets/living_luxury.jpg',
     midcentury: 'assets/hero_farmhouse.jpg'
   },
   bedroom: {
@@ -822,6 +1238,18 @@ const styleImages = {
     scandinavian: 'assets/reno_after.jpg',
     farmhouse: 'assets/reno_after.jpg',
     coastal: 'assets/reno_after.jpg'
+  },
+  kitchen: {
+    modern: 'assets/kitchen_staged.jpg?v=4',
+    scandinavian: 'assets/kitchen_staged.jpg?v=4',
+    farmhouse: 'assets/kitchen_staged.jpg?v=4',
+    coastal: 'assets/kitchen_staged.jpg?v=4'
+  },
+  bath: {
+    modern: 'assets/bath_staged.jpg?v=4',
+    scandinavian: 'assets/bath_staged.jpg?v=4',
+    farmhouse: 'assets/bath_staged.jpg?v=4',
+    coastal: 'assets/bath_staged.jpg?v=4'
   }
 };
 
@@ -1330,7 +1758,6 @@ let selectedTier = 'pro';
 const tierPrices = {
   single:         { name: 'Single photo', price: 2.99, credits: 1, type: 'pack' },
   listing:        { name: 'Single Listing Pass (8 Photos)', price: 19.00, credits: 8, type: 'pack' },
-  starter:        { name: 'Starter Pack (10 Images)', price: 29.00, credits: 10, type: 'pack' },
   pro:            { name: 'Pro Agent Pack (25 Images)', price: 49.00, credits: 25, type: 'pack' },
   agency_pack:    { name: 'Agency Bulk Pack (60 Images)', price: 99.00, credits: 60, type: 'pack' }
 };
@@ -1338,7 +1765,6 @@ const tierPrices = {
 function openPricingModal(context) {
   if (context === 'unlock') selectedTier = 'single';
   else if (context === 'listing') selectedTier = 'listing';
-  else if (context === 'starter') selectedTier = 'starter';
   else if (context === 'agency_pack') selectedTier = 'agency_pack';
   else selectedTier = 'pro';
 
@@ -1358,13 +1784,11 @@ function selectModalTier(tier) {
   selectedTier = tierPrices[tier] ? tier : 'pro';
   const singleR = document.getElementById('optSingle');
   const listingR = document.getElementById('optListing');
-  const starterR = document.getElementById('optStarter');
   const proR = document.getElementById('optPro');
   const agencyR = document.getElementById('optAgency');
 
   if (singleR) singleR.checked = (selectedTier === 'single');
   if (listingR) listingR.checked = (selectedTier === 'listing');
-  if (starterR) starterR.checked = (selectedTier === 'starter');
   if (proR) proR.checked = (selectedTier === 'pro');
   if (agencyR) agencyR.checked = (selectedTier === 'agency_pack');
 
@@ -1751,7 +2175,6 @@ function selectPersona(role, btnEl) {
 
 function checkout(plan) {
   if (plan === 'listing') openPricingModal('listing');
-  else if (plan === 'starter') openPricingModal('starter');
   else if (plan === 'pro') openPricingModal('pro');
   else if (plan === 'agency_pack') openPricingModal('agency_pack');
   else openPricingModal('pro');
@@ -2649,7 +3072,7 @@ function initAnimatedCounters() {
 function initStickyCta() {
   const cta = document.getElementById('stickyCta');
   if (!cta) return;
-  const targets = [...document.querySelectorAll('.hero-cta-row, .gallery-action-bar, .steps-cta, .comparison-cta, #pricing, .final-cta')];
+  const targets = [...document.querySelectorAll('.hero-cta-row, .hero-stage-actions, #examples, #scene, #gallery, .steps-cta, .comparison-cta, #pricing, .final-cta')];
 
   const check = () => {
     const hide = document.body.classList.contains('menu-open') || targets.some((el) => {

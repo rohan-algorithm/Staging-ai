@@ -83,8 +83,8 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,450;1,6..72,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6.30">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=6.56">
 </head>
 <body>
 
@@ -93,7 +93,7 @@
     <div class="nav-container">
       <a href="/" class="nav-brand" aria-label="RoomGenixAI home">
         <img class="brand-mark" src="/assets/logo-mark.png" alt="" width="36" height="36">
-        <span class="brand-name">RoomGenix<span class="brand-ai">AI</span></span>
+        <span class="brand-name"><em>Room</em>Genix<span class="brand-ai">AI</span></span>
       </a>
 
       <div class="nav-links" id="navLinks">
@@ -107,14 +107,11 @@
         <div id="navAuthSlot">
           <a href="#account" class="nav-login" id="navLoginBtn" onclick="handleNavAuthClick(); return false;">Log in</a>
         </div>
-        <a href="/dashboard" class="btn btn-primary btn-nav">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Open studio
-        </a>
+        <a href="/dashboard" class="btn btn-primary btn-nav"><span class="cta-wide">Get started</span><span class="cta-short">Start</span></a>
+        <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
-      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
     </div>
   </nav>
 
@@ -130,185 +127,355 @@
       </div>
       <div class="drawer-actions">
         <a href="#account" class="btn btn-outline drawer-login" onclick="openLoginModal(); return false;">Log in</a>
-        <a href="/dashboard" class="btn btn-primary">Open studio</a>
+        <a href="/dashboard" class="btn btn-primary">Get started</a>
       </div>
     </div>
   </div>
 
-  <!-- ===== HERO — SPLIT LAYOUT ===== -->
+  <!-- ===== HERO ===== -->
   <header class="hero" id="hero">
-    <div class="hero-inner container">
-
-      <!-- Left: Copy -->
+    <div class="hero-grid">
+      <div class="hero-stage-wrap">
+        <div class="hero-stage" id="heroStage">
+          <img class="hero-stage-img hero-stage-before" src="assets/hero_empty.jpg" alt="Empty living room before furniture" width="1376" height="768">
+          <img class="hero-stage-img hero-layer is-front" id="heroLayerA" src="assets/hero_coastal.jpg" alt="Living room after coastal furniture is added" width="1376" height="768" fetchpriority="high">
+          <img class="hero-stage-img hero-layer" id="heroLayerB" src="assets/hero_farmhouse.jpg" alt="" width="1376" height="768" aria-hidden="true">
+          <div class="ai-scan" aria-hidden="true">
+            <span class="ai-scan-grid"></span>
+            <span class="ai-scan-beam"></span>
+            <span class="ai-scan-label">Staging</span>
+          </div>
+          <div class="hero-stage-actions">
+            <button type="button" class="hero-stage-btn" id="heroShowOriginal" aria-pressed="false">Show original</button>
+            <button type="button" class="hero-stage-btn" id="heroRestage">Restage</button>
+          </div>
+        </div>
+      </div>
       <div class="hero-copy">
-        <div class="hero-eyebrow">Virtual staging for listing photos</div>
-
-        <h1 class="hero-title">Furnish the photo<br>you already shot.</h1>
-
-        <p class="hero-desc">
-          Furniture goes into the listing photo. Walls, windows, and floors stay as photographed. A new account includes 3 watermarked previews, and no card is required.
-        </p>
-
+        <h1 class="hero-title">Furnish the photo<br><em>you already shot.</em></h1>
         <div class="hero-cta-row">
           <a href="/dashboard" class="btn btn-primary btn-hero" id="heroUploadBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Upload a photo
-          </a>
-          <a href="#gallery" class="btn btn-ghost btn-hero" onclick="scrollToSection('gallery'); return false;">
-            See examples →
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Start staging
           </a>
         </div>
-
-        <p class="hero-meta"><span>Ready in a minute or two</span><span>Credits never expire</span></p>
-      </div>
-
-      <!-- Right: Visual -->
-      <div class="hero-visual">
-        <div class="hero-image-card" id="heroCompare">
-          <img class="hero-shot hero-shot-after" src="assets/hero_coastal.jpg" alt="Living room with furniture added" loading="eager" fetchpriority="high" width="700" height="440">
-          <div class="hero-before-clip" id="heroBeforeClip">
-            <img class="hero-shot hero-shot-before" src="assets/hero_empty.jpg" alt="The same living room before furniture" width="700" height="440">
-            <span class="hero-compare-label hero-compare-before">Before</span>
-          </div>
-          <span class="hero-compare-label hero-compare-after">After</span>
-          <div class="hero-slider-handle" id="heroSliderHandle" role="slider" tabindex="0" aria-label="Drag to compare before and after" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-            <span class="hero-slider-knob" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg>
-            </span>
-          </div>
-        </div>
+        <ul class="hero-promises">
+          <li>Ready in a minute or two</li>
+          <li>3 previews, no card</li>
+          <li>No subscription</li>
+          <li>Credits never expire</li>
+        </ul>
       </div>
     </div>
   </header>
 
-  <section class="metrics-bar" id="metrics">
-    <div class="container metrics-grid">
-      <div class="metric">
-        <span class="metric-val">1–2 min</span>
-        <span class="metric-label">Typical render</span>
-      </div>
-      <div class="metric">
-        <span class="metric-val">$1.96</span>
-        <span class="metric-label">Per photo on Pro</span>
-      </div>
-      <div class="metric">
-        <span class="metric-val">7</span>
-        <span class="metric-label">Furniture styles</span>
-      </div>
-      <div class="metric">
-        <span class="metric-val">$2.99</span>
-        <span class="metric-label">One photo, no pack</span>
+  <!-- ===== VISIBLE EXAMPLES ===== -->
+  <section class="examples-section" id="examples">
+    <div class="container">
+      <h2 class="section-title reveal">Same walls.<br><em>New furniture.</em></h2>
+      <p class="section-subtitle reveal">Drag across each photo. These are studio examples, not a client’s listing.</p>
+
+      <div class="examples-grid">
+      <article class="example-block reveal">
+        <div class="compare-card" data-compare>
+          <img class="compare-shot compare-shot-after" src="assets/bedroom_scandinavian.jpg" alt="Primary bedroom after Scandinavian furniture is added" width="1376" height="768">
+          <div class="compare-before-clip">
+            <img class="compare-shot compare-shot-before" src="assets/bedroom_empty.jpg" alt="The same primary bedroom before furniture" width="1376" height="768">
+            <span class="compare-tag compare-tag-before">Before</span>
+          </div>
+          <span class="compare-tag compare-tag-after">After</span>
+          <span class="compare-hint">Drag to compare</span>
+          <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the primary bedroom" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <span class="compare-knob" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg>
+            </span>
+          </div>
+        </div>
+        <div class="example-foot">
+          <div>
+            <h3>Primary bedroom</h3>
+            <p>A made bed and two nightstands. Buyers are checking whether the suite feels like a place to sleep.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="example-block reveal">
+        <div class="compare-card" data-compare>
+          <img class="compare-shot compare-shot-after" src="assets/dining_staged.jpg" alt="Dining room after a table and chairs are added" width="1376" height="768">
+          <div class="compare-before-clip">
+            <img class="compare-shot compare-shot-before" src="assets/dining_empty.jpg" alt="The same dining room before furniture" width="1376" height="768">
+            <span class="compare-tag compare-tag-before">Before</span>
+          </div>
+          <span class="compare-tag compare-tag-after">After</span>
+          <span class="compare-hint">Drag to compare</span>
+          <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the dining room" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <span class="compare-knob" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg>
+            </span>
+          </div>
+        </div>
+        <div class="example-foot">
+          <div>
+            <h3>Dining room</h3>
+            <p>Set the table with the number of chairs that fit. That is the question buyers ask before they drive over.</p>
+          </div>
+        </div>
+      </article>
       </div>
     </div>
   </section>
 
-  <!-- ===== BEFORE / AFTER GALLERY ===== -->
+  <!-- ===== GALLERY ===== -->
   <section class="gallery-section" id="gallery">
     <div class="container">
       <div class="gallery-header reveal">
-        <div class="section-eyebrow">What buyers see on the listing</div>
-        <h2 class="section-title">The first photo decides<br>whether they book a showing</h2>
-        <p class="section-subtitle">The empty room and the furnished room. The walls stay. Furniture is there so a buyer can judge the size.</p>
+        <h2 class="section-title">Every room.<br><em>On one page.</em></h2>
+        <p class="section-subtitle">Office, patio, dusk, and a remodel, then kitchen and bath. Studio photos. Drag each one.</p>
       </div>
 
-      <div class="gallery-controls-bar">
-        <div class="gallery-tabs" role="tablist" aria-label="Rooms">
-          <button class="gallery-tab active" data-room="living" onclick="switchHeroRoom('living', this)" id="tab_living">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            Living Room
-          </button>
-          <button class="gallery-tab" data-room="bedroom" onclick="switchHeroRoom('bedroom', this)" id="tab_bedroom">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9V7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2M2 9v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9M2 9h20"/></svg>
-            Primary Suite
-          </button>
-          <button class="gallery-tab" data-room="dining" onclick="switchHeroRoom('dining', this)" id="tab_dining">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2v20M6 2v20M6 12h12M9 2v6M15 2v6"/></svg>
-            Dining Room
-          </button>
-          <button class="gallery-tab" data-room="office" onclick="switchHeroRoom('office', this)" id="tab_office">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            Home Office
-          </button>
-          <button class="gallery-tab" data-room="twilight" onclick="switchHeroRoom('twilight', this)" id="tab_twilight">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/></svg>
-            Virtual Twilight
-          </button>
-          <button class="gallery-tab" data-room="declutter" onclick="switchHeroRoom('declutter', this)" id="tab_declutter">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            Item Removal
-          </button>
-          <button class="gallery-tab" data-room="patio" onclick="switchHeroRoom('patio', this)" id="tab_patio">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"/><path d="M12 8v8M8 12h8"/></svg>
-            Outdoor Patio
-          </button>
-          <button class="gallery-tab" data-room="renovation" onclick="switchHeroRoom('renovation', this)" id="tab_renovation">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            Virtual Remodel
-          </button>
-        </div>
-      </div>
-
-      <div class="gallery-slider-wrap reveal">
-        <div class="gallery-stage" id="heroSlider">
-          <div class="gallery-pair" role="region" aria-label="Before and after photos">
-            <figure class="gallery-shot">
-              <img id="beforeImage" src="assets/hero_empty.jpg" alt="Empty living room before staging" width="1376" height="768">
-              <figcaption>Before</figcaption>
-            </figure>
-            <figure class="gallery-shot gallery-shot-after">
-              <img id="afterImage" src="assets/hero_coastal.jpg" alt="Living room after virtual staging" width="1376" height="768">
-              <figcaption>After</figcaption>
-            </figure>
-          </div>
-          <p class="gallery-help">
-            <span class="gallery-help-kicker">How this helps the buyer</span>
-            <span id="galleryBuyerLine">An empty living room photographs smaller than it is. Furniture shows a buyer that the sofa fits and that the view is the point of the room.</span>
-          </p>
-        </div>
-
-        <!-- Aesthetic Preset Studio Panel -->
-        <div class="gallery-style-box">
-          <div class="style-row">
-            <span class="style-row-label">Style</span>
-            <button class="style-chip active" onclick="selectGalleryStyle('modern', this)">Modern</button>
-            <button class="style-chip" onclick="selectGalleryStyle('scandinavian', this)">Scandinavian</button>
-            <button class="style-chip" onclick="selectGalleryStyle('farmhouse', this)">Farmhouse</button>
-            <button class="style-chip" data-style="coastal" onclick="selectGalleryStyle('coastal', this)">Coastal</button>
-          </div>
-          <div class="style-preset-card">
-            <div class="style-preset-top">
-              <span class="style-preset-title" id="stylePresetTitle">Modern</span>
-              <div class="palette-swatches" id="stylePresetPalette">
-                <span class="palette-swatch" style="background-color: #FFFFFF;" title="#FFFFFF"></span>
-                <span class="palette-swatch" style="background-color: #E2E8F0;" title="#E2E8F0"></span>
-                <span class="palette-swatch" style="background-color: #1E293B;" title="#1E293B"></span>
-                <span class="palette-swatch" style="background-color: #B89B72;" title="#B89B72"></span>
-              </div>
+      <div class="examples-grid gallery-grid">
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/living_luxury.jpg" alt="The same living room with a charcoal sofa and walnut table" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/hero_empty.jpg" alt="Empty living room before furniture" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Before</span>
             </div>
-            <p class="style-preset-desc" id="stylePresetDesc">A low sofa, a light wood table, one large rug. Fits new construction and condos with big windows.</p>
-            <span class="style-preset-best" id="stylePresetBest">Condos and new construction</span>
+            <span class="compare-tag compare-tag-after">After</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the luxury living room" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
           </div>
-          <p class="style-more">Luxury, mid-century, and traditional are in the studio. This page shows a style only when that room has its own photo.</p>
-        </div>
+          <div class="example-foot"><div><h3>Living room, second style</h3><p>The same windows as the hero, with a charcoal sofa and a walnut table.</p></div></div>
+        </article>
 
-        <!-- High-Converting Bottom Action Bar -->
-        <div class="gallery-action-bar">
-          <div class="action-btn-group">
-            <button class="btn btn-primary btn-gallery-stage" onclick="stageThisGalleryRoom()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Stage a photo like this
-            </button>
-            <button class="btn btn-secondary btn-gallery-download" onclick="downloadActiveGallerySample()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download this example
-            </button>
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/office_staged.jpg" alt="Home office after a desk is added" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/office_empty.jpg" alt="Empty home office before a desk" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Before</span>
+            </div>
+            <span class="compare-tag compare-tag-after">After</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the home office" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
           </div>
-          <p class="gallery-action-trust">From $2.99 a photo</p>
-        </div>
+          <div class="example-foot"><div><h3>Home office</h3><p>A desk in the spare room, so the listing still reads as a place to work.</p></div></div>
+        </article>
 
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/patio_staged.jpg?v=2" alt="Patio after outdoor seating is added" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/patio_empty.jpg" alt="Empty patio before outdoor furniture" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Before</span>
+            </div>
+            <span class="compare-tag compare-tag-after">After</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the patio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
+          </div>
+          <div class="example-foot"><div><h3>Outdoor patio</h3><p>A bare slab reads as unused yard. Daylight seating shows the outdoor room.</p></div></div>
+        </article>
+
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/twilight_dusk.jpg" alt="The same house with dusk light" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/twilight_day.jpg" alt="House exterior photographed in daylight" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Noon</span>
+            </div>
+            <span class="compare-tag compare-tag-after">Dusk</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare day and dusk" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
+          </div>
+          <div class="example-foot"><div><h3>Day to dusk</h3><p>The same house, with the light moved to evening. Say so on the listing.</p></div></div>
+        </article>
+
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/declutter_after.jpg" alt="The same room after boxes are removed" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/declutter_before.jpg" alt="Occupied room with boxes before item removal" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Before</span>
+            </div>
+            <span class="compare-tag compare-tag-after">After</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare item removal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
+          </div>
+          <div class="example-foot"><div><h3>Occupied listing</h3><p>Take the boxes out of a room that is already lived in. Say what was removed before you publish.</p></div></div>
+        </article>
+
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/reno_after.jpg" alt="The same room after a virtual refresh" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/reno_before.jpg" alt="Dated room before a virtual refresh" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Before</span>
+            </div>
+            <span class="compare-tag compare-tag-after">After</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the remodel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
+          </div>
+          <div class="example-foot"><div><h3>Virtual remodel</h3><p>A refresh of the finishes. The listing still needs to say the work is not done.</p></div></div>
+        </article>
+
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/kitchen_staged.jpg?v=4" alt="Kitchen after two stools and a bowl of lemons are added" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/kitchen_empty.jpg?v=4" alt="The same kitchen before stools" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Before</span>
+            </div>
+            <span class="compare-tag compare-tag-after">After</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the kitchen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
+          </div>
+          <div class="example-foot"><div><h3>Kitchen</h3><p>Two stools and a bowl on the island. Cabinets, window, and floor stay as shot.</p></div></div>
+        </article>
+
+        <article class="example-block">
+          <div class="compare-card" data-compare>
+            <img class="compare-shot compare-shot-after" src="assets/bath_staged.jpg?v=4" alt="Bathroom after towels, a vase, and a mat are added" width="1376" height="768" loading="lazy">
+            <div class="compare-before-clip">
+              <img class="compare-shot compare-shot-before" src="assets/bath_empty.jpg?v=4" alt="The same bathroom before towels" width="1376" height="768" loading="lazy">
+              <span class="compare-tag compare-tag-before">Before</span>
+            </div>
+            <span class="compare-tag compare-tag-after">After</span>
+            <span class="compare-hint">Drag to compare</span>
+            <div class="compare-handle" role="slider" tabindex="0" aria-label="Drag to compare the bathroom" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="compare-knob" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 7 4 12 9 17"/><polyline points="15 7 20 12 15 17"/></svg></span>
+            </div>
+          </div>
+          <div class="example-foot"><div><h3>Bathroom</h3><p>Towels, a tray, and a small stool. The vanity, shower, and window stay.</p></div></div>
+        </article>
+      </div>
+
+      <div class="gallery-action-bar">
+        <a href="/dashboard" class="btn btn-primary">Upload a photo</a>
+        <p class="gallery-action-trust">From $2.99 a photo. These are studio examples, not a client listing.</p>
       </div>
     </div>
   </section>
+
+  <section class="scene-section" id="scene">
+    <div class="container">
+      <h2 class="section-title reveal">Watch it happen.<br><em>On the same photo.</em></h2>
+      <p class="section-subtitle reveal">These play on their own. The room does not get redrawn.</p>
+
+      <article class="scene-row">
+        <div class="scene-copy">
+          <h3>Furniture out, then a new set in.</h3>
+          <p>The living room loses its furniture, then another style goes into that same frame.</p>
+        </div>
+        <div class="play-shell" data-play="remove">
+          <div class="play-bar"><span>Living room</span></div>
+          <div class="play-stage">
+            <img class="play-img" src="assets/hero_coastal.jpg" alt="Living room with coastal furniture">
+            <img class="play-img play-fade" data-layer="empty" src="assets/hero_empty.jpg" alt="">
+            <img class="play-img play-fade" data-layer="staged" src="assets/hero_farmhouse.jpg" alt="">
+            <p class="play-status" hidden></p>
+            <button type="button" class="play-action" tabindex="-1">Remove furniture</button>
+            <span class="play-cursor" aria-hidden="true"></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="scene-row scene-row-flip">
+        <div class="scene-copy">
+          <h3>Three styles. One room.</h3>
+          <p>Coastal, Farmhouse, then Scandinavian. The windows stay in the same place.</p>
+        </div>
+        <div class="play-shell" data-play="styles">
+          <div class="play-bar"><span>Living room</span><em data-count>1 / 3</em></div>
+          <div class="play-stage">
+            <img class="play-img play-swap is-on" src="assets/hero_coastal.jpg" alt="Coastal furniture in the living room">
+            <img class="play-img play-swap" src="assets/hero_farmhouse.jpg" alt="Farmhouse furniture in the same living room">
+            <img class="play-img play-swap" src="assets/hero_scandinavian.jpg" alt="Scandinavian furniture in the same living room">
+            <div class="play-dots" aria-hidden="true"><i class="is-on"></i><i></i><i></i></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="scene-row">
+        <div class="scene-copy">
+          <h3>Type the change.</h3>
+          <p>A short line is enough. Here it turns the noon photo to dusk.</p>
+        </div>
+        <div class="play-shell" data-play="type">
+          <div class="play-bar"><span>Exterior</span></div>
+          <div class="play-stage">
+            <img class="play-img" src="assets/twilight_day.jpg" alt="House exterior in daylight">
+            <img class="play-img play-fade" data-layer="dusk" src="assets/twilight_dusk.jpg" alt="The same house at dusk">
+            <p class="play-status" hidden>Applying…</p>
+          </div>
+          <div class="play-compose">
+            <span class="play-typed" data-typed></span>
+            <span class="play-caret" aria-hidden="true"></span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="features-section" id="why">
+    <div class="container">
+      <div class="section-eyebrow reveal">Why agents use it</div>
+      <h2 class="section-title reveal">Built for a listing photo, not a new picture.</h2>
+      <p class="section-subtitle reveal reveal-delay-1">Stage it, look at it, then pay for the file you want to publish.</p>
+      <div class="features-grid reveal reveal-delay-2">
+        <article class="feature">
+          <div class="feature-body">
+            <h3>The photo stays</h3>
+            <p>Furniture goes into the file you uploaded. Walls, windows, and floors stay as shot.</p>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature-body">
+            <h3>Another style, same room</h3>
+            <p>The first photo restages itself through Coastal, Farmhouse, and Scandinavian. The windows do not move.</p>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature-body">
+            <h3>Occupied homes</h3>
+            <p>Take boxes out and leave the furniture that is really there. Buyers should recognize the room.</p>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature-body">
+            <h3>One credit, one photo</h3>
+            <p>A photo is usually ready in a minute or two. Downloading that file again does not use another credit.</p>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature-body">
+            <h3>Look before you pay</h3>
+            <p>A new account includes 3 watermarked previews. No card. A paid photo is not watermarked.</p>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature-body">
+            <h3>Your photos stay yours</h3>
+            <p>We do not use your listing photos to train a model. Email within 30 days of a charge for a refund.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
 
   <!-- ===== HOW IT WORKS ===== -->
   <section class="how-section" id="how-it-works">
@@ -319,6 +486,9 @@
 
       <div class="steps-grid reveal reveal-delay-2">
         <article class="step-card">
+          <div class="step-live">
+            <img src="assets/hero_empty.jpg" alt="Empty living room ready to upload">
+          </div>
           <span class="step-num">1</span>
           <div class="step-body">
             <h3>Upload the photo</h3>
@@ -326,6 +496,13 @@
           </div>
         </article>
         <article class="step-card">
+          <div class="step-live" data-play="staging">
+            <img src="assets/hero_coastal.jpg" alt="Living room while it is staging">
+            <div class="step-veil">
+              <span class="step-pill"><i></i> Staging room…</span>
+              <span class="step-bar"><span></span></span>
+            </div>
+          </div>
           <span class="step-num">2</span>
           <div class="step-body">
             <h3>Pick the job</h3>
@@ -333,6 +510,12 @@
           </div>
         </article>
         <article class="step-card">
+          <div class="step-live" data-play="download">
+            <img class="is-on" src="assets/hero_coastal.jpg" alt="Coastal staged living room">
+            <img src="assets/hero_farmhouse.jpg" alt="Farmhouse staged living room">
+            <img src="assets/hero_scandinavian.jpg" alt="Scandinavian staged living room">
+            <div class="play-dots" aria-hidden="true"><i class="is-on"></i><i></i><i></i></div>
+          </div>
           <span class="step-num">3</span>
           <div class="step-body">
             <h3>Download the file</h3>
@@ -377,6 +560,27 @@
             <li>Stage, declutter, or twilight. No prompt to write</li>
           </ul>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="metrics-bar" id="metrics">
+    <div class="container metrics-grid">
+      <div class="metric">
+        <span class="metric-val">1–2 min</span>
+        <span class="metric-label">Typical render</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">$1.96</span>
+        <span class="metric-label">Per photo on Pro</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">7</span>
+        <span class="metric-label">Furniture styles</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">$2.99</span>
+        <span class="metric-label">One photo, no pack</span>
       </div>
     </div>
   </section>
@@ -588,7 +792,7 @@
     <div class="container">
       <div class="final-cta-inner">
         <div class="section-eyebrow final-eyebrow">Next listing</div>
-        <h2 class="reveal">Stage the next<br>vacant room</h2>
+        <h2 class="reveal">Stage the next<br><em>vacant room.</em></h2>
         <p class="reveal reveal-delay-1">Three watermarked previews on a new account. No card. A photo you publish starts at $2.99.</p>
         <div class="final-cta-buttons reveal reveal-delay-2">
           <a href="/dashboard" class="btn btn-white btn-lg">
@@ -628,6 +832,7 @@
         <a href="/chatgpt">vs. ChatGPT</a>
         <a href="/faq">FAQ</a>
         <a href="/blog">Guides</a>
+        <a href="/for-agents">For agents</a>
       </div>
       <div class="footer-col">
         <h4>Legal &amp; Safety</h4>
@@ -647,7 +852,7 @@
     <div class="sticky-cta-inner">
       <div class="sticky-cta-copy">
         <strong>Stage a listing photo</strong>
-        <span>3 free previews</span>
+        <span>3 previews, no card</span>
       </div>
       <a href="/dashboard" class="btn btn-primary btn-sm">Open studio</a>
     </div>
@@ -679,14 +884,6 @@
             <span>$2.37/image · Stage 1 whole home · Credits never expire</span>
           </div>
           <span class="modal-opt-price">$19</span>
-        </label>
-        <label class="modal-opt" id="tierStarter" onclick="selectModalTier('starter')">
-          <input type="radio" name="modalOption" id="optStarter" value="starter" aria-label="Starter pack 10 images for $29">
-          <div class="modal-opt-body">
-            <strong>Starter pack — 10 images</strong>
-            <span>$2.90/image · credits stay on your account</span>
-          </div>
-          <span class="modal-opt-price">$29</span>
         </label>
         <label class="modal-opt selected" id="tierPro" onclick="selectModalTier('pro')">
           <input type="radio" name="modalOption" id="optPro" value="pro" checked aria-label="Pro pack 25 images for $49">
@@ -842,6 +1039,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=6.27"></script>
+  <script src="app.js?v=6.45"></script>
 </body>
 </html>

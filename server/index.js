@@ -16,6 +16,7 @@ const { connect, getDb } = require('./db');
 const storage = require('./storage');
 const dodo = require('./dodo');
 const mail = require('./mail');
+const nurture = require('./nurture');
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const ROOT = path.join(__dirname, '..');
@@ -496,6 +497,12 @@ async function main() {
   app.get('/dashboard/', (_req, res) => res.redirect('/dashboard'));
   app.use(routePage);
   app.use(express.static(ROOT, { index: 'index.html', etag: false, maxAge: 0 }));
+
+  app.get('/unsubscribe', asyncRoute(async (req, res) => {
+    const ok = await nurture.unsubscribe(db(), req.query.t);
+    res.set('Cache-Control', 'no-store');
+    res.type('html').send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Unsubscribe | RoomGenixAI</title><link rel="stylesheet" href="/style.css"></head><body style="font-family:sans-serif;padding:48px;text-align:center"><p>${ok ? 'You are unsubscribed. You will not get these emails again.' : 'That link is not valid. Email support@roomgenix.com and we will remove you.'}</p><p><a href="/">RoomGenix home</a></p></body></html>`);
+  }));
 
   app.get('/api/health', (_req, res) => {
     res.json({
@@ -1180,6 +1187,7 @@ async function main() {
     res.status(status).json({ status: 'error', message: raw || 'Something went wrong.' });
   });
 
+  nurture.start(db);
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Roomgenix listening on http://127.0.0.1:${PORT}`);
   });

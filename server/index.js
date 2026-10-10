@@ -55,7 +55,15 @@ const PAGE_ROUTES = {
   '/mls-compliance': 'mls-compliance.html',
   '/refund': 'refund-guarantee.html',
   '/blog': 'blog.html',
-  '/for-agents': 'for-agents.html'
+  '/for-agents': 'for-agents.html',
+  '/virtual-staging-vacant-listings': 'virtual-staging-vacant-listings.html',
+  '/virtual-staging-for-photographers': 'virtual-staging-for-photographers.html',
+  '/ai-staging-keeps-room-layout': 'ai-staging-keeps-room-layout.html',
+  '/virtual-vs-physical-staging-cost': 'virtual-vs-physical-staging-cost.html',
+  '/virtual-staging-short-term-rentals': 'virtual-staging-short-term-rentals.html',
+  '/blog/stage-vacant-listing-in-minutes': 'blog-stage-vacant-listing-in-minutes.html',
+  '/blog/is-virtual-staging-legal': 'blog-is-virtual-staging-legal.html',
+  '/blog/virtual-staging-cost-breakdown': 'blog-virtual-staging-cost-breakdown.html'
 };
 
 const PAGE_ALIASES = {
@@ -72,7 +80,15 @@ const PAGE_ALIASES = {
   '/refund-guarantee': '/refund',
   '/guarantee': '/refund',
   '/comparison': '/',
-  '/dashboard.html': '/dashboard'
+  '/dashboard.html': '/dashboard',
+  '/virtual-staging-vacant-listings.html': '/virtual-staging-vacant-listings',
+  '/virtual-staging-for-photographers.html': '/virtual-staging-for-photographers',
+  '/ai-staging-keeps-room-layout.html': '/ai-staging-keeps-room-layout',
+  '/virtual-vs-physical-staging-cost.html': '/virtual-vs-physical-staging-cost',
+  '/virtual-staging-short-term-rentals.html': '/virtual-staging-short-term-rentals',
+  '/blog-stage-vacant-listing-in-minutes.html': '/blog/stage-vacant-listing-in-minutes',
+  '/blog-is-virtual-staging-legal.html': '/blog/is-virtual-staging-legal',
+  '/blog-virtual-staging-cost-breakdown.html': '/blog/virtual-staging-cost-breakdown'
 };
 
 const HOME_SECTIONS = {

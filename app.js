@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   syncStyleChoices();
   updateStudioStatus();
   initAuth().then(() => {
+    try {
+      const authTab = new URLSearchParams(window.location.search).get('auth');
+      if ((authTab === 'signup' || authTab === 'login') && !getCurrentUser()) openLoginModal(authTab);
+    } catch (_) {}
     applyStudioQuery();
     confirmCheckoutReturn();
   });

@@ -65,7 +65,8 @@ const PAGE_ROUTES = {
   '/blog/stage-vacant-listing-in-minutes': 'blog-stage-vacant-listing-in-minutes.html',
   '/blog/is-virtual-staging-legal': 'blog-is-virtual-staging-legal.html',
   '/blog/virtual-staging-cost-breakdown': 'blog-virtual-staging-cost-breakdown.html',
-  '/virtual-staging-bedroom': 'virtual-staging-bedroom.html'
+  '/virtual-staging-bedroom': 'virtual-staging-bedroom.html',
+  '/done-for-you': 'done-for-you.html'
 };
 
 const PAGE_ALIASES = {
@@ -83,6 +84,13 @@ const PAGE_ALIASES = {
   '/guarantee': '/refund',
   '/comparison': '/',
   '/dashboard.html': '/dashboard',
+  '/signup': '/dashboard?auth=signup',
+  '/register': '/dashboard?auth=signup',
+  '/login': '/dashboard?auth=login',
+  '/signin': '/dashboard?auth=login',
+  '/app': '/dashboard',
+  '/studio': '/dashboard',
+  '/done-for-you.html': '/done-for-you',
   '/virtual-staging-vacant-listings.html': '/virtual-staging-vacant-listings',
   '/virtual-staging-for-photographers.html': '/virtual-staging-for-photographers',
   '/ai-staging-keeps-room-layout.html': '/ai-staging-keeps-room-layout',
@@ -932,6 +940,81 @@ async function main() {
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh)
     });
+  }));
+
+  const dfyUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: storage.MAX_BYTES, files: 10, fields: 10, fieldSize: 4000 },
+    fileFilter: (_req, file, cb) => {
+      if (!/^image\/(jpeg|png|webp)$/.test(file.mimetype || '')) {
+        const err = new Error('Upload JPG, PNG, or WEBP photos.');
+        err.status = 400;
+        return cb(err);
+      }
+      cb(null, true);
+    }
+  });
+  app.post('/api/done-for-you', (req, res, next) => {
+    dfyUpload.array('photos', 10)(req, res, (err) => {
+      if (!err) return next();
+      const message = err.code === 'LIMIT_FILE_SIZE' ? 'Each photo must be under 10 MB.'
+        : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE' ? 'Send up to 10 photos.'
+        : (err.message || 'Upload failed.');
+      res.status(400).json({ status: 'error', message });
+    });
+  }, asyncRoute(async (req, res) => {
+    const name = String(req.body.name || '').replace(/[\r\n]+/g, ' ').trim();
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const note = String(req.body.note || '').trim();
+    const files = req.files || [];
+    if (!name || name.length > 80) return res.status(400).json({ status: 'error', message: 'Enter your name.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return res.status(400).json({ status: 'error', message: 'Enter a valid email.' });
+    if (note.length > 2000) return res.status(400).json({ status: 'error', message: 'Keep the note under 2000 characters.' });
+    if (!files.length && !/https?:\/\//i.test(note)) return res.status(400).json({ status: 'error', message: 'Add photos or a link to the listing photos.' });
+    const ip = String(req.ip || 'unknown').slice(0, 80);
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const col = db().collection('dfy_requests');
+    if (await col.countDocuments({ ip, created_at: { $gte: since } }) >= 3) {
+      return res.status(429).json({ status: 'error', message: 'Too many requests from this network today. Email support@roomgenix.com.' });
+    }
+    if (await col.countDocuments({ created_at: { $gte: since } }) >= 30) {
+      return res.status(429).json({ status: 'error', message: 'We are at today\'s limit. Email support@roomgenix.com.' });
+    }
+    const inserted = await col.insertOne({ ip, name, email, note, photos: [], status: 'uploading', created_at: new Date() });
+    const urls = [];
+    try {
+      for (const file of files) {
+        const saved = await storage.uploadBuffer(file.buffer, { folder: 'done-for-you', mime: file.mimetype });
+        urls.push(saved.url);
+      }
+    } catch (err) {
+      await col.deleteOne({ _id: inserted.insertedId });
+      throw err;
+    }
+    const abs = (u) => (/^https?:/i.test(u) ? u : `${SITE}${u.startsWith('/') ? '' : '/'}${u}`);
+    const links = urls.map(abs);
+    await col.updateOne({ _id: inserted.insertedId }, { $set: { photos: links, status: 'new' } });
+    const safe = (value) => String(value).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    const ref = String(inserted.insertedId).slice(-6).toUpperCase();
+    try {
+      await mail.sendEmail({
+        to: 'support@roomgenix.com',
+        replyTo: email,
+        subject: `Done-for-you request ${ref} from ${name} (${links.length} photo${links.length === 1 ? '' : 's'})`.slice(0, 200),
+        text: `${name} <${email}>\nRef: ${ref}\n\nNote:\n${note || '(none)'}\n\nPhotos:\n${links.join('\n') || '(none, see note)'}\n\nOffer: $9 a photo, min 3, delivered within 24h, pay after they see them.`,
+        html: `<p>${safe(name)} &lt;${safe(email)}&gt;<br>Ref: ${ref}</p><p><b>Note:</b><br>${safe(note || '(none)').replace(/\n/g, '<br>')}</p><p><b>Photos:</b><br>${links.map((u) => `<a href="${safe(u)}">${safe(u)}</a>`).join('<br>') || '(none, see note)'}</p><p>Offer: $9 a photo, min 3, delivered within 24h, pay after they see them.</p>`
+      });
+    } catch (err) {
+      await col.updateOne({ _id: inserted.insertedId }, { $set: { status: 'email_failed' } });
+      return res.status(502).json({ status: 'error', message: 'Your photos were saved but we could not notify the team. Email support@roomgenix.com and mention ref ' + ref + '.' });
+    }
+    mail.sendEmail({
+      to: email,
+      replyTo: 'support@roomgenix.com',
+      subject: `We got your photos (ref ${ref}) — RoomGenix`,
+      text: `Hi ${name},\n\nWe received ${links.length ? links.length + ' photo' + (links.length === 1 ? '' : 's') : 'your listing link'}. We'll stage them and email the results within 24 hours. You only pay ($9 a photo, minimum 3) if you want to use them; we'll send a payment link with the results.\n\nReply to this email with any questions.\n\nRohan\nRoomGenix`
+    }).catch(() => {});
+    res.json({ status: 'success', ref, count: links.length });
   }));
 
   app.post('/api/contact', asyncRoute(async (req, res) => {

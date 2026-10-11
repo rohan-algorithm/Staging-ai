@@ -64,7 +64,8 @@ const PAGE_ROUTES = {
   '/virtual-staging-short-term-rentals': 'virtual-staging-short-term-rentals.html',
   '/blog/stage-vacant-listing-in-minutes': 'blog-stage-vacant-listing-in-minutes.html',
   '/blog/is-virtual-staging-legal': 'blog-is-virtual-staging-legal.html',
-  '/blog/virtual-staging-cost-breakdown': 'blog-virtual-staging-cost-breakdown.html'
+  '/blog/virtual-staging-cost-breakdown': 'blog-virtual-staging-cost-breakdown.html',
+  '/virtual-staging-bedroom': 'virtual-staging-bedroom.html'
 };
 
 const PAGE_ALIASES = {
@@ -89,7 +90,8 @@ const PAGE_ALIASES = {
   '/virtual-staging-short-term-rentals.html': '/virtual-staging-short-term-rentals',
   '/blog-stage-vacant-listing-in-minutes.html': '/blog/stage-vacant-listing-in-minutes',
   '/blog-is-virtual-staging-legal.html': '/blog/is-virtual-staging-legal',
-  '/blog-virtual-staging-cost-breakdown.html': '/blog/virtual-staging-cost-breakdown'
+  '/blog-virtual-staging-cost-breakdown.html': '/blog/virtual-staging-cost-breakdown',
+  '/virtual-staging-bedroom.html': '/virtual-staging-bedroom'
 };
 
 const HOME_SECTIONS = {

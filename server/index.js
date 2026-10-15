@@ -66,6 +66,10 @@ const PAGE_ROUTES = {
   '/blog/is-virtual-staging-legal': 'blog-is-virtual-staging-legal.html',
   '/blog/virtual-staging-cost-breakdown': 'blog-virtual-staging-cost-breakdown.html',
   '/virtual-staging-bedroom': 'virtual-staging-bedroom.html',
+  '/virtual-staging-home-office': 'virtual-staging-home-office.html',
+  '/virtual-staging-dining-room': 'virtual-staging-dining-room.html',
+  '/virtual-twilight-real-estate-photos': 'virtual-twilight-real-estate-photos.html',
+  '/virtual-staging-declutter': 'virtual-staging-declutter.html',
   '/done-for-you': 'done-for-you.html'
 };
 
@@ -99,7 +103,11 @@ const PAGE_ALIASES = {
   '/blog-stage-vacant-listing-in-minutes.html': '/blog/stage-vacant-listing-in-minutes',
   '/blog-is-virtual-staging-legal.html': '/blog/is-virtual-staging-legal',
   '/blog-virtual-staging-cost-breakdown.html': '/blog/virtual-staging-cost-breakdown',
-  '/virtual-staging-bedroom.html': '/virtual-staging-bedroom'
+  '/virtual-staging-bedroom.html': '/virtual-staging-bedroom',
+  '/virtual-staging-home-office.html': '/virtual-staging-home-office',
+  '/virtual-staging-dining-room.html': '/virtual-staging-dining-room',
+  '/virtual-twilight-real-estate-photos.html': '/virtual-twilight-real-estate-photos',
+  '/virtual-staging-declutter.html': '/virtual-staging-declutter'
 };
 
 const HOME_SECTIONS = {

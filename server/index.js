@@ -155,7 +155,12 @@ function routePage(req, res, next) {
     const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
     return res.redirect(301, p.slice(0, -1) + query);
   }
-  if (PAGE_ALIASES[p]) return res.redirect(301, PAGE_ALIASES[p]);
+  if (PAGE_ALIASES[p]) {
+    const target = PAGE_ALIASES[p];
+    const rawQuery = req.url.includes('?') ? req.url.slice(req.url.indexOf('?') + 1) : '';
+    const joined = rawQuery ? target + (target.includes('?') ? '&' : '?') + rawQuery : target;
+    return res.redirect(301, joined);
+  }
   const section = HOME_SECTIONS[p.slice(1)];
   if (section) {
     return sendPage(res, path.join(ROOT, 'index.html'), {
@@ -234,6 +239,58 @@ function publicJob(job) {
     watermarked: Boolean(job.watermarked),
     source: job.source || (String(job.image_url || '').includes('assets/') ? 'sample' : ''),
     created_at: job.created_at
+  };
+}
+
+
+// First-party visit tracking: one document per human HTML page view, no raw IPs.
+const VISIT_BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|preview|monitor|uptime|pingdom|lighthouse|headless|curl\/|wget|python-requests|go-http-client|node-fetch|axios|okhttp|java\/|libwww|railway|healthcheck|cloudflare-|httpclient/i;
+const VISIT_IP_SALT = process.env.VISIT_IP_SALT
+  || crypto.createHash('sha256').update('roomgenix-visits:' + (process.env.MONGODB_URI || 'local')).digest('hex');
+
+function visitField(value, max, pattern) {
+  const v = String(Array.isArray(value) ? value[0] : (value || '')).trim().slice(0, max);
+  return v && (!pattern || pattern.test(v)) ? v : '';
+}
+
+function visitReferrer(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const u = new URL(raw);
+    return (u.origin + u.pathname).slice(0, 300);
+  } catch (_) {
+    return '';
+  }
+}
+
+function visitTracker(getDatabase) {
+  return (req, res, next) => {
+    if (req.method !== 'GET') return next();
+    const p = req.path;
+    if (p === '/api/health' || p.startsWith('/api/') || p.startsWith('/uploads') || p === '/unsubscribe') return next();
+    const ua = String(req.get('user-agent') || '');
+    if (!ua || VISIT_BOT_UA.test(ua)) return next();
+    res.on('finish', () => {
+      try {
+        if (res.statusCode !== 200) return;
+        if (!String(res.get('Content-Type') || '').includes('text/html')) return;
+        const ip = String(req.get('cf-connecting-ip') || req.ip || '');
+        const q = req.query || {};
+        getDatabase().collection('visits').insertOne({
+          timestamp: new Date(),
+          path: p.slice(0, 200),
+          referrer: visitReferrer(req.get('referer')),
+          utm_source: visitField(q.utm_source, 100),
+          utm_medium: visitField(q.utm_medium, 100),
+          utm_campaign: visitField(q.utm_campaign, 100),
+          ref: visitField(q.ref, 64, /^[\w.-]+$/),
+          ip_hash: crypto.createHash('sha256').update(VISIT_IP_SALT + '|' + ip).digest('hex'),
+          user_agent: ua.slice(0, 200)
+        }).catch(() => {});
+      } catch (_) { /* tracking must never affect a response */ }
+    });
+    next();
   };
 }
 
@@ -514,6 +571,8 @@ async function main() {
     if (blocked) return res.status(404).end();
     next();
   });
+  db().collection('visits').createIndex({ timestamp: -1 }).catch(() => {});
+  app.use(visitTracker(db));
   app.use('/uploads', express.static(storage.UPLOADS));
   app.get('/dashboard', (_req, res) => {
     sendPage(res, path.join(ROOT, 'dashboard.html'));

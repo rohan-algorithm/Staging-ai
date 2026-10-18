@@ -70,6 +70,9 @@ const PAGE_ROUTES = {
   '/virtual-staging-dining-room': 'virtual-staging-dining-room.html',
   '/virtual-twilight-real-estate-photos': 'virtual-twilight-real-estate-photos.html',
   '/virtual-staging-declutter': 'virtual-staging-declutter.html',
+  '/virtual-staging-scandinavian': 'virtual-staging-scandinavian.html',
+  '/virtual-staging-farmhouse': 'virtual-staging-farmhouse.html',
+  '/virtual-staging-coastal': 'virtual-staging-coastal.html',
   '/done-for-you': 'done-for-you.html'
 };
 
@@ -107,7 +110,10 @@ const PAGE_ALIASES = {
   '/virtual-staging-home-office.html': '/virtual-staging-home-office',
   '/virtual-staging-dining-room.html': '/virtual-staging-dining-room',
   '/virtual-twilight-real-estate-photos.html': '/virtual-twilight-real-estate-photos',
-  '/virtual-staging-declutter.html': '/virtual-staging-declutter'
+  '/virtual-staging-declutter.html': '/virtual-staging-declutter',
+  '/virtual-staging-scandinavian.html': '/virtual-staging-scandinavian',
+  '/virtual-staging-farmhouse.html': '/virtual-staging-farmhouse',
+  '/virtual-staging-coastal.html': '/virtual-staging-coastal'
 };
 
 const HOME_SECTIONS = {

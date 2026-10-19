@@ -73,6 +73,7 @@ const PAGE_ROUTES = {
   '/virtual-staging-scandinavian': 'virtual-staging-scandinavian.html',
   '/virtual-staging-farmhouse': 'virtual-staging-farmhouse.html',
   '/virtual-staging-coastal': 'virtual-staging-coastal.html',
+  '/virtual-staging-luxury': 'virtual-staging-luxury.html',
   '/done-for-you': 'done-for-you.html'
 };
 
@@ -113,7 +114,8 @@ const PAGE_ALIASES = {
   '/virtual-staging-declutter.html': '/virtual-staging-declutter',
   '/virtual-staging-scandinavian.html': '/virtual-staging-scandinavian',
   '/virtual-staging-farmhouse.html': '/virtual-staging-farmhouse',
-  '/virtual-staging-coastal.html': '/virtual-staging-coastal'
+  '/virtual-staging-coastal.html': '/virtual-staging-coastal',
+  '/virtual-staging-luxury.html': '/virtual-staging-luxury'
 };
 
 const HOME_SECTIONS = {

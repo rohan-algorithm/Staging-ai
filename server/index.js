@@ -234,7 +234,7 @@ function publicJob(job) {
     id: String(job._id),
     room_type: job.room_type,
     style: job.style,
-    image_url: storage.stripDisclosure(job.image_url),
+    image_url: storage.stripDisclosure(job.preview_url && job.status !== 'downloaded' ? job.preview_url : job.image_url),
     before_url: job.before_url,
     prompt: job.prompt || '',
     status: job.status,
@@ -294,6 +294,28 @@ function visitTracker(getDatabase) {
     });
     next();
   };
+}
+
+function clientIpHash(req) {
+  const ip = String(req.get('cf-connecting-ip') || req.ip || '');
+  return crypto.createHash('sha256').update(VISIT_IP_SALT + '|' + ip).digest('hex');
+}
+
+// Free no-signup try: one per hashed IP per 24h plus a global daily cap (protects render cost).
+const FREE_TRY_DAILY_CAP = Math.max(0, parseInt(process.env.FREE_TRY_DAILY_CAP || '50', 10) || 0);
+const FREE_TRY_ROOMS = ['living', 'bedroom', 'dining', 'office'];
+const FREE_TRY_INPUT_EDGE = 1600;
+
+function sniffImageMime(buffer) {
+  if (!buffer || buffer.length < 12) return '';
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
+  if (buffer.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
+  if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  return '';
+}
+
+function sha256Hex(value) {
+  return crypto.createHash('sha256').update(String(value)).digest('hex');
 }
 
 function db() {
@@ -403,7 +425,7 @@ function imageForReplicate(req, before) {
   throw new Error('The photo has to be a public link or a file on this server.');
 }
 
-async function callReplicate(imageInput, style, room, prompt) {
+async function callReplicate(imageInput, style, room, prompt, info) {
   const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-2-max/predictions', {
     method: 'POST',
     headers: {
@@ -438,6 +460,11 @@ async function callReplicate(imageInput, style, room, prompt) {
     await new Promise(r => setTimeout(r, 2000));
     const poll = await fetch(pollUrl, { headers: { Authorization: `Bearer ${REPLICATE_API_TOKEN}` } });
     prediction = await poll.json();
+  }
+  if (info && typeof info === 'object') {
+    info.id = prediction.id || '';
+    info.status = prediction.status || '';
+    info.metrics = prediction.metrics || null;
   }
   const output = prediction.output;
   if (Array.isArray(output) && output[0]) return output[0];
@@ -992,7 +1019,22 @@ async function main() {
     }
 
     if (job.status !== 'downloaded') {
-      if (!job.credit_spent) {
+      if (!job.credit_spent && job.requires_paid_credit) {
+        // Free-try results unlock only with a purchased credit, never a welcome preview credit.
+        const paid = await db().collection('users').updateOne(
+          { _id: user._id, $expr: { $gte: [{ $subtract: ['$credits_balance', { $ifNull: ['$welcome_credits', 0] }] }, 1] } },
+          { $inc: { credits_balance: -1 } }
+        );
+        if (!paid.modifiedCount) {
+          return res.status(402).json({
+            status: 'error',
+            message: 'Get the clean high-res file for $2.99. Free preview credits do not unlock it.',
+            plan: 'single',
+            credits_balance: user.credits_balance,
+            user: publicUser(user)
+          });
+        }
+      } else if (!job.credit_spent) {
         if (user.credits_balance < 1) {
           return res.status(402).json({
             status: 'error',
@@ -1015,6 +1057,194 @@ async function main() {
       credits_balance: fresh.credits_balance,
       user: publicUser(fresh)
     });
+  }));
+
+  const freeTryUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: storage.MAX_BYTES, files: 1, fields: 10, fieldSize: 600 },
+    fileFilter: (_req, file, cb) => {
+      if (!/^image\/(jpeg|png|webp)$/.test(file.mimetype || '')) {
+        const err = new Error('Upload a JPG, PNG, or WEBP photo.');
+        err.status = 400;
+        return cb(err);
+      }
+      cb(null, true);
+    }
+  });
+
+  app.post('/api/free-try', (req, res, next) => {
+    freeTryUpload.single('image')(req, res, (err) => {
+      if (!err) return next();
+      const message = err.code === 'LIMIT_FILE_SIZE' ? 'The photo must be under 10 MB.'
+        : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE' ? 'Send one photo.'
+        : (err.message || 'Upload failed.');
+      res.status(400).json({ status: 'error', message });
+    });
+  }, asyncRoute(async (req, res) => {
+    if (!REPLICATE_API_TOKEN || !storage.configured()) {
+      return res.status(503).json({ status: 'error', message: 'The free try is not available right now.' });
+    }
+    const file = req.file;
+    if (!file || !file.buffer || !file.buffer.length) {
+      return res.status(400).json({ status: 'error', message: 'Choose a room photo to upload.' });
+    }
+    const mime = sniffImageMime(file.buffer);
+    if (!mime) {
+      return res.status(400).json({ status: 'error', message: 'That file is not a JPG, PNG, or WEBP photo.' });
+    }
+    const room = FREE_TRY_ROOMS.includes(String(req.body.room_type || '')) ? String(req.body.room_type) : 'living';
+    const style = STYLE_LOOK[String(req.body.style || '')] ? String(req.body.style) : 'modern';
+    const attribution = {
+      ref: visitField(req.body.ref, 64, /^[\w.-]+$/),
+      utm_source: visitField(req.body.utm_source, 100),
+      utm_medium: visitField(req.body.utm_medium, 100),
+      utm_campaign: visitField(req.body.utm_campaign, 100),
+      referrer: visitReferrer(req.body.referrer)
+    };
+    const ipHash = clientIpHash(req);
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const col = db().collection('free_tries');
+    const active = { $in: ['pending', 'done'] };
+    const limited = (code, message) => res.status(429).json({ status: 'error', code, message });
+    const ipMessage = 'You have used your free try for today. Create a free account for 3 more previews.';
+    const capMessage = 'Today\'s free tries are used up. Create a free account for 3 previews, or come back tomorrow.';
+    if (await col.countDocuments({ ip_hash: ipHash, created_at: { $gte: since }, status: active }) >= 1) {
+      return limited('ip_limit', ipMessage);
+    }
+    if (await col.countDocuments({ created_at: { $gte: since } }) >= FREE_TRY_DAILY_CAP) {
+      return limited('daily_cap', capMessage);
+    }
+    const claimToken = crypto.randomBytes(24).toString('hex');
+    const startedAt = new Date();
+    const inserted = await col.insertOne({
+      ip_hash: ipHash,
+      status: 'pending',
+      room_type: room,
+      style,
+      ...attribution,
+      user_agent: String(req.get('user-agent') || '').slice(0, 200),
+      input_bytes: file.buffer.length,
+      input_mime: mime,
+      claim_token_hash: sha256Hex(claimToken),
+      created_at: startedAt
+    });
+    const tryId = inserted.insertedId;
+    // Re-check after the insert so two parallel requests can't both pass.
+    const first = await col.find({ ip_hash: ipHash, created_at: { $gte: since }, status: active })
+      .sort({ created_at: 1, _id: 1 }).limit(1).next();
+    if (!first || String(first._id) !== String(tryId)) {
+      await col.deleteOne({ _id: tryId });
+      return limited('ip_limit', ipMessage);
+    }
+    if (await col.countDocuments({ created_at: { $gte: since } }) > FREE_TRY_DAILY_CAP) {
+      await col.deleteOne({ _id: tryId });
+      return limited('daily_cap', capMessage);
+    }
+
+    try {
+      const before = await storage.uploadBuffer(file.buffer, { folder: 'virtualstage/free-try/before', mime });
+      const input = storage.limitedUrl(before.url, FREE_TRY_INPUT_EDGE);
+      const info = {};
+      const staged = await callReplicate(input, style, room, '', info);
+      const clean = await storage.persistRemote(staged, { folder: 'virtualstage/free-try/staged', preview: false });
+      const preview = await storage.bakePreview(clean.url, { folder: 'virtualstage/free-try/preview' });
+      await col.updateOne({ _id: tryId }, {
+        $set: {
+          status: 'done',
+          before_url: before.url,
+          before_public_id: before.public_id || '',
+          input_url: input,
+          clean_url: clean.url,
+          clean_public_id: clean.public_id || '',
+          preview_url: preview.url,
+          preview_public_id: preview.public_id || '',
+          replicate_id: info.id || '',
+          replicate_metrics: info.metrics || null,
+          duration_ms: Date.now() - startedAt.getTime(),
+          finished_at: new Date()
+        }
+      });
+      return res.json({
+        status: 'success',
+        try_id: String(tryId),
+        claim_token: claimToken,
+        preview_url: preview.url,
+        before_url: input,
+        room_type: room,
+        style,
+        message: 'Here is your staged preview. It has a RoomGenix watermark. The clean high-res file is $2.99.'
+      });
+    } catch (err) {
+      const detail = String(err && err.message || err || '');
+      console.error('Free try failed:', detail);
+      await col.updateOne({ _id: tryId }, { $set: { status: 'failed', error: detail.slice(0, 300), finished_at: new Date() } });
+      return res.status(502).json({
+        status: 'error',
+        message: 'The render did not finish. Your free try was not used, so you can try again.'
+      });
+    }
+  }));
+
+  app.post('/api/free-try/claim', asyncRoute(async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    let tryId;
+    try { tryId = new ObjectId(String(req.body.try_id || '')); } catch (_) {
+      return res.status(400).json({ status: 'error', message: 'That free try was not found.' });
+    }
+    const token = String(req.body.claim_token || '');
+    const col = db().collection('free_tries');
+    const doc = await col.findOne({ _id: tryId, status: 'done' });
+    if (!doc || !token || doc.claim_token_hash !== sha256Hex(token)) {
+      return res.status(404).json({ status: 'error', message: 'That free try was not found.' });
+    }
+    if (doc.claimed_by) {
+      if (String(doc.claimed_by) === String(user._id) && doc.job_id) {
+        return res.json({ status: 'success', job_id: String(doc.job_id), user: publicUser(user) });
+      }
+      return res.status(409).json({ status: 'error', message: 'That free try is already saved to another account.' });
+    }
+    const claim = await col.updateOne(
+      { _id: tryId, claimed_by: { $exists: false } },
+      { $set: { claimed_by: user._id, claimed_at: new Date() } }
+    );
+    if (!claim.modifiedCount) {
+      return res.status(409).json({ status: 'error', message: 'That free try is already saved to an account.' });
+    }
+    const attribution = {
+      ref: doc.ref || '', utm_source: doc.utm_source || '', utm_medium: doc.utm_medium || '',
+      utm_campaign: doc.utm_campaign || '', referrer: doc.referrer || ''
+    };
+    const job = {
+      user_id: user._id,
+      room_type: doc.room_type,
+      style: doc.style,
+      prompt: '',
+      before_url: doc.input_url || doc.before_url,
+      before_public_id: doc.before_public_id || '',
+      image_url: doc.clean_url,
+      image_public_id: doc.clean_public_id || '',
+      preview_url: doc.preview_url,
+      status: 'preview',
+      credit_spent: false,
+      requires_paid_credit: true,
+      watermarked: true,
+      source: 'free_try',
+      free_try_id: tryId,
+      attribution,
+      created_at: new Date()
+    };
+    const result = await db().collection('jobs').insertOne(job);
+    await col.updateOne({ _id: tryId }, { $set: { job_id: result.insertedId } });
+    await db().collection('users').updateOne(
+      { _id: user._id, attribution: { $exists: false } },
+      { $set: { attribution: { ...attribution, via: 'free_try' } } }
+    );
+    await db().collection('events').insertOne({
+      user_id: user._id, event_type: 'free_try_claim', property_address: '',
+      metadata: { free_try_id: String(tryId), job_id: String(result.insertedId), ...attribution }, created_at: new Date()
+    });
+    res.json({ status: 'success', job_id: String(result.insertedId), user: publicUser(user) });
   }));
 
   const dfyUpload = multer({

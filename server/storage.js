@@ -171,6 +171,38 @@ function downloadUrl(url, filename) {
   return url;
 }
 
+// Cloudinary delivery URL limited to a max edge, re-encoded as JPEG (used to cap render input size and cost).
+function limitedUrl(url, maxEdge) {
+  if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
+  const edge = Math.max(256, Math.min(4096, parseInt(maxEdge, 10) || 1600));
+  return url.replace('/upload/', `/upload/c_limit,w_${edge},h_${edge}/f_jpg,q_auto:good/`);
+}
+
+// Stores a new Cloudinary asset with the preview watermark baked into the pixels, so the
+// clean original can't be recovered by editing the delivery URL. Returns { url, public_id }.
+async function bakePreview(url, { folder, maxEdge } = {}) {
+  if (!configured() || !url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) {
+    const err = new Error('The preview watermark could not be added.');
+    err.refund = true;
+    throw err;
+  }
+  const edge = Math.max(256, Math.min(4096, parseInt(maxEdge, 10) || 1400));
+  const layers = [
+    `c_limit,w_${edge},h_${edge}`,
+    'l_text:Arial_72_bold:RoomGenix%20preview,co_white,g_center,o_60,a_-30',
+    'l_text:Arial_30_bold:roomgenix.com%20preview,co_white,g_south_east,x_24,y_24,o_85',
+    'f_jpg,q_auto:good'
+  ];
+  const marked = url.replace('/upload/', `/upload/${layers.join('/')}/`);
+  const result = await cloudinary.uploader.upload(marked, {
+    folder: folder || 'virtualstage/free-try/preview',
+    resource_type: 'image',
+    unique_filename: true,
+    overwrite: false
+  });
+  return { url: result.secure_url, public_id: result.public_id, provider: 'cloudinary' };
+}
+
 module.exports = {
   UPLOADS,
   MAX_BYTES,
@@ -181,5 +213,7 @@ module.exports = {
   persistRemote,
   downloadUrl,
   withDisclosure,
-  stripDisclosure
+  stripDisclosure,
+  limitedUrl,
+  bakePreview
 };

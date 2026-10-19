@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Read-only summary of first-party page visits (collection `visits`).
+ * Read-only summary of first-party page visits (collection `visits`) and no-signup free tries (`free_tries`).
  * Usage: node scripts/visits-summary.js
  * Uses MONGODB_URI / MONGODB_DB from .env. Performs aggregate reads only.
  */
@@ -32,6 +32,28 @@ async function group(col, since, field) {
   return docs.map((d) => ({ key: d._id === '' ? '(none)' : d._id, visits: d.visits, unique: d.unique }));
 }
 
+// No-signup free tries (collection `free_tries`): status counts, claims, and source.
+async function freeTries(tries, since) {
+  const match = { created_at: { $gte: since } };
+  const total = await tries.countDocuments(match);
+  const byStatus = await tries.aggregate([
+    { $match: match },
+    { $group: { _id: '$status', n: { $sum: 1 } } },
+    { $sort: { n: -1 } }
+  ]).toArray();
+  const claimed = await tries.countDocuments({ ...match, claimed_by: { $exists: true } });
+  const ips = (await tries.distinct('ip_hash', match)).length;
+  console.log(`  free tries: ${total}   unique visitors (hashed IP): ${ips}   saved to an account: ${claimed}`);
+  console.log(`    by status: ${byStatus.map((s) => `${s._id || '(none)'} ${s.n}`).join(', ') || '(none)'}`);
+  const byRef = await tries.aggregate([
+    { $match: match },
+    { $group: { _id: { $ifNull: ['$ref', ''] }, n: { $sum: 1 } } },
+    { $sort: { n: -1 } },
+    { $limit: 15 }
+  ]).toArray();
+  console.log(`    by ref: ${byRef.map((r) => `${r._id || '(none)'} ${r.n}`).join(', ') || '(none)'}`);
+}
+
 (async () => {
   if (!process.env.MONGODB_URI) {
     console.error('MONGODB_URI is not set (check .env).');
@@ -39,7 +61,9 @@ async function group(col, since, field) {
   }
   const client = new MongoClient(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 15000 });
   await client.connect();
-  const col = client.db(process.env.MONGODB_DB || 'virtualstage').collection('visits');
+  const database = client.db(process.env.MONGODB_DB || 'virtualstage');
+  const col = database.collection('visits');
+  const tries = database.collection('free_tries');
   const now = Date.now();
   console.log(`Visits summary generated ${new Date(now).toISOString()} (UTC)`);
   for (const w of WINDOWS) {
@@ -53,6 +77,7 @@ async function group(col, since, field) {
     table('by ref', await group(col, since, 'ref'));
     table('by utm_source', await group(col, since, 'utm_source'));
     table('by path', await group(col, since, 'path'));
+    await freeTries(tries, since);
   }
   await client.close();
 })().catch((err) => { console.error('Summary failed:', err.message); process.exit(1); });

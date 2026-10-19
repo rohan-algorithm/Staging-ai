@@ -163,6 +163,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Start staging
           </a>
+          <a href="#try-free" class="btn btn-secondary btn-hero" id="heroTryFreeBtn" style="margin-left:10px;">Try one photo free, no signup</a>
         </div>
         <ul class="hero-promises">
           <li>Ready in a minute or two</li>
@@ -173,6 +174,79 @@
       </div>
     </div>
   </header>
+
+  <!-- ===== TRY IT FREE, NO SIGNUP ===== -->
+  <section class="try-free-section" id="try-free" style="padding:56px 0;background:var(--bg-alt,#efede6);">
+    <style>
+      #try-free .ft-card{max-width:880px;margin:0 auto;background:#fff;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+      #try-free h2{margin:0 0 6px}
+      #try-free .ft-sub{margin:0 0 20px;color:var(--muted,#6b6560);line-height:1.5}
+      #try-free .ft-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+      #try-free label.ft-field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;flex:1 1 180px}
+      #try-free select{padding:10px 12px;border:1px solid #d8d4cc;border-radius:10px;font:inherit;background:#fff}
+      #try-free .ft-file{display:flex;align-items:center;gap:10px;flex:1 1 100%;padding:14px;border:1.5px dashed #c9c4ba;border-radius:12px;cursor:pointer}
+      #try-free .ft-file input{position:absolute;opacity:0;width:1px;height:1px}
+      #try-free .ft-file span[data-ft-filename]{color:var(--muted,#6b6560);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #try-free .ft-status{margin:14px 0 0;font-size:15px}
+      #try-free .ft-status[data-kind="error"]{color:#b42318}
+      #try-free .ft-status[data-kind="limit"]{color:#8a5a00}
+      #try-free .ft-result{margin-top:24px}
+      #try-free .ft-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      #try-free .ft-pair figure{margin:0}
+      #try-free .ft-pair img{width:100%;border-radius:12px;display:block;background:#eee}
+      #try-free .ft-pair figcaption{font-size:13px;color:var(--muted,#6b6560);margin-top:6px}
+      #try-free .ft-cta-box{margin-top:18px;padding:18px;border-radius:14px;background:var(--bg,#faf9f5);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+      #try-free .ft-cta-box p{margin:0;line-height:1.45}
+      @media (max-width:640px){#try-free .ft-pair{grid-template-columns:1fr}#try-free .ft-card{padding:18px}}
+    </style>
+    <div class="container">
+      <div class="ft-card">
+        <h2 class="section-title" style="font-size:clamp(26px,3.4vw,36px);">Try it free. <em>No signup.</em></h2>
+        <p class="ft-sub">Upload one empty-room photo, pick a style, and see it furnished in about a minute. Walls, windows and floors stay as photographed. One free try per day.</p>
+        <form novalidate>
+          <div class="ft-row">
+            <label class="ft-file">
+              <input type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-label="Room photo (JPG, PNG or WEBP, up to 10 MB)">
+              <span class="btn btn-secondary" style="pointer-events:none;">Choose photo</span>
+              <span data-ft-filename>No photo chosen</span>
+            </label>
+            <label class="ft-field">Room
+              <select name="room_type">
+                <option value="living">Living room</option>
+                <option value="bedroom">Bedroom</option>
+                <option value="dining">Dining room</option>
+                <option value="office">Home office</option>
+              </select>
+            </label>
+            <label class="ft-field">Style
+              <select name="style">
+                <option value="modern">Modern</option>
+                <option value="scandinavian">Scandinavian</option>
+                <option value="farmhouse">Farmhouse</option>
+                <option value="coastal">Coastal</option>
+                <option value="luxury">Quiet luxury</option>
+                <option value="midcentury">Mid-century</option>
+                <option value="traditional">Traditional</option>
+              </select>
+            </label>
+            <button type="submit" class="btn btn-primary" data-ft-submit style="flex:0 0 auto;">Stage my photo free</button>
+          </div>
+          <p class="ft-status" data-ft-status hidden role="status" aria-live="polite"></p>
+        </form>
+        <div class="ft-result" data-ft-result hidden>
+          <div class="ft-pair">
+            <figure><img data-ft-before alt="Your original photo"><figcaption>Your photo</figcaption></figure>
+            <figure><img data-ft-after alt="Your photo with furniture added (watermarked preview)"><figcaption>Staged preview (watermarked)</figcaption></figure>
+          </div>
+          <div class="ft-cta-box">
+            <p><strong>Like it? Get the clean high-res file for $2.99.</strong><br>No watermark, ready for MLS. One-time payment, no subscription.</p>
+            <button type="button" class="btn btn-primary btn-lg" data-ft-cta>Get the clean file for $2.99</button>
+          </div>
+          <p class="ft-sub" style="margin:12px 0 0;font-size:14px;">Want to try more rooms? <a data-ft-signup href="/dashboard?auth=signup" style="color:inherit;text-decoration:underline;">Create a free account</a> for 3 more previews.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- ===== VISIBLE EXAMPLES ===== -->
   <section class="examples-section" id="examples">
@@ -1055,5 +1129,6 @@
   </div>
 
   <script src="app.js?v=6.46"></script>
+  <script src="free-try.js?v=1"></script>
 </body>
 </html>

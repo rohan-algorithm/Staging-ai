@@ -301,7 +301,12 @@ function clientIpHash(req) {
   return crypto.createHash('sha256').update(VISIT_IP_SALT + '|' + ip).digest('hex');
 }
 
-// Free no-signup try: one per hashed IP per 24h plus a global daily cap (protects render cost).
+// Free try (account required): 1 per user per 24h, a few per hashed IP (shared networks), plus a global daily cap.
+const FREE_TRY_USER_DAILY = 1;
+const FREE_TRY_IP_DAILY = 3;
+const FREE_TRY_FAIL_DAILY = 6;
+const FREE_TRY_STALE_MS = 4 * 60 * 1000;
+const FREE_TRY_RENDER_MS = 170 * 1000;
 const FREE_TRY_DAILY_CAP = Math.max(0, parseInt(process.env.FREE_TRY_DAILY_CAP || '50', 10) || 0);
 const FREE_TRY_ROOMS = ['living', 'bedroom', 'dining', 'office'];
 const FREE_TRY_INPUT_EDGE = 1600;
@@ -409,6 +414,11 @@ function dataUri(buffer, mime) {
 }
 
 function imageForReplicate(req, before) {
+  // Large phone/camera photos make the render model reject the request (it caps total pixels at 4MP);
+  // send a downscaled, EXIF-corrected JPEG copy whenever the original is hosted on Cloudinary.
+  if (before && typeof before.url === 'string' && before.url.includes('res.cloudinary.com')) {
+    return storage.limitedUrl(before.url, 2048);
+  }
   if (req.file && req.file.buffer) {
     return dataUri(req.file.buffer, req.file.mimetype);
   }
@@ -426,27 +436,37 @@ function imageForReplicate(req, before) {
 }
 
 async function callReplicate(imageInput, style, room, prompt, info) {
-  const start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-2-max/predictions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
-      'Content-Type': 'application/json',
-      Prefer: 'wait'
-    },
-    body: JSON.stringify({
-      input: {
-        prompt: editPrompt(style, room, prompt),
-        input_images: [imageInput],
-        aspect_ratio: 'match_input_image',
-        resolution: 'match_input_image',
-        output_format: 'png',
-        output_quality: 100,
-        prompt_upsampling: false,
-        safety_tolerance: 2
-      }
-    })
+  const body = JSON.stringify({
+    input: {
+      prompt: editPrompt(style, room, prompt),
+      input_images: [imageInput],
+      aspect_ratio: 'match_input_image',
+      resolution: 'match_input_image',
+      output_format: 'png',
+      output_quality: 100,
+      prompt_upsampling: false,
+      safety_tolerance: 2
+    }
   });
-  let prediction = await start.json();
+  let start;
+  let prediction;
+  // Replicate throttles accounts with a low balance (burst of 1); wait and retry instead of failing the render.
+  for (let attempt = 0; attempt < 4; attempt++) {
+    start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-2-max/predictions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+        Prefer: 'wait'
+      },
+      signal: AbortSignal.timeout(100000),
+      body
+    });
+    prediction = await start.json();
+    if (start.status !== 429 || attempt === 3) break;
+    const wait = Math.min(15, Math.max(3, Number(prediction.retry_after) || 8));
+    await new Promise(r => setTimeout(r, wait * 1000 + 500));
+  }
   if (!start.ok) {
     const detail = prediction.detail || prediction.error || prediction.title;
     throw new Error(typeof detail === 'string' ? detail : 'Render service rejected the photo.');
@@ -458,8 +478,10 @@ async function callReplicate(imageInput, style, room, prompt, info) {
     }
     if (!pollUrl) break;
     await new Promise(r => setTimeout(r, 2000));
-    const poll = await fetch(pollUrl, { headers: { Authorization: `Bearer ${REPLICATE_API_TOKEN}` } });
-    prediction = await poll.json();
+    try {
+      const poll = await fetch(pollUrl, { headers: { Authorization: `Bearer ${REPLICATE_API_TOKEN}` }, signal: AbortSignal.timeout(20000) });
+      prediction = await poll.json();
+    } catch (_) { /* a single slow or dropped poll must not fail the render; try again */ }
   }
   if (info && typeof info === 'object') {
     info.id = prediction.id || '';
@@ -950,7 +972,9 @@ async function main() {
       const detail = String(err && err.message || '');
       console.error('Render failed:', detail || err);
       const billing = /insufficient credit/i.test(detail);
-      if (billing || err.refund) {
+      // Failures that are ours, not the photo's (throttling, size limits, timeouts), never cost the user a credit.
+      const transient = /throttl|rate limit|total pixels|timeout|timed out|aborted|fetch failed|did not finish|without an image/i.test(detail) || err.name === 'TimeoutError' || err.name === 'AbortError';
+      if (billing || transient || err.refund) {
         const inc = { credits_balance: 1 };
         if (spentWelcome) inc.welcome_credits = 1;
         await db().collection('users').updateOne({ _id: user._id }, { $inc: inc });
@@ -960,7 +984,9 @@ async function main() {
         status: 'error',
         message: billing
           ? 'Replicate has no credit left. Add credit in the Replicate billing page, wait a few minutes, then try this photo again.'
-          : 'The render was started and one credit was used. It did not finish.',
+          : (transient || err.refund)
+            ? 'The render did not finish. Your credit was not used, please try again.'
+            : 'The render was started and one credit was used. It did not finish.',
         credits_balance: fresh.credits_balance,
         user: publicUser(fresh)
       });
@@ -1072,7 +1098,17 @@ async function main() {
     }
   });
 
-  app.post('/api/free-try', (req, res, next) => {
+  // Free try (account required): POST starts a render and returns at once; the browser then polls
+  // GET /api/free-try/:id. No request is ever held open for the render, so proxy and browser idle
+  // timeouts (Cloudflare 100s, Railway, flaky mobile links) can no longer strand the page.
+  app.post('/api/free-try', asyncRoute(async (req, res, next) => {
+    const user = await authUser(req);
+    if (!user) {
+      return res.status(401).json({ status: 'error', code: 'login_required', message: 'Sign up or log in to stage your photo free.' });
+    }
+    req.freeTryUser = user;
+    next();
+  }), (req, res, next) => {
     freeTryUpload.single('image')(req, res, (err) => {
       if (!err) return next();
       const message = err.code === 'LIMIT_FILE_SIZE' ? 'The photo must be under 10 MB.'
@@ -1081,6 +1117,7 @@ async function main() {
       res.status(400).json({ status: 'error', message });
     });
   }, asyncRoute(async (req, res) => {
+    const user = req.freeTryUser;
     if (!REPLICATE_API_TOKEN || !storage.configured()) {
       return res.status(503).json({ status: 'error', message: 'The free try is not available right now.' });
     }
@@ -1104,19 +1141,33 @@ async function main() {
     const ipHash = clientIpHash(req);
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const col = db().collection('free_tries');
-    const active = { $in: ['pending', 'done'] };
+    // Only finished tries and fresh in-flight ones use up the allowance; failed or stuck ones never do.
+    const activeSince = () => ({
+      $or: [
+        { status: 'done', created_at: { $gte: since } },
+        { status: 'pending', created_at: { $gte: new Date(Date.now() - FREE_TRY_STALE_MS) } }
+      ]
+    });
     const limited = (code, message) => res.status(429).json({ status: 'error', code, message });
-    const ipMessage = 'You have used your free try for today. Create a free account for 3 more previews.';
-    const capMessage = 'Today\'s free tries are used up. Create a free account for 3 previews, or come back tomorrow.';
-    if (await col.countDocuments({ ip_hash: ipHash, created_at: { $gte: since }, status: active }) >= 1) {
+    const userMessage = 'You have used your free try for today. Come back tomorrow, or use the 3 free previews that come with your account.';
+    const ipMessage = 'Free tries from this network are used up for today. Use the 3 free previews that come with your account.';
+    const capMessage = 'Today\'s free tries are used up. Use the 3 free previews that come with your account, or come back tomorrow.';
+    if (await col.countDocuments({ user_id: user._id, ...activeSince() }) >= FREE_TRY_USER_DAILY) {
+      return limited('user_limit', userMessage);
+    }
+    if (await col.countDocuments({ ip_hash: ipHash, ...activeSince() }) >= FREE_TRY_IP_DAILY) {
       return limited('ip_limit', ipMessage);
     }
-    if (await col.countDocuments({ created_at: { $gte: since } }) >= FREE_TRY_DAILY_CAP) {
+    if (await col.countDocuments({ ip_hash: ipHash, status: 'failed', created_at: { $gte: since } }) >= FREE_TRY_FAIL_DAILY) {
+      return limited('ip_limit', 'Too many failed tries from this network today. Please come back tomorrow.');
+    }
+    if (await col.countDocuments(activeSince()) >= FREE_TRY_DAILY_CAP) {
       return limited('daily_cap', capMessage);
     }
     const claimToken = crypto.randomBytes(24).toString('hex');
     const startedAt = new Date();
     const inserted = await col.insertOne({
+      user_id: user._id,
       ip_hash: ipHash,
       status: 'pending',
       room_type: room,
@@ -1130,25 +1181,34 @@ async function main() {
     });
     const tryId = inserted.insertedId;
     // Re-check after the insert so two parallel requests can't both pass.
-    const first = await col.find({ ip_hash: ipHash, created_at: { $gte: since }, status: active })
-      .sort({ created_at: 1, _id: 1 }).limit(1).next();
+    const first = await col.find({ user_id: user._id, ...activeSince() }).sort({ created_at: 1, _id: 1 }).limit(1).next();
     if (!first || String(first._id) !== String(tryId)) {
       await col.deleteOne({ _id: tryId });
-      return limited('ip_limit', ipMessage);
+      return limited('user_limit', userMessage);
     }
-    if (await col.countDocuments({ created_at: { $gte: since } }) > FREE_TRY_DAILY_CAP) {
+    if (await col.countDocuments(activeSince()) > FREE_TRY_DAILY_CAP) {
       await col.deleteOne({ _id: tryId });
       return limited('daily_cap', capMessage);
     }
 
-    try {
-      const before = await storage.uploadBuffer(file.buffer, { folder: 'virtualstage/free-try/before', mime });
+    res.status(202).json({
+      status: 'pending',
+      try_id: String(tryId),
+      claim_token: claimToken,
+      poll_after_ms: 3000,
+      message: 'Staging started.'
+    });
+
+    // Render in the background. A watchdog marks it failed (never "used") if it runs too long.
+    const buffer = file.buffer;
+    const render = async () => {
+      const before = await storage.uploadBuffer(buffer, { folder: 'virtualstage/free-try/before', mime });
       const input = storage.limitedUrl(before.url, FREE_TRY_INPUT_EDGE);
       const info = {};
       const staged = await callReplicate(input, style, room, '', info);
       const clean = await storage.persistRemote(staged, { folder: 'virtualstage/free-try/staged', preview: false });
       const preview = await storage.bakePreview(clean.url, { folder: 'virtualstage/free-try/preview' });
-      await col.updateOne({ _id: tryId }, {
+      await col.updateOne({ _id: tryId, status: 'pending' }, {
         $set: {
           status: 'done',
           before_url: before.url,
@@ -1164,25 +1224,53 @@ async function main() {
           finished_at: new Date()
         }
       });
+    };
+    let timer;
+    const watchdog = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Render timed out after ' + Math.round(FREE_TRY_RENDER_MS / 1000) + 's')), FREE_TRY_RENDER_MS);
+    });
+    Promise.race([render(), watchdog])
+      .catch(async (err) => {
+        const detail = String(err && err.message || err || '');
+        console.error('Free try failed:', detail);
+        try {
+          await col.updateOne({ _id: tryId, status: 'pending' }, {
+            $set: { status: 'failed', error: detail.slice(0, 300), duration_ms: Date.now() - startedAt.getTime(), finished_at: new Date() }
+          });
+        } catch (dbErr) { console.error('Free try status update failed:', dbErr && dbErr.message); }
+      })
+      .finally(() => clearTimeout(timer));
+  }));
+
+  app.get('/api/free-try/:id', asyncRoute(async (req, res) => {
+    let tryId;
+    try { tryId = new ObjectId(String(req.params.id || '')); } catch (_) {
+      return res.status(404).json({ status: 'error', message: 'That free try was not found.' });
+    }
+    const token = String(req.get('x-try-token') || req.query.token || '');
+    const col = db().collection('free_tries');
+    const doc = token ? await col.findOne({ _id: tryId }) : null;
+    if (!doc || doc.claim_token_hash !== sha256Hex(token)) {
+      return res.status(404).json({ status: 'error', message: 'That free try was not found.' });
+    }
+    res.set('Cache-Control', 'no-store');
+    const failedReply = { status: 'error', failed: true, message: 'The render did not finish. Your free try was not used, so you can try again.' };
+    if (doc.status === 'done') {
       return res.json({
         status: 'success',
-        try_id: String(tryId),
-        claim_token: claimToken,
-        preview_url: preview.url,
-        before_url: input,
-        room_type: room,
-        style,
-        message: 'Here is your staged preview. It has a RoomGenix watermark. The clean high-res file is $2.99.'
-      });
-    } catch (err) {
-      const detail = String(err && err.message || err || '');
-      console.error('Free try failed:', detail);
-      await col.updateOne({ _id: tryId }, { $set: { status: 'failed', error: detail.slice(0, 300), finished_at: new Date() } });
-      return res.status(502).json({
-        status: 'error',
-        message: 'The render did not finish. Your free try was not used, so you can try again.'
+        try_id: String(doc._id),
+        preview_url: doc.preview_url,
+        before_url: doc.input_url || doc.before_url,
+        room_type: doc.room_type,
+        style: doc.style
       });
     }
+    if (doc.status === 'failed') return res.json(failedReply);
+    if (Date.now() - new Date(doc.created_at).getTime() > FREE_TRY_STALE_MS) {
+      await col.updateOne({ _id: tryId, status: 'pending' }, { $set: { status: 'failed', error: 'stale pending (server restarted or timed out)', finished_at: new Date() } });
+      return res.json(failedReply);
+    }
+    res.json({ status: 'pending', elapsed_ms: Date.now() - new Date(doc.created_at).getTime() });
   }));
 
   app.post('/api/free-try/claim', asyncRoute(async (req, res) => {
@@ -1195,7 +1283,7 @@ async function main() {
     const token = String(req.body.claim_token || '');
     const col = db().collection('free_tries');
     const doc = await col.findOne({ _id: tryId, status: 'done' });
-    if (!doc || !token || doc.claim_token_hash !== sha256Hex(token)) {
+    if (!doc || !token || doc.claim_token_hash !== sha256Hex(token) || (doc.user_id && String(doc.user_id) !== String(user._id))) {
       return res.status(404).json({ status: 'error', message: 'That free try was not found.' });
     }
     if (doc.claimed_by) {

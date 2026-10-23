@@ -163,7 +163,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Start staging
           </a>
-          <a href="#try-free" class="btn btn-secondary btn-hero" id="heroTryFreeBtn" style="margin-left:10px;">Try one photo free, no signup</a>
+          <a href="#try-free" class="btn btn-secondary btn-hero" id="heroTryFreeBtn" style="margin-left:10px;">Try it free. Sign up in 10 seconds</a>
         </div>
         <ul class="hero-promises">
           <li>Ready in a minute or two</li>
@@ -175,7 +175,7 @@
     </div>
   </header>
 
-  <!-- ===== TRY IT FREE, NO SIGNUP ===== -->
+  <!-- ===== TRY IT FREE (free account, 10-second signup) ===== -->
   <section class="try-free-section" id="try-free" style="padding:56px 0;background:var(--bg-alt,#efede6);">
     <style>
       #try-free .ft-card{max-width:880px;margin:0 auto;background:#fff;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
@@ -189,6 +189,7 @@
       #try-free .ft-file span[data-ft-filename]{color:var(--muted,#6b6560);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       #try-free .ft-status{margin:14px 0 0;font-size:15px}
       #try-free .ft-status[data-kind="error"]{color:#b42318}
+      #try-free .ft-status[data-kind="info"]{color:#2c5282}
       #try-free .ft-status[data-kind="limit"]{color:#8a5a00}
       #try-free .ft-result{margin-top:24px}
       #try-free .ft-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -201,8 +202,8 @@
     </style>
     <div class="container">
       <div class="ft-card">
-        <h2 class="section-title" style="font-size:clamp(26px,3.4vw,36px);">Try it free. <em>No signup.</em></h2>
-        <p class="ft-sub">Upload one empty-room photo, pick a style, and see it furnished in about a minute. Walls, windows and floors stay as photographed. One free try per day.</p>
+        <h2 class="section-title" style="font-size:clamp(26px,3.4vw,36px);">Try it free. <em>Sign up in 10 seconds.</em></h2>
+        <p class="ft-sub">Upload one empty-room photo, pick a style, and see it furnished in about a minute. Walls, windows and floors stay as photographed. One free try per day with a free account. Your photo is kept while you sign up.</p>
         <form novalidate>
           <div class="ft-row">
             <label class="ft-file">
@@ -232,6 +233,7 @@
             <button type="submit" class="btn btn-primary" data-ft-submit style="flex:0 0 auto;">Stage my photo free</button>
           </div>
           <p class="ft-status" data-ft-status hidden role="status" aria-live="polite"></p>
+          <button type="button" class="btn btn-secondary" data-ft-retry hidden style="margin-top:10px;">Try again</button>
         </form>
         <div class="ft-result" data-ft-result hidden>
           <div class="ft-pair">
@@ -1128,7 +1130,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=6.46"></script>
-  <script src="free-try.js?v=1"></script>
+  <script src="app.js?v=6.47"></script>
+  <script src="free-try.js?v=2"></script>
 </body>
 </html>

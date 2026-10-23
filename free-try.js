@@ -1,4 +1,5 @@
-/* RoomGenix: "Try it free, no signup" on the homepage, plus the $2.99 clean-file hand-off.
+/* RoomGenix: "Try it free" on the homepage (free account required), plus the $2.99 clean-file hand-off.
+   The render is started with one short request, then polled, so no request is held open for the render.
    Relies on globals from app.js (getAuthToken, authHeaders, showToast) when they exist. */
 (function () {
   'use strict';
@@ -173,6 +174,141 @@
     el.hidden = !text;
   }
 
+  var PENDING_KEY = 'rg_free_try_pending';
+  var POLL_MS = 3000;
+  var DEADLINE_MS = 120 * 1000;      // show an error + retry after about 2 minutes
+  var RESUME_MS = 60 * 1000;         // extra wait when the visitor taps Try again on a slow render
+  var state = { root: null, form: null, button: null, retry: null, file: null, room: 'living', style: 'modern', running: false, tryId: '', claimToken: '' };
+
+  function fetchTimeout(url, opts, ms) {
+    var ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, ms) : null;
+    if (ctl) opts.signal = ctl.signal;
+    return fetch(url, opts).then(
+      function (r) { if (timer) clearTimeout(timer); return r; },
+      function (e) { if (timer) clearTimeout(timer); throw e; }
+    );
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function authOnly() {
+    var h = {};
+    if (token()) h.Authorization = 'Bearer ' + token();
+    return h;
+  }
+
+  function busy(on) {
+    if (state.button) state.button.disabled = !!on;
+    if (state.retry) state.retry.hidden = true;
+    state.running = !!on;
+  }
+  function fail(message, kind, canRetry) {
+    setStatus(state.root, message, kind || 'error');
+    if (state.retry) state.retry.hidden = !canRetry;
+    state.running = false;
+    if (state.button) state.button.disabled = false;
+  }
+
+  // Polls until the render is done, failed, or the deadline passes. Network blips just retry.
+  async function pollTry(tryId, claimToken, limitMs) {
+    var started = Date.now();
+    var misses = 0;
+    while (Date.now() - started < limitMs) {
+      var secs = Math.round((Date.now() - started) / 1000);
+      setStatus(state.root, 'Staging your photo (' + secs + 's). This takes about a minute, keep this tab open.', 'busy');
+      await sleep(POLL_MS);
+      try {
+        var res = await fetchTimeout('/api/free-try/' + encodeURIComponent(tryId), { headers: { 'X-Try-Token': claimToken, 'Cache-Control': 'no-cache' }, cache: 'no-store' }, 15000);
+        var data = await res.json().catch(function () { return {}; });
+        misses = 0;
+        if (res.status === 404) return { state: 'failed', message: 'That try expired. Please try again.' };
+        if (data.status === 'success' && data.preview_url) return { state: 'done', data: data };
+        if (data.status === 'error') return { state: 'failed', message: data.message };
+      } catch (_) {
+        misses++;
+        if (misses >= 6 && Date.now() - started > 30000) {
+          setStatus(state.root, 'Connection looks unstable. Still checking your photo...', 'busy');
+        }
+      }
+    }
+    return { state: 'timeout' };
+  }
+
+  function finishDone(data) {
+    var saved = { try_id: data.try_id || state.tryId, claim_token: state.claimToken, preview_url: data.preview_url, before_url: data.before_url, at: Date.now() };
+    writeJson(TRY_KEY, saved);
+    localStorage.removeItem(JOB_KEY);
+    localStorage.removeItem(PENDING_KEY);
+    setStatus(state.root, '', '');
+    busy(false);
+    showResult(state.root, saved);
+  }
+
+  async function watch(limitMs) {
+    var out = await pollTry(state.tryId, state.claimToken, limitMs);
+    if (out.state === 'done') return finishDone(out.data);
+    if (out.state === 'failed') {
+      localStorage.removeItem(PENDING_KEY);
+      state.tryId = ''; state.claimToken = '';
+      return fail(out.message || 'The render did not finish. Your free try was not used, so you can try again.', 'error', true);
+    }
+    // Timeout: the render may still finish, so Try again checks it once more before starting over.
+    fail('This is taking longer than expected. Your free try has not been used up. Tap Try again.', 'error', true);
+  }
+
+  async function startTry() {
+    var f = state.file;
+    if (!f) return fail('Choose a room photo first.', 'error', false);
+    if (!token()) return needLogin();
+    var fd = new FormData();
+    fd.append('image', f);
+    fd.append('room_type', state.room);
+    fd.append('style', state.style);
+    var a = attribution();
+    ATTR_FIELDS.concat(['referrer']).forEach(function (k) { if (a[k]) fd.append(k, a[k]); });
+    busy(true);
+    setStatus(state.root, 'Uploading your photo...', 'busy');
+    var res, data;
+    try {
+      res = await fetchTimeout('/api/free-try', { method: 'POST', headers: authOnly(), body: fd }, 90000);
+      data = await res.json().catch(function () { return {}; });
+    } catch (_) {
+      return fail('Could not upload your photo. Check your connection and tap Try again.', 'error', true);
+    }
+    if (res.status === 401) { busy(false); return needLogin(true); }
+    if (res.status === 429) return fail(data.message || 'You have used your free try for today.', 'limit', false);
+    if (!res.ok || !data.try_id) return fail(data.message || 'Something went wrong. Tap Try again.', 'error', true);
+    state.tryId = data.try_id;
+    state.claimToken = data.claim_token;
+    writeJson(PENDING_KEY, { try_id: data.try_id, claim_token: data.claim_token, at: Date.now() });
+    await watch(DEADLINE_MS);
+  }
+
+  // Logged out: open the signup modal; the chosen file and settings stay in memory and the try
+  // starts right after sign-in, without leaving the page.
+  function needLogin(expired) {
+    setStatus(state.root, expired ? 'Please log in again to stage your photo.' : 'Create your free account (10 seconds) and we will stage this photo right away.', 'info');
+    if (typeof window.openLoginModal === 'function') {
+      window.openLoginModal('signup');
+      var sub = document.getElementById('loginModalSub');
+      if (sub) sub.textContent = 'Sign up in 10 seconds and your free staging starts right away.';
+    } else {
+      var q = attrQuery();
+      window.location.href = '/dashboard?auth=signup' + (q ? '&' + q : '');
+    }
+  }
+
+  function onAuthed() {
+    if (!state.file || state.running || !state.root) return false;
+    setTimeout(startTry, 50);
+    return true;
+  }
+
+  function retryTry() {
+    if (state.running) return;
+    if (state.tryId) { busy(true); watch(RESUME_MS); return; }
+    startTry();
+  }
+
   function initForm() {
     var root = document.getElementById('try-free');
     if (!root) return;
@@ -182,6 +318,8 @@
     var nameEl = root.querySelector('[data-ft-filename]');
     var cta = root.querySelector('[data-ft-cta]');
     var signupLink = root.querySelector('[data-ft-signup]');
+    state.root = root; state.form = form; state.button = button;
+    state.retry = root.querySelector('[data-ft-retry]');
     if (signupLink) {
       var q = attrQuery();
       signupLink.href = '/dashboard?auth=signup' + (q ? '&' + q : '');
@@ -195,38 +333,32 @@
       if (nameEl) nameEl.textContent = f ? f.name : 'No photo chosen';
     });
     if (cta) cta.addEventListener('click', getClean);
+    if (state.retry) state.retry.addEventListener('click', retryTry);
     if (!form) return;
-    form.addEventListener('submit', async function (e) {
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (state.running) return;
       var f = input && input.files && input.files[0];
       if (!f) { setStatus(root, 'Choose a room photo first.', 'error'); return; }
       if (TYPES.indexOf(f.type) === -1) { setStatus(root, 'Use a JPG, PNG, or WEBP photo.', 'error'); return; }
       if (f.size > MAX_BYTES) { setStatus(root, 'The photo must be under 10 MB.', 'error'); return; }
-      var fd = new FormData();
-      fd.append('image', f);
-      fd.append('room_type', form.elements.room_type.value);
-      fd.append('style', form.elements.style.value);
-      var a = attribution();
-      ATTR_FIELDS.concat(['referrer']).forEach(function (k) { if (a[k]) fd.append(k, a[k]); });
-      button.disabled = true;
-      setStatus(root, 'Staging your photo. This takes about a minute, keep this tab open.', 'busy');
-      try {
-        var res = await fetch('/api/free-try', { method: 'POST', body: fd });
-        var data = await res.json().catch(function () { return {}; });
-        if (!res.ok || data.status !== 'success') {
-          setStatus(root, data.message || 'Something went wrong. Try again.', res.status === 429 ? 'limit' : 'error');
-          return;
-        }
-        writeJson(TRY_KEY, { try_id: data.try_id, claim_token: data.claim_token, preview_url: data.preview_url, before_url: data.before_url, at: Date.now() });
-        localStorage.removeItem(JOB_KEY);
-        setStatus(root, '', '');
-        showResult(root, data);
-      } catch (_) {
-        setStatus(root, 'Could not reach the server. Check your connection and try again.', 'error');
-      } finally {
-        button.disabled = false;
-      }
+      state.file = f;
+      state.room = form.elements.room_type.value;
+      state.style = form.elements.style.value;
+      state.tryId = ''; state.claimToken = '';
+      if (state.retry) state.retry.hidden = true;
+      if (!token()) { needLogin(); return; }
+      startTry();
     });
+    // A reload mid-render resumes watching the same try instead of losing it.
+    var pend = readJson(PENDING_KEY);
+    if (pend && pend.try_id && pend.claim_token && Date.now() - (pend.at || 0) < 4 * 60 * 1000) {
+      state.tryId = pend.try_id; state.claimToken = pend.claim_token;
+      busy(true);
+      watch(DEADLINE_MS);
+    } else {
+      localStorage.removeItem(PENDING_KEY);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -235,5 +367,5 @@
     finishAfterCheckout();
     resumeIntent();
   });
-  window.RoomGenixFreeTry = { getClean: getClean };
+  window.RoomGenixFreeTry = { getClean: getClean, onAuthed: onAuthed };
 })();

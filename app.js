@@ -2549,6 +2549,10 @@ async function handleAuthSubmit(event) {
     setAuthToken(data.token);
     setCurrentUser(data.user);
     closeLoginModal();
+    if (window.RoomGenixFreeTry && window.RoomGenixFreeTry.onAuthed && window.RoomGenixFreeTry.onAuthed()) {
+      showToast(data.message || `Welcome, ${data.user.name}! Staging your photo now.`, 'success', 5000);
+      return;
+    }
     if (isDashboardPage()) {
       showAccount();
       loadDashboardData();
@@ -2635,6 +2639,10 @@ async function handleGoogleCredential(response) {
     setAuthToken(data.token);
     setCurrentUser(data.user);
     closeLoginModal();
+    if (window.RoomGenixFreeTry && window.RoomGenixFreeTry.onAuthed && window.RoomGenixFreeTry.onAuthed()) {
+      showToast(data.message || `Welcome, ${data.user.name}! Staging your photo now.`, 'success', 5000);
+      return;
+    }
     if (isDashboardPage()) {
       showAccount();
       loadDashboardData();

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Read-only summary of first-party page visits (collection `visits`) and no-signup free tries (`free_tries`).
+ * Read-only summary of first-party page visits (collection `visits`) and free tries (account required) (`free_tries`).
  * Usage: node scripts/visits-summary.js
  * Uses MONGODB_URI / MONGODB_DB from .env. Performs aggregate reads only.
  */
@@ -43,7 +43,8 @@ async function freeTries(tries, since) {
   ]).toArray();
   const claimed = await tries.countDocuments({ ...match, claimed_by: { $exists: true } });
   const ips = (await tries.distinct('ip_hash', match)).length;
-  console.log(`  free tries: ${total}   unique visitors (hashed IP): ${ips}   saved to an account: ${claimed}`);
+  const users = (await tries.distinct('user_id', match)).filter(Boolean).length;
+  console.log(`  free tries: ${total}   unique users: ${users}   unique networks (hashed IP): ${ips}   saved to an account: ${claimed}`);
   console.log(`    by status: ${byStatus.map((s) => `${s._id || '(none)'} ${s.n}`).join(', ') || '(none)'}`);
   const byRef = await tries.aggregate([
     { $match: match },

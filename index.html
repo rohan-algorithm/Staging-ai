@@ -194,7 +194,7 @@
       #try-free .ft-result{margin-top:24px}
       #try-free .ft-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
       #try-free .ft-pair figure{margin:0}
-      #try-free .ft-pair img{width:100%;border-radius:12px;display:block;background:#eee}
+      #try-free .ft-pair img{width:100%;height:auto;border-radius:12px;display:block;background:#eee;image-rendering:auto}
       #try-free .ft-pair figcaption{font-size:13px;color:var(--muted,#6b6560);margin-top:6px}
       #try-free .ft-cta-box{margin-top:18px;padding:18px;border-radius:14px;background:var(--bg,#faf9f5);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
       #try-free .ft-cta-box p{margin:0;line-height:1.45}
@@ -237,8 +237,8 @@
         </form>
         <div class="ft-result" data-ft-result hidden>
           <div class="ft-pair">
-            <figure><img data-ft-before alt="Your original photo"><figcaption>Your photo</figcaption></figure>
-            <figure><img data-ft-after alt="Your photo with furniture added (watermarked preview)"><figcaption>Staged preview (watermarked)</figcaption></figure>
+            <figure><img data-ft-before alt="Your original photo" decoding="async"><figcaption>Your photo</figcaption></figure>
+            <figure><img data-ft-after alt="Your photo with furniture added (watermarked preview)" decoding="async"><figcaption>Staged preview (watermarked)</figcaption></figure>
           </div>
           <div class="ft-cta-box">
             <p><strong>Like it? Get the clean high-res file for $2.99.</strong><br>No watermark, ready for MLS. One-time payment, no subscription.</p>
@@ -1131,6 +1131,6 @@
   </div>
 
   <script src="app.js?v=6.47"></script>
-  <script src="free-try.js?v=2"></script>
+  <script src="free-try.js?v=3"></script>
 </body>
 </html>

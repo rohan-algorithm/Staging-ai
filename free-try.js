@@ -176,7 +176,7 @@
 
   var PENDING_KEY = 'rg_free_try_pending';
   var POLL_MS = 3000;
-  var DEADLINE_MS = 120 * 1000;      // show an error + retry after about 2 minutes
+  var DEADLINE_MS = 150 * 1000;      // show an error + retry after about 2.5 minutes
   var RESUME_MS = 60 * 1000;         // extra wait when the visitor taps Try again on a slow render
   var state = { root: null, form: null, button: null, retry: null, file: null, room: 'living', style: 'modern', running: false, tryId: '', claimToken: '' };
 

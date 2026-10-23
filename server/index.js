@@ -309,7 +309,14 @@ const FREE_TRY_STALE_MS = 4 * 60 * 1000;
 const FREE_TRY_RENDER_MS = 170 * 1000;
 const FREE_TRY_DAILY_CAP = Math.max(0, parseInt(process.env.FREE_TRY_DAILY_CAP || '50', 10) || 0);
 const FREE_TRY_ROOMS = ['living', 'bedroom', 'dining', 'office'];
-const FREE_TRY_INPUT_EDGE = 1600;
+const FREE_TRY_INPUT_EDGE = 2048;
+const FREE_TRY_MODEL = 'google/nano-banana-pro';
+const FREE_TRY_FULL = {
+  living: 'a sofa, a coffee table, a large area rug, one accent armchair, a small side table with a lamp, and one tall indoor plant',
+  bedroom: 'a queen bed with layered bedding and pillows, two nightstands with lamps, a large area rug under the bed, and a low dresser',
+  dining: 'a dining table with six chairs, a rug under the table, and a low sideboard',
+  office: 'a desk, a desk chair, a large area rug, a low bookcase or credenza, a desk lamp, and one indoor plant'
+};
 
 function sniffImageMime(buffer) {
   if (!buffer || buffer.length < 12) return '';
@@ -408,6 +415,14 @@ function editPrompt(style, room, prompt) {
   return instruction + sharp;
 }
 
+// Free-try staging prompt: fuller, true-to-scale furniture while the photo itself (walls, windows, floor, framing) stays as shot.
+function freeTryPrompt(style, room) {
+  const furniture = ROOM_FURNITURE[room] || { name: 'room' };
+  const pieces = FREE_TRY_FULL[room] || 'furniture that belongs in this room';
+  const look = STYLE_LOOK[style] || STYLE_LOOK.modern;
+  return `Virtually stage this empty ${furniture.name} for a real estate listing by adding furniture: ${pieces}, in ${look}. This is an exact edit of the photograph. Keep the identical camera position, framing, crop, field of view, and perspective. Leave the walls and their color, the windows, doors, trim, flooring, ceiling, lights, and every existing object exactly as photographed. The furniture must be true to real-world scale and sit on the floor in correct perspective, with soft contact shadows and light that matches the direction, color temperature, and softness of the existing window light. Make the room look fuller but not cluttered, with clear walkways and nothing blocking windows or doors. Photorealistic, sharp, true-to-life materials.`;
+}
+
 function dataUri(buffer, mime) {
   const type = mime && String(mime).startsWith('image/') ? String(mime).split(';')[0] : 'image/jpeg';
   return `data:${type};base64,${buffer.toString('base64')}`;
@@ -435,8 +450,17 @@ function imageForReplicate(req, before) {
   throw new Error('The photo has to be a public link or a file on this server.');
 }
 
-async function callReplicate(imageInput, style, room, prompt, info) {
-  const body = JSON.stringify({
+async function callReplicate(imageInput, style, room, prompt, info, options = {}) {
+  const model = options.freeTry ? FREE_TRY_MODEL : 'black-forest-labs/flux-2-max';
+  const body = JSON.stringify(options.freeTry ? {
+    input: {
+      prompt: freeTryPrompt(style, room),
+      image_input: [imageInput],
+      aspect_ratio: 'match_input_image',
+      resolution: '2K',
+      output_format: 'jpg'
+    }
+  } : {
     input: {
       prompt: editPrompt(style, room, prompt),
       input_images: [imageInput],
@@ -452,7 +476,7 @@ async function callReplicate(imageInput, style, room, prompt, info) {
   let prediction;
   // Replicate throttles accounts with a low balance (burst of 1); wait and retry instead of failing the render.
   for (let attempt = 0; attempt < 4; attempt++) {
-    start = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-2-max/predictions', {
+    start = await fetch(`https://api.replicate.com/v1/models/${model}/predictions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
@@ -1203,15 +1227,15 @@ async function main() {
     const buffer = file.buffer;
     const render = async () => {
       const before = await storage.uploadBuffer(buffer, { folder: 'virtualstage/free-try/before', mime });
-      const input = storage.limitedUrl(before.url, FREE_TRY_INPUT_EDGE);
+      const input = storage.limitedUrl(before.url, FREE_TRY_INPUT_EDGE, 90);
       const info = {};
-      const staged = await callReplicate(input, style, room, '', info);
+      const staged = await callReplicate(input, style, room, '', info, { freeTry: true });
       const clean = await storage.persistRemote(staged, { folder: 'virtualstage/free-try/staged', preview: false });
       const preview = await storage.bakePreview(clean.url, { folder: 'virtualstage/free-try/preview' });
       await col.updateOne({ _id: tryId, status: 'pending' }, {
         $set: {
           status: 'done',
-          before_url: before.url,
+          before_url: storage.limitedUrl(before.url, FREE_TRY_INPUT_EDGE, 90),
           before_public_id: before.public_id || '',
           input_url: input,
           clean_url: clean.url,

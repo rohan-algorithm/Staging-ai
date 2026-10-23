@@ -172,10 +172,10 @@ function downloadUrl(url, filename) {
 }
 
 // Cloudinary delivery URL limited to a max edge, re-encoded as JPEG (used to cap render input size and cost).
-function limitedUrl(url, maxEdge) {
+function limitedUrl(url, maxEdge, quality) {
   if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
   const edge = Math.max(256, Math.min(4096, parseInt(maxEdge, 10) || 1600));
-  return url.replace('/upload/', `/upload/c_limit,w_${edge},h_${edge}/f_jpg,q_auto:good/`);
+  return url.replace('/upload/', `/upload/c_limit,w_${edge},h_${edge}/f_jpg,q_${quality || 'auto:good'}/`);
 }
 
 // Stores a new Cloudinary asset with the preview watermark baked into the pixels, so the
@@ -186,12 +186,20 @@ async function bakePreview(url, { folder, maxEdge } = {}) {
     err.refund = true;
     throw err;
   }
-  const edge = Math.max(256, Math.min(4096, parseInt(maxEdge, 10) || 1400));
+  const edge = Math.max(256, Math.min(4096, parseInt(maxEdge, 10) || 2048));
+  // Small repeated diagonal "roomgenix.com" tile (so a crop can't remove it) plus a corner mark;
+  // the staging stays clearly visible. Baked into the pixels at a 2048px long edge, JPEG quality 90.
   const layers = [
     `c_limit,w_${edge},h_${edge}`,
-    'l_text:Arial_72_bold:RoomGenix%20preview,co_white,g_center,o_60,a_-30',
-    'l_text:Arial_30_bold:roomgenix.com%20preview,co_white,g_south_east,x_24,y_24,o_85',
-    'f_jpg,q_auto:good'
+    'l_text:Arial_30_bold:roomgenix.com,co_white,o_45',
+    'e_shadow:40,x_2,y_2',
+    'c_lpad,w_460,h_250,b_rgb:00000000',
+    'a_-30',
+    'fl_layer_apply,fl_tiled',
+    'l_text:Arial_34_bold:roomgenix.com%20%C2%B7%20preview,co_white,o_90',
+    'e_shadow:50,x_2,y_2',
+    'fl_layer_apply,g_south_east,x_30,y_26',
+    'f_jpg,q_90'
   ];
   const marked = url.replace('/upload/', `/upload/${layers.join('/')}/`);
   const result = await cloudinary.uploader.upload(marked, {

@@ -683,7 +683,10 @@ async function main() {
   });
 
   app.get('/api/auth/config', (_req, res) => {
-    res.json({ google_client_id: GOOGLE_CLIENT_ID });
+    res.json({
+      google_client_id: GOOGLE_CLIENT_ID,
+      meta_pixel_id: process.env.META_PIXEL_ID || ''
+    });
   });
 
   async function verifyGoogleIdToken(credential) {
@@ -764,10 +767,12 @@ async function main() {
       Object.assign(user, updates);
     }
     const first = (user.name || 'there').split(' ')[0];
+    const userPayload = publicUser(user);
+    userPayload.is_new_user = created; // used by client Pixel to fire Lead/CompleteRegistration on first Google sign-in only
     res.json({
       status: 'success',
       message: created ? 'Account created. Three watermarked previews are included. No card.' : `Welcome back, ${first}.`,
-      user: publicUser(user),
+      user: userPayload,
       token: user.session_token
     });
   }));
@@ -1660,7 +1665,9 @@ async function main() {
         credited = true;
       }
       const fresh = await db().collection('users').findOne({ _id: user._id });
-      return res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance, credited });
+      // Return purchase amount (USD) for client-side Pixel Purchase event (first-time credit of a transaction only).
+      const purchaseValue = credited && pending ? Number(pending.amount_usd || pending.amount || 0) : 0;
+      return res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance, credited, purchase_value: purchaseValue, plan: pending ? pending.plan : null });
     }
     if (!sessionId || !STRIPE_SECRET_KEY) {
       const fresh = await db().collection('users').findOne({ _id: user._id });

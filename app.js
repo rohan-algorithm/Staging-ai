@@ -2,6 +2,27 @@
    Roomgenix – Application Logic
    ========================================================================== */
 
+// --- META PIXEL (injected on load, ID comes from server env META_PIXEL_ID) ---
+let metaPixelInstalled = false;
+function installMetaPixel(pixelId) {
+  if (metaPixelInstalled || !pixelId || typeof window === 'undefined') return;
+  metaPixelInstalled = true;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+  (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  window.fbq('init', pixelId);
+  window.fbq('track', 'PageView');
+}
+function trackPixelEvent(event, params) {
+  try { if (typeof window.fbq === 'function') window.fbq('track', event, params || {}); } catch (_) {}
+}
+// Boot Pixel ASAP (parallel to the rest of init)
+fetch('/api/auth/config').then(r => r.ok ? r.json() : {}).then(cfg => {
+  if (cfg && cfg.meta_pixel_id) installMetaPixel(cfg.meta_pixel_id);
+}).catch(() => {});
+
 document.addEventListener('DOMContentLoaded', () => {
   hidePublicDemo();
   initNavbar();
@@ -1877,6 +1898,14 @@ async function confirmCheckoutReturn() {
     if (res.ok && data.user) setCurrentUser(data.user);
     if (res.ok && data.credited) {
       showToast('Payment received. Credits are on this account.', 'success', 5000);
+      // Pixel: Purchase conversion. Value comes from the server-confirmed transaction (USD).
+      const value = Number(data.purchase_value || 0);
+      trackPixelEvent('Purchase', {
+        value: value > 0 ? value : 2.99,
+        currency: 'USD',
+        content_name: data.plan || 'single',
+        content_type: 'product'
+      });
     }
     params.delete('checkout');
     params.delete('session_id');
@@ -2548,6 +2577,11 @@ async function handleAuthSubmit(event) {
 
     setAuthToken(data.token);
     setCurrentUser(data.user);
+    // Pixel: track signup as a Lead (and CompleteRegistration) so Meta can optimize for new accounts.
+    if (authMode === 'signup') {
+      trackPixelEvent('Lead', { content_name: 'Free account signup', content_category: 'signup', value: 0, currency: 'USD' });
+      trackPixelEvent('CompleteRegistration', { content_name: 'Free account signup', status: 'new_account' });
+    }
     closeLoginModal();
     if (window.RoomGenixFreeTry && window.RoomGenixFreeTry.onAuthed && window.RoomGenixFreeTry.onAuthed()) {
       showToast(data.message || `Welcome, ${data.user.name}! Staging your photo now.`, 'success', 5000);
@@ -2638,6 +2672,11 @@ async function handleGoogleCredential(response) {
     }
     setAuthToken(data.token);
     setCurrentUser(data.user);
+    // Pixel: Google signup → Lead + CompleteRegistration. `is_new_user` is set by the server on first sign-in.
+    if (data.user && data.user.is_new_user) {
+      trackPixelEvent('Lead', { content_name: 'Google signup', content_category: 'signup', value: 0, currency: 'USD' });
+      trackPixelEvent('CompleteRegistration', { content_name: 'Google signup', status: 'new_account' });
+    }
     closeLoginModal();
     if (window.RoomGenixFreeTry && window.RoomGenixFreeTry.onAuthed && window.RoomGenixFreeTry.onAuthed()) {
       showToast(data.message || `Welcome, ${data.user.name}! Staging your photo now.`, 'success', 5000);

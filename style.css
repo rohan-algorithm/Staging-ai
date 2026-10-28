@@ -4123,7 +4123,8 @@ body[data-page="dashboard"] { scroll-padding-top: 96px; }
   font-family: var(--font);
   color: var(--text);
 }
-.legal-prose h3 { margin: 28px 0 8px; font-size: 18px; }
+.legal-prose h2, .legal-prose h3 { margin: 28px 0 8px; font-size: 18px; }
+.legal-prose h3.q { margin: 16px 0 6px; font-size: 15px; }
 .legal-prose h4 { margin: 16px 0 6px; font-size: 15px; }
 .legal-prose p, .legal-prose li { color: var(--text-2); line-height: 1.7; font-size: 15px; }
 .legal-prose ul, .legal-prose ol { padding-left: 20px; margin: 8px 0 12px; }

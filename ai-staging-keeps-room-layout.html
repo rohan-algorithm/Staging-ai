@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=6.30">
+  <link rel="stylesheet" href="/style.css?v=6.63">
   <style>
     .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0 8px; }
     .pair-grid figure { margin: 0; }
@@ -29,10 +29,11 @@
     @media (max-width: 640px) { .pair-grid { grid-template-columns: 1fr; } }
   </style>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does RoomGenix change the walls or windows?", "acceptedAnswer": {"@type": "Answer", "text": "It is built to keep walls, windows, floors and the view as shot and only add furniture and décor. Always compare the result with the original."}}, {"@type": "Question", "name": "Why do some AI tools change the room?", "acceptedAnswer": {"@type": "Answer", "text": "General image models often regenerate the whole picture, which can move windows, change flooring or add walls."}}, {"@type": "Question", "name": "Can I try different styles on the same photo?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Run the same photo in coastal, Scandinavian, farmhouse or other styles and keep the one you like."}}, {"@type": "Question", "name": "What should I do if a result changes the room?", "acceptedAnswer": {"@type": "Answer", "text": "Run it again and don’t publish it. A listing photo should never misrepresent the property."}}]}</script>
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Service", "name": "AI staging that keeps the original room layout", "serviceType": "Virtual staging", "provider": {"@type": "Organization", "name": "RoomGenix", "url": "https://roomgenix.com"}, "areaServed": "US", "offers": [{"@type": "Offer", "name": "Listing pass, 8 photos", "price": "19", "priceCurrency": "USD"}, {"@type": "Offer", "name": "25 photos", "price": "49", "priceCurrency": "USD"}, {"@type": "Offer", "name": "60 photos", "price": "99", "priceCurrency": "USD"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Service", "name": "AI staging that keeps the original room layout", "serviceType": "Virtual staging", "provider": {"@id": "https://roomgenix.com/#organization", "@type": "Organization", "name": "RoomGenixAI", "url": "https://roomgenix.com/"}, "areaServed": {"@type": "Country", "name": "United States"}, "offers": [{"@type": "Offer", "name": "Listing pass, 8 photos", "price": "19", "priceCurrency": "USD"}, {"@type": "Offer", "name": "25 photos", "price": "49", "priceCurrency": "USD"}, {"@type": "Offer", "name": "60 photos", "price": "99", "priceCurrency": "USD"}]}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://roomgenix.com/"}, {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://roomgenix.com/blog"}, {"@type": "ListItem", "position": 3, "name": "AI staging keeps room layout", "item": "https://roomgenix.com/ai-staging-keeps-room-layout"}]}</script>
 </head>
 <body class="legal-page-body">
+<!--email_off-->
   <nav class="navbar">
     <div class="nav-container">
       <a href="/" class="nav-brand" aria-label="RoomGenixAI home">
@@ -54,15 +55,15 @@
       </div>
       <article class="legal-card-standalone">
         <div class="legal-prose">
-          <h3>Why layout matters in a listing photo</h3>
+          <h2>Why layout matters in a listing photo</h2>
           <p>A listing photo is a record of the property. If a staged image shows a larger window, a different floor or an extra wall, the buyer who tours the home will notice, and the agent who published it may be breaking MLS rules about misrepresenting a property. Furniture is the part that is understood to be illustrative. The room is not.</p>
           <p>That is the line RoomGenix is designed around. The structure of the photo, meaning walls, ceilings, windows, doors, flooring and what is visible outside, is meant to stay as it was. Furniture, rugs, lighting and décor are added on top.</p>
           <div class="pair-grid">
-            <figure><img src="/assets/bedroom_empty.jpg" alt="Empty bedroom with floor-to-ceiling windows and wood floors" loading="lazy" width="1376" height="768"><figcaption>Before</figcaption></figure>
-            <figure><img src="/assets/bedroom_scandinavian.jpg" alt="The same bedroom, same windows and floor, with furniture added" loading="lazy" width="1376" height="768"><figcaption>After</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/bedroom_empty-800.webp 800w, /assets/bedroom_empty.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/bedroom_empty.jpg" alt="Empty bedroom with floor-to-ceiling windows and wood floors" loading="lazy" width="1376" height="768"></picture><figcaption>Before</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/bedroom_scandinavian-800.webp 800w, /assets/bedroom_scandinavian.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/bedroom_scandinavian.jpg" alt="The same bedroom, same windows and floor, with furniture added" loading="lazy" width="1376" height="768"></picture><figcaption>After</figcaption></figure>
           </div>
           <p><small>Studio examples, not a client listing.</small></p>
-          <h3>What to look for in any staged photo</h3>
+          <h2>What to look for in any staged photo</h2>
           <p>Whatever tool you use, compare the staged image with the original before publishing. Check:</p>
           <ul>
             <li><strong>Windows and doors.</strong> Same number, same size, same position.</li>
@@ -73,42 +74,42 @@
           </ul>
           <p>If a result fails any of these, run it again. Don't publish a photo that changes the property.</p>
           <div class="pair-grid">
-            <figure><img src="/assets/kitchen_empty.jpg" alt="Empty white kitchen with island and stainless appliances" loading="lazy" width="1376" height="768"><figcaption>Before</figcaption></figure>
-            <figure><img src="/assets/kitchen_staged.jpg" alt="The same kitchen with stools and a few accessories added" loading="lazy" width="1376" height="768"><figcaption>After</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/kitchen_empty-800.webp 800w, /assets/kitchen_empty.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/kitchen_empty.jpg" alt="Empty white kitchen with island and stainless appliances" loading="lazy" width="1376" height="768"></picture><figcaption>Before</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/kitchen_staged-800.webp 800w, /assets/kitchen_staged.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/kitchen_staged.jpg" alt="The same kitchen with stools and a few accessories added" loading="lazy" width="1376" height="768"></picture><figcaption>After</figcaption></figure>
           </div>
           <p><small>Studio examples, not a client listing.</small></p>
-          <h3>One room, several styles</h3>
+          <h2>One room, several styles</h2>
           <p>Because the room stays fixed, you can try several looks on the same photo and pick the one that suits the home and its likely buyer. The living room below is the same photo staged in three styles.</p>
           <div class="pair-grid">
-            <figure><img src="/assets/hero_coastal.jpg" alt="Living room staged in a coastal style" loading="lazy" width="1376" height="768"><figcaption>Coastal</figcaption></figure>
-            <figure><img src="/assets/hero_farmhouse.jpg" alt="The same living room staged in a farmhouse style" loading="lazy" width="1376" height="768"><figcaption>Farmhouse</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/hero_coastal-800.webp 800w, /assets/hero_coastal.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/hero_coastal.jpg" alt="Living room staged in a coastal style" loading="lazy" width="1376" height="768"></picture><figcaption>Coastal</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/hero_farmhouse-800.webp 800w, /assets/hero_farmhouse.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/hero_farmhouse.jpg" alt="The same living room staged in a farmhouse style" loading="lazy" width="1376" height="768"></picture><figcaption>Farmhouse</figcaption></figure>
           </div>
           <p><small>Studio examples, not a client listing.</small></p>
-          <h3>How RoomGenix is different from a chat app</h3>
-          <p>General chat and image apps are built to make a pleasing picture, not to preserve one. They often regenerate the whole frame, and small changes add up. RoomGenix is a single-purpose studio: you upload a listing photo, choose a room type and style, and get back the same room with furniture. See <a href="/chatgpt">vs. ChatGPT</a> for a side-by-side.</p>
-          <h3>Try it on a hard photo</h3>
+          <h2>How RoomGenix is different from a chat app</h2>
+          <p>General chat and image apps are built to make a pleasing picture, not to preserve one. They often regenerate the whole frame, and small changes add up. RoomGenix is a single-purpose studio: you upload a listing photo, choose a room type and style, and get back the same room with furniture. See <a href="/#chatgpt">vs. ChatGPT</a> for a side-by-side.</p>
+          <h2>Try it on a hard photo</h2>
           <p>The best test is one of your own: a room with a big window, an unusual floor or a view. A new account gets 3 watermarked previews without a card, then photos start at $2.99 each or $19 for 8.</p>
-          <h3>Photos that stage well</h3>
+          <h2>Photos that stage well</h2>
           <p>The cleaner the input, the easier it is for any tool to keep the room intact. Wide, level shots with even light and a visible floor give the best results. Very dark rooms, extreme fisheye lenses and photos with lots of reflections are harder. If a room has an unusual feature, such as a sloped ceiling, a fireplace or built-in shelving, check that it survives in the staged version exactly as shot.</p>
-          <h3>Keep the before and after together</h3>
+          <h2>Keep the before and after together</h2>
           <p>Because the room is unchanged, the original and the staged version line up. That makes it easy to show both in the listing, which many MLSs require and which buyers appreciate: they see the furnished idea and the real empty room side by side. It also protects you if anyone later asks what the property looked like.</p>
-          <h3>Questions</h3>
-          <h4>Does RoomGenix change the walls or windows?</h4>
+          <h2>Questions</h2>
+          <h3 class="q">Does RoomGenix change the walls or windows?</h3>
           <p>It is built to keep walls, windows, floors and the view as shot and only add furniture and décor. Always compare the result with the original.</p>
-          <h4>Why do some AI tools change the room?</h4>
+          <h3 class="q">Why do some AI tools change the room?</h3>
           <p>General image models often regenerate the whole picture, which can move windows, change flooring or add walls.</p>
-          <h4>Can I try different styles on the same photo?</h4>
+          <h3 class="q">Can I try different styles on the same photo?</h3>
           <p>Yes. Run the same photo in coastal, Scandinavian, farmhouse or other styles and keep the one you like.</p>
-          <h4>What should I do if a result changes the room?</h4>
+          <h3 class="q">What should I do if a result changes the room?</h3>
           <p>Run it again and don’t publish it. A listing photo should never misrepresent the property.</p>
           <div class="seo-related">
-            <h3>Related</h3>
+            <h2>Related</h2>
             <ul>
               <li><a href="/virtual-staging-vacant-listings">Virtual staging for vacant listings</a></li>
               <li><a href="/virtual-staging-for-photographers">Virtual staging for real estate photographers</a></li>
               <li><a href="/blog/is-virtual-staging-legal">Is virtual staging legal? Disclosure basics</a></li>
-              <li><a href="/gallery">Gallery</a></li>
-              <li><a href="/chatgpt">Vs. ChatGPT</a></li>
+              <li><a href="/#gallery">Gallery</a></li>
+              <li><a href="/#chatgpt">Vs. ChatGPT</a></li>
             </ul>
           </div>
           <p><a class="btn btn-primary" href="/dashboard" style="color:#fff;">Try 3 free previews</a> &nbsp; <a class="btn btn-outline" href="/pricing">See pricing</a></p>
@@ -116,5 +117,6 @@
       </article>
     </div>
   </main>
+<!--/email_off-->
 </body>
 </html>

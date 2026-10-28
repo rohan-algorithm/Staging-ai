@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (_) {}
     applyStudioQuery();
     confirmCheckoutReturn();
+    openCheckoutFromQuery();
   });
   initGoogleAuth();
   initCheckoutRadios();
@@ -2204,6 +2205,13 @@ function selectPersona(role, btnEl) {
   if (p.room) {
     switchHeroRoom(p.room, null);
   }
+}
+
+// /pricing links here as /?buy=<plan> so its Buy buttons open the same checkout modal.
+function openCheckoutFromQuery() {
+  const buy = new URLSearchParams(window.location.search).get('buy');
+  if (buy === 'single') openPricingModal('unlock');
+  else if (['listing', 'pro', 'agency_pack'].includes(buy)) checkout(buy);
 }
 
 function checkout(plan) {

@@ -64,7 +64,6 @@ const PAGE_ROUTES = {
   '/virtual-staging-short-term-rentals': 'virtual-staging-short-term-rentals.html',
   '/blog/stage-vacant-listing-in-minutes': 'blog-stage-vacant-listing-in-minutes.html',
   '/blog/is-virtual-staging-legal': 'blog-is-virtual-staging-legal.html',
-  '/blog/virtual-staging-cost-breakdown': 'blog-virtual-staging-cost-breakdown.html',
   '/virtual-staging-bedroom': 'virtual-staging-bedroom.html',
   '/virtual-staging-home-office': 'virtual-staging-home-office.html',
   '/virtual-staging-dining-room': 'virtual-staging-dining-room.html',
@@ -78,7 +77,9 @@ const PAGE_ROUTES = {
   '/virtual-staging-modern': 'virtual-staging-modern.html',
   '/virtual-staging-traditional': 'virtual-staging-traditional.html',
   '/virtual-staging-dallas': 'virtual-staging-dallas.html',
-  '/done-for-you': 'done-for-you.html'
+  '/done-for-you': 'done-for-you.html',
+  '/about': 'about.html',
+  '/pricing': 'pricing.html'
 };
 
 const PAGE_ALIASES = {
@@ -110,7 +111,9 @@ const PAGE_ALIASES = {
   '/virtual-staging-short-term-rentals.html': '/virtual-staging-short-term-rentals',
   '/blog-stage-vacant-listing-in-minutes.html': '/blog/stage-vacant-listing-in-minutes',
   '/blog-is-virtual-staging-legal.html': '/blog/is-virtual-staging-legal',
-  '/blog-virtual-staging-cost-breakdown.html': '/blog/virtual-staging-cost-breakdown',
+  '/blog-virtual-staging-cost-breakdown.html': '/virtual-vs-physical-staging-cost',
+  // Merged into the cost comparison page.
+  '/blog/virtual-staging-cost-breakdown': '/virtual-vs-physical-staging-cost',
   '/virtual-staging-bedroom.html': '/virtual-staging-bedroom',
   '/virtual-staging-home-office.html': '/virtual-staging-home-office',
   '/virtual-staging-dining-room.html': '/virtual-staging-dining-room',
@@ -127,12 +130,65 @@ const PAGE_ALIASES = {
 };
 
 const HOME_SECTIONS = {
-  pricing: 'Pricing',
   gallery: 'Gallery',
   'how-it-works': 'How it works',
   chatgpt: 'Vs. ChatGPT',
   faq: 'FAQ'
 };
+
+const META_PIXEL_ID = (process.env.META_PIXEL_ID || '').trim();
+// Landing pages don't load app.js, so they get the Pixel base code from here.
+const PIXEL_SNIPPET = /^\d+$/.test(META_PIXEL_ID)
+  ? `<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', ${JSON.stringify(META_PIXEL_ID)});
+fbq('track', 'PageView');
+</script>`
+  : '';
+
+// HTML stays uncached by default: an edge-cached page never reaches visitTracker.
+// Set HTML_EDGE_CACHE_SECONDS (plus a Cloudflare cache rule) to trade visit counts for speed.
+const HTML_EDGE_CACHE_SECONDS = Math.max(0, parseInt(process.env.HTML_EDGE_CACHE_SECONDS || '0', 10) || 0);
+const PUBLIC_HTML_CACHE = HTML_EDGE_CACHE_SECONDS
+  ? `public, max-age=0, s-maxage=${HTML_EDGE_CACHE_SECONDS}, stale-while-revalidate=86400`
+  : 'no-cache';
+
+const INDEXNOW_KEY = /^[a-f0-9-]{8,128}$/i.test((process.env.INDEXNOW_KEY || '').trim())
+  ? process.env.INDEXNOW_KEY.trim()
+  : '';
+
+const SECURITY_TXT = `Contact: mailto:support@roomgenix.com
+Expires: 2027-10-28T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://roomgenix.com/.well-known/security.txt
+`;
+
+function securityHeaders(_req, res, next) {
+  res.set({
+    'Strict-Transport-Security': 'max-age=31536000',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Content-Security-Policy': "frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+  });
+  next();
+}
+
+// Versioned CSS/JS (?v=) can be cached for a year; images and unversioned files for less.
+function staticCacheHeaders(res, file) {
+  const versioned = /[?&]v=/.test(res.req && res.req.originalUrl || '');
+  if (/\.(css|js)$/i.test(file)) {
+    res.set('Cache-Control', versioned ? 'public, max-age=31536000, immutable' : 'public, max-age=3600');
+  } else if (/\.(jpe?g|png|webp|avif|svg|ico|mp4|woff2?)$/i.test(file)) {
+    res.set('Cache-Control', versioned ? 'public, max-age=31536000, immutable' : 'public, max-age=604800');
+  }
+}
 
 function sendPage(res, file, options = {}) {
   let html = fs.readFileSync(file, 'utf8');
@@ -152,9 +208,17 @@ function sendPage(res, file, options = {}) {
   if (GA_SNIPPET && !html.includes('googletagmanager.com/gtag/js')) {
     html = html.replace('</head>', `${GA_SNIPPET}\n</head>`);
   }
-  res.set('Cache-Control', 'no-cache');
+  if (PIXEL_SNIPPET && !html.includes('app.js') && !html.includes('fbevents.js')) {
+    html = html.replace('</head>', `${PIXEL_SNIPPET}\n</head>`);
+  }
+  res.set('Cache-Control', options.cache || PUBLIC_HTML_CACHE);
   res.type('html').send(html);
 }
+
+// /foo.html -> /foo for every routed page, so no file is reachable at two URLs.
+const HTML_FILE_ROUTES = Object.fromEntries(
+  Object.entries(PAGE_ROUTES).map(([route, file]) => [`/${file}`, route])
+);
 
 function routePage(req, res, next) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
@@ -165,16 +229,17 @@ function routePage(req, res, next) {
     const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
     return res.redirect(301, p.slice(0, -1) + query);
   }
-  if (PAGE_ALIASES[p]) {
-    const target = PAGE_ALIASES[p];
+  if (PAGE_ALIASES[p] || HTML_FILE_ROUTES[p]) {
+    const target = PAGE_ALIASES[p] || HTML_FILE_ROUTES[p];
     const rawQuery = req.url.includes('?') ? req.url.slice(req.url.indexOf('?') + 1) : '';
     const joined = rawQuery ? target + (target.includes('?') ? '&' : '?') + rawQuery : target;
     return res.redirect(301, joined);
   }
   const section = HOME_SECTIONS[p.slice(1)];
   if (section) {
+    // Same document as the homepage, so it points search engines at "/".
     return sendPage(res, path.join(ROOT, 'index.html'), {
-      canonical: `${SITE}${p}`,
+      canonical: `${SITE}/`,
       title: `${section} — RoomGenixAI`
     });
   }
@@ -617,6 +682,8 @@ async function main() {
 
   const app = express();
   app.set('trust proxy', 1);
+  app.disable('x-powered-by');
+  app.use(securityHeaders);
   app.post('/api/webhooks/dodo', express.raw({ type: '*/*' }), asyncRoute(async (req, res) => {
     const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
     let event;
@@ -650,7 +717,8 @@ async function main() {
       || req.path === '/package.json'
       || req.path === '/package-lock.json'
       || req.path === '/.env'
-      || req.path === '/.env.example';
+      || req.path === '/.env.example'
+      || req.path === '/404.html';
     if (blocked) return res.status(404).end();
     next();
   });
@@ -658,11 +726,17 @@ async function main() {
   app.use(visitTracker(db));
   app.use('/uploads', express.static(storage.UPLOADS));
   app.get('/dashboard', (_req, res) => {
-    sendPage(res, path.join(ROOT, 'dashboard.html'));
+    sendPage(res, path.join(ROOT, 'dashboard.html'), { cache: 'no-cache' });
   });
   app.get('/dashboard/', (_req, res) => res.redirect('/dashboard'));
+  app.get('/.well-known/security.txt', (_req, res) => {
+    res.type('text/plain').send(SECURITY_TXT);
+  });
+  if (INDEXNOW_KEY) {
+    app.get(`/${INDEXNOW_KEY}.txt`, (_req, res) => res.type('text/plain').send(INDEXNOW_KEY));
+  }
   app.use(routePage);
-  app.use(express.static(ROOT, { index: 'index.html', etag: false, maxAge: 0 }));
+  app.use(express.static(ROOT, { index: 'index.html', etag: false, maxAge: 0, setHeaders: staticCacheHeaders }));
 
   app.get('/unsubscribe', asyncRoute(async (req, res) => {
     const ok = await nurture.unsubscribe(db(), req.query.t);
@@ -1691,6 +1765,17 @@ async function main() {
     const fresh = await db().collection('users').findOne({ _id: user._id });
     res.json({ status: 'success', user: publicUser(fresh), credits_balance: fresh.credits_balance, credited: true });
   }));
+
+  app.use((req, res) => {
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ status: 'error', message: 'Not found.' });
+    }
+    res.status(404);
+    if (req.method === 'GET' && req.accepts('html')) {
+      return sendPage(res, path.join(ROOT, '404.html'), { cache: 'no-store' });
+    }
+    res.end();
+  });
 
   app.use((err, _req, res, _next) => {
     if (err && err.code === 'LIMIT_FILE_SIZE') {

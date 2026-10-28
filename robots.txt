@@ -1,27 +1,23 @@
 # Default policy
 User-agent: *
 Allow: /
-Disallow: /dashboard
 Disallow: /uploads/
 
 # AI search citability — explicitly allowed
 User-agent: OAI-SearchBot
 Allow: /
-Disallow: /dashboard
 Disallow: /uploads/
 
 User-agent: ChatGPT-User
 Allow: /
-Disallow: /dashboard
+Disallow: /uploads/
 
 User-agent: PerplexityBot
 Allow: /
-Disallow: /dashboard
 Disallow: /uploads/
 
 User-agent: Claude-SearchBot
 Allow: /
-Disallow: /dashboard
 Disallow: /uploads/
 
 # AI training — allowed. Gemini can ground on this content.

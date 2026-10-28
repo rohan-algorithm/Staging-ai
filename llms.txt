@@ -1,18 +1,18 @@
-# RoomGenix
+# RoomGenixAI
 
-> AI virtual staging for real estate listing photos. Adds furniture to empty rooms in 30 seconds while keeping walls, windows, and floors exactly as photographed. $2.99 per photo. No subscription.
+> AI virtual staging for real estate listing photos. Adds furniture to photos of empty rooms in a minute or two and is built to keep the walls, windows, and floors as photographed. $2.99 per photo. No subscription.
 
-RoomGenix is a web application that virtually stages empty-room listing photos using AI. Agents and photographers upload a photo of a vacant room and the system renders furniture into it, preserving the original architecture of the space (walls, windows, flooring, lighting). Each account receives three free watermarked previews with no credit card. Clean (non-watermarked) photos are $2.99 each, with volume packs at $19 (8 photos), $49 (25 photos), and $99 (60 photos). A done-for-you service costs $9 per photo (minimum 3). Turnaround is typically one to two minutes per photo.
+RoomGenix is a web application that virtually stages empty-room listing photos using AI. Agents and photographers upload a photo of a vacant room and the system renders furniture into it, aiming to preserve the original architecture of the space (walls, windows, flooring, lighting). Results should be checked before publishing. Each account receives three free watermarked previews with no credit card. Clean (non-watermarked) photos are $2.99 each, with volume packs at $19 (8 photos), $49 (25 photos), and $99 (60 photos). A done-for-you service costs $9 per photo (minimum 3). Turnaround is typically one to two minutes per photo.
 
 ## Key pages
 
 - [Home](https://roomgenix.com/): overview and 3-free-preview sign-up
-- [Pricing](https://roomgenix.com/pricing): all pack prices
 - [How it works](https://roomgenix.com/how-to): step-by-step walkthrough
+- [About](https://roomgenix.com/about): who builds RoomGenixAI and why
 - [For agents](https://roomgenix.com/for-agents): free staging for one vacant listing
 - [Done-for-you](https://roomgenix.com/done-for-you): $9/photo managed service
 - [MLS compliance](https://roomgenix.com/mls-compliance): disclosure guidance for virtually staged listing photos
-- [Refund guarantee](https://roomgenix.com/refund): 30-day refund
+- [Refund policy](https://roomgenix.com/refund): email within 30 days of a charge for a refund of that payment; no partial refunds of unused credits
 
 ## Room landing pages
 
@@ -42,7 +42,6 @@ RoomGenix is a web application that virtually stages empty-room listing photos u
 ## Articles
 
 - [Is virtual staging legal?](https://roomgenix.com/blog/is-virtual-staging-legal)
-- [Virtual staging cost breakdown](https://roomgenix.com/blog/virtual-staging-cost-breakdown)
 - [Stage a vacant listing in minutes](https://roomgenix.com/blog/stage-vacant-listing-in-minutes)
 - [AI staging keeps room layout](https://roomgenix.com/ai-staging-keeps-room-layout)
 - [Virtual vs physical staging cost](https://roomgenix.com/virtual-vs-physical-staging-cost)
@@ -52,17 +51,18 @@ RoomGenix is a web application that virtually stages empty-room listing photos u
 | Pack | Price | Per photo |
 |---|---|---|
 | Single | $2.99 | $2.99 |
-| Single Listing Pass | $19 for 8 photos | $2.38 |
+| Single Listing Pass | $19 for 8 photos | $2.38 (rounded) |
 | Pro Pack | $49 for 25 photos | $1.96 |
 | Agency Bulk | $99 for 60 photos | $1.65 |
 | Done-for-you | $9/photo, min 3 | $9 |
 
 ## What makes RoomGenix different
 
-- **Keeps the original photo real.** Most AI tools (and ChatGPT image prompts) redraw the whole room. RoomGenix adds furniture over the photo you shot, so walls, windows, floors, and lighting from your photo stay in the output.
+- **Keeps the original photo real.** Most AI tools (and ChatGPT image prompts) redraw the whole room. RoomGenix adds furniture to the photo you shot and is built to keep its walls, windows, floors, and lighting. It does not guarantee this on every render, so each result should be checked.
 - **No subscription.** Pay per photo or per pack. Credits never expire while the account is active.
 - **No credit card to try.** 3 watermarked previews on signup.
-- **MLS-aware.** Guidance on how to disclose virtually staged photos per your MLS board's rules.
+- **MLS-aware.** Guidance on disclosing virtually staged photos. RoomGenix does not add a disclosure to the file; agents follow their own board's rules.
+- **Jobs supported.** Staging for living rooms, bedrooms, dining rooms, home offices and patios, plus virtual twilight, decluttering and virtual remodel.
 
 ## Contact
 

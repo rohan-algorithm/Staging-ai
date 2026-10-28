@@ -4,8 +4,6 @@
   <url>
     <loc>https://roomgenix.com/</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
     <image:image>
       <image:loc>https://roomgenix.com/assets/hero_coastal.jpg</image:loc>
       <image:title>Virtual staging: coastal living room</image:title>
@@ -23,48 +21,38 @@
     </image:image>
   </url>
   <url>
+    <loc>https://roomgenix.com/about</loc>
+    <lastmod>2026-10-28</lastmod>
+  </url>
+  <url>
     <loc>https://roomgenix.com/pricing</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/for-agents</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/done-for-you</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/how-to</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/mls-compliance</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/refund</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
   </url>
 
   <!-- Room landing pages -->
   <url>
     <loc>https://roomgenix.com/virtual-staging-bedroom</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
     <image:image>
       <image:loc>https://roomgenix.com/assets/bedroom_scandinavian.jpg</image:loc>
       <image:title>Virtual staging: Scandinavian bedroom</image:title>
@@ -77,8 +65,6 @@
   <url>
     <loc>https://roomgenix.com/virtual-staging-dining-room</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
     <image:image>
       <image:loc>https://roomgenix.com/assets/dining_staged.jpg</image:loc>
       <image:title>Virtual staging: dining room with table and chairs</image:title>
@@ -87,8 +73,6 @@
   <url>
     <loc>https://roomgenix.com/virtual-staging-home-office</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
     <image:image>
       <image:loc>https://roomgenix.com/assets/office_staged.jpg</image:loc>
       <image:title>Virtual staging: home office with desk</image:title>
@@ -97,135 +81,89 @@
   <url>
     <loc>https://roomgenix.com/virtual-staging-vacant-listings</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-short-term-rentals</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-for-photographers</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-declutter</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-twilight-real-estate-photos</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
   </url>
 
   <!-- Style landing pages -->
   <url>
     <loc>https://roomgenix.com/virtual-staging-modern</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-scandinavian</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-farmhouse</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-coastal</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-luxury</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-mid-century-modern</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-traditional</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
 
   <!-- City pages -->
   <url>
     <loc>https://roomgenix.com/virtual-staging-dallas</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
 
   <!-- Blog + guides -->
   <url>
     <loc>https://roomgenix.com/blog</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/blog/is-virtual-staging-legal</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://roomgenix.com/blog/virtual-staging-cost-breakdown</loc>
-    <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/blog/stage-vacant-listing-in-minutes</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/ai-staging-keeps-room-layout</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-vs-physical-staging-cost</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
 
   <!-- Legal -->
   <url>
     <loc>https://roomgenix.com/privacy</loc>
-    <lastmod>2026-10-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <lastmod>2026-10-07</lastmod>
   </url>
   <url>
     <loc>https://roomgenix.com/terms</loc>
     <lastmod>2026-10-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
   </url>
 </urlset>

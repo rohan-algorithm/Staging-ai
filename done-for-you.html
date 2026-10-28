@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Done-for-you virtual staging, pay after you see it | RoomGenixAI</title>
+  <title>Done-for-You Virtual Staging, $9 a Photo | RoomGenixAI</title>
   <meta name="description" content="Send us your empty-room photos and we stage them for you. $9 a photo, minimum 3, back within 24 hours. You pay after you see them.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#1c1915">
@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=6.30">
+  <link rel="stylesheet" href="/style.css?v=6.63">
   <style>
     .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0 8px; }
     .pair-grid figure { margin: 0; }
@@ -30,6 +30,7 @@
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://roomgenix.com/"}, {"@type": "ListItem", "position": 2, "name": "Done-for-you staging", "item": "https://roomgenix.com/done-for-you"}]}</script>
 </head>
 <body class="legal-page-body">
+<!--email_off-->
   <nav class="navbar">
     <div class="nav-container">
       <a href="/" class="nav-brand" aria-label="RoomGenixAI home">
@@ -52,7 +53,7 @@
 
       <article class="legal-card-standalone">
         <div class="legal-prose">
-          <h3>How it works</h3>
+          <h2>How it works</h2>
           <ol>
             <li>Upload up to 10 photos below, or paste a link to the listing photos.</li>
             <li>We stage them, keeping walls, windows and floors as photographed, and email the results within 24 hours.</li>
@@ -61,13 +62,13 @@
           <p>Tell us the style you want (for example coastal, Scandinavian or farmhouse) and which rooms are which. Staged photos should be labeled as virtually staged when you publish them; see <a href="/blog/is-virtual-staging-legal">disclosure basics</a>.</p>
 
           <div class="pair-grid">
-            <figure><img src="/assets/hero_empty.jpg" alt="Empty living room before staging"><figcaption>Before</figcaption></figure>
-            <figure><img src="/assets/hero_coastal.jpg" alt="The same living room staged with coastal furniture"><figcaption>After</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/hero_empty-800.webp 800w, /assets/hero_empty.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/hero_empty.jpg" alt="Empty living room before staging"></picture><figcaption>Before</figcaption></figure>
+            <figure><picture><source type="image/webp" srcset="/assets/hero_coastal-800.webp 800w, /assets/hero_coastal.webp 1376w" sizes="(max-width: 640px) 100vw, 50vw"><img src="/assets/hero_coastal.jpg" alt="The same living room staged with coastal furniture"></picture><figcaption>After</figcaption></figure>
           </div>
           <p><small>Studio example, not a client listing.</small></p>
 
           <div id="dfyFormWrap">
-            <h3>Send your photos</h3>
+            <h2>Send your photos</h2>
             <form class="dfy-form" id="dfyForm" enctype="multipart/form-data" novalidate>
               <label for="dfyName">Name</label>
               <input type="text" id="dfyName" name="name" maxlength="80" required autocomplete="name">
@@ -82,12 +83,12 @@
             </form>
           </div>
           <div id="dfyDone" hidden>
-            <h3>Got them, thanks.</h3>
+            <h2>Got them, thanks.</h2>
             <p id="dfyDoneText">We'll email your staged photos within 24 hours. You only pay if you want to use them.</p>
             <p>Questions? Email <a href="mailto:support@roomgenix.com">support@roomgenix.com</a>.</p>
           </div>
 
-          <h3>Prefer to do it yourself?</h3>
+          <h2>Prefer to do it yourself?</h2>
           <p>The <a href="/dashboard">studio</a> stages a photo in a minute or two, from $2.99 a photo or $19 for 8. See <a href="/pricing">pricing</a>.</p>
         </div>
       </article>
@@ -123,5 +124,6 @@
     });
   })();
   </script>
+<!--/email_off-->
 </body>
 </html>

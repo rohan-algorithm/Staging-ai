@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "node server/index.js",
+    "indexnow": "node scripts/indexnow.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

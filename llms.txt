@@ -1,0 +1,69 @@
+# RoomGenix
+
+> AI virtual staging for real estate listing photos. Adds furniture to empty rooms in 30 seconds while keeping walls, windows, and floors exactly as photographed. $2.99 per photo. No subscription.
+
+RoomGenix is a web application that virtually stages empty-room listing photos using AI. Agents and photographers upload a photo of a vacant room and the system renders furniture into it, preserving the original architecture of the space (walls, windows, flooring, lighting). Each account receives three free watermarked previews with no credit card. Clean (non-watermarked) photos are $2.99 each, with volume packs at $19 (8 photos), $49 (25 photos), and $99 (60 photos). A done-for-you service costs $9 per photo (minimum 3). Turnaround is typically one to two minutes per photo.
+
+## Key pages
+
+- [Home](https://roomgenix.com/): overview and 3-free-preview sign-up
+- [Pricing](https://roomgenix.com/pricing): all pack prices
+- [How it works](https://roomgenix.com/how-to): step-by-step walkthrough
+- [For agents](https://roomgenix.com/for-agents): free staging for one vacant listing
+- [Done-for-you](https://roomgenix.com/done-for-you): $9/photo managed service
+- [MLS compliance](https://roomgenix.com/mls-compliance): disclosure guidance for virtually staged listing photos
+- [Refund guarantee](https://roomgenix.com/refund): 30-day refund
+
+## Room landing pages
+
+- [Bedroom virtual staging](https://roomgenix.com/virtual-staging-bedroom)
+- [Dining room virtual staging](https://roomgenix.com/virtual-staging-dining-room)
+- [Home office virtual staging](https://roomgenix.com/virtual-staging-home-office)
+- [Vacant listings](https://roomgenix.com/virtual-staging-vacant-listings)
+- [Short-term rentals](https://roomgenix.com/virtual-staging-short-term-rentals)
+- [For real estate photographers](https://roomgenix.com/virtual-staging-for-photographers)
+- [Declutter mode](https://roomgenix.com/virtual-staging-declutter)
+- [Virtual twilight real-estate photos](https://roomgenix.com/virtual-twilight-real-estate-photos)
+
+## Style landing pages
+
+- [Modern virtual staging](https://roomgenix.com/virtual-staging-modern)
+- [Scandinavian virtual staging](https://roomgenix.com/virtual-staging-scandinavian)
+- [Farmhouse virtual staging](https://roomgenix.com/virtual-staging-farmhouse)
+- [Coastal virtual staging](https://roomgenix.com/virtual-staging-coastal)
+- [Luxury virtual staging](https://roomgenix.com/virtual-staging-luxury)
+- [Mid-century modern virtual staging](https://roomgenix.com/virtual-staging-mid-century-modern)
+- [Traditional virtual staging](https://roomgenix.com/virtual-staging-traditional)
+
+## City pages
+
+- [Virtual staging in Dallas-Fort Worth](https://roomgenix.com/virtual-staging-dallas)
+
+## Articles
+
+- [Is virtual staging legal?](https://roomgenix.com/blog/is-virtual-staging-legal)
+- [Virtual staging cost breakdown](https://roomgenix.com/blog/virtual-staging-cost-breakdown)
+- [Stage a vacant listing in minutes](https://roomgenix.com/blog/stage-vacant-listing-in-minutes)
+- [AI staging keeps room layout](https://roomgenix.com/ai-staging-keeps-room-layout)
+- [Virtual vs physical staging cost](https://roomgenix.com/virtual-vs-physical-staging-cost)
+
+## Pricing summary
+
+| Pack | Price | Per photo |
+|---|---|---|
+| Single | $2.99 | $2.99 |
+| Single Listing Pass | $19 for 8 photos | $2.38 |
+| Pro Pack | $49 for 25 photos | $1.96 |
+| Agency Bulk | $99 for 60 photos | $1.65 |
+| Done-for-you | $9/photo, min 3 | $9 |
+
+## What makes RoomGenix different
+
+- **Keeps the original photo real.** Most AI tools (and ChatGPT image prompts) redraw the whole room. RoomGenix adds furniture over the photo you shot, so walls, windows, floors, and lighting from your photo stay in the output.
+- **No subscription.** Pay per photo or per pack. Credits never expire while the account is active.
+- **No credit card to try.** 3 watermarked previews on signup.
+- **MLS-aware.** Guidance on how to disclose virtually staged photos per your MLS board's rules.
+
+## Contact
+
+support@roomgenix.com

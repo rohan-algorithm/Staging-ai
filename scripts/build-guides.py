@@ -10,7 +10,7 @@ import os
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 S = 'https://roomgenix.com'
-AUTHOR = {"@type": "Person", "@id": S + "/about#rohan", "name": "Rohan", "url": S + "/about"}
+AUTHOR = {"@type": "Person", "@id": S + "/about#rohan", "name": "Rohan Rao", "url": S + "/about"}
 ORG = {"@id": S + "/#organization", "@type": "Organization", "name": "RoomGenixAI", "url": S + "/"}
 
 STYLE = """  <style>
@@ -78,7 +78,7 @@ def page(slug, title, desc, image, h1, intro, body, faqs, related, crumb, articl
         graph.append({"@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faqs]})
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False)
-    byline = ('\n        <p><small>By <a href="/about">Rohan</a>, founder of RoomGenixAI · Published October 31, 2026</small></p>'
+    byline = ('\n        <p><small>By <a href="/about">Rohan Rao</a>, founder of RoomGenixAI · Published October 31, 2026</small></p>'
               if article else '')
     rel = '\n'.join(f'              <li><a href="{u}">{html.escape(t)}</a></li>' for u, t in related)
     t, d = html.escape(title), html.escape(desc)

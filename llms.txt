@@ -70,3 +70,6 @@ RoomGenix is a web application that virtually stages empty-room listing photos u
 ## Contact
 
 support@roomgenix.com
+
+- Instagram: https://www.instagram.com/roomgenixai/
+- Facebook: https://www.facebook.com/61595202026884

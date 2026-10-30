@@ -94,14 +94,6 @@ const roomImages = {
     edge: 'One living-room photo is $2.99. A staging visit usually starts around $2,500.',
     before: 'assets/hero_empty.jpg',
     after: 'assets/hero_coastal.jpg',
-    daysOnMarket: '9 Days',
-    benchmark: 'vs 46 MLS avg',
-    overAsking: '+$22,500',
-    roi: '1,148x ROI',
-    savings: '$2,800 saved vs physical',
-    agentName: 'Sarah Jenkins',
-    agentBrokerage: 'Keller Williams Beverly Hills',
-    agentQuote: 'Photograph the empty room, then stage that same frame. The windows should line up when a buyer drags across the photo.'
   },
   bedroom: {
     title: 'Primary Master Suite',
@@ -111,14 +103,6 @@ const roomImages = {
     edge: 'BoxBrownie charges about $24 and a day for this same shot. You can restage the suite before the listing appointment ends.',
     before: 'assets/bedroom_empty.jpg',
     after: 'assets/bedroom_scandinavian.jpg',
-    daysOnMarket: '12 Days',
-    benchmark: 'vs 42 MLS avg',
-    overAsking: '+$18,000',
-    roi: '918x ROI',
-    savings: '$1,900 saved vs physical',
-    agentName: 'David Marcus',
-    agentBrokerage: 'Compass Real Estate',
-    agentQuote: 'A made bed and two nightstands are enough. Buyers are checking whether the suite feels like a place to sleep.'
   },
   dining: {
     title: 'Executive Entertaining Dining Room',
@@ -128,14 +112,6 @@ const roomImages = {
     edge: 'A physical stager spends a day moving a table in. This photo does that job for under $2.',
     before: 'assets/dining_empty.jpg',
     after: 'assets/dining_staged.jpg',
-    daysOnMarket: '8 Days',
-    benchmark: 'vs 39 MLS avg',
-    overAsking: '+$27,000',
-    roi: '1,377x ROI',
-    savings: '$2,400 saved vs physical',
-    agentName: 'Elena Rostova',
-    agentBrokerage: 'Sotheby’s International Realty',
-    agentQuote: 'Set the table with the number of chairs that actually fit. That is the question buyers ask before they drive over.'
   },
   office: {
     title: 'Executive Work-From-Home Office',
@@ -145,14 +121,6 @@ const roomImages = {
     edge: 'Editors bill this as a separate room and a separate wait. Here it is the same 15-second credit.',
     before: 'assets/office_empty.jpg',
     after: 'assets/office_staged.jpg',
-    daysOnMarket: '11 Days',
-    benchmark: 'vs 48 MLS avg',
-    overAsking: '+$19,500',
-    roi: '994x ROI',
-    savings: '$2,100 saved vs physical',
-    agentName: 'Marcus Vance',
-    agentBrokerage: 'eXp Realty Silicon Valley',
-    agentQuote: 'If the spare room is the home office, show a desk. An empty room drops out of that search filter.'
   },
   twilight: {
     title: 'Virtual Twilight / Day-to-Dusk Exterior',
@@ -162,14 +130,6 @@ const roomImages = {
     edge: 'A second twilight photo shoot is often $350. This uses one credit on the photo you already have.',
     before: 'assets/twilight_day.jpg',
     after: 'assets/twilight_dusk.jpg',
-    daysOnMarket: '6 Days',
-    benchmark: 'vs 51 MLS avg',
-    overAsking: '+$31,000',
-    roi: '1,581x ROI',
-    savings: '$350 saved vs dusk photo',
-    agentName: 'Amanda Ruiz',
-    agentBrokerage: 'RE/MAX Premier',
-    agentQuote: 'Use this when the exterior was shot at noon. It is the same house, with the light moved to dusk. Say so on the listing.'
   },
   declutter: {
     title: 'Tenant Item Removal & Decluttering',
@@ -179,14 +139,6 @@ const roomImages = {
     edge: 'Waiting for tenants to move delays the listing. A removal credit lets you photograph now and publish a clean room the same day.',
     before: 'assets/declutter_before.jpg',
     after: 'assets/declutter_after.jpg',
-    daysOnMarket: '14 Days',
-    benchmark: 'vs 68 MLS avg',
-    overAsking: '+$15,000',
-    roi: '765x ROI',
-    savings: '$1,500 saved in delays',
-    agentName: 'Michael Chang',
-    agentBrokerage: 'Coldwell Banker Realty',
-    agentQuote: 'Remove the boxes and leave the real sofa. Buyers should still recognize the room they walk into.'
   },
   patio: {
     title: 'Outdoor living patio',
@@ -196,14 +148,6 @@ const roomImages = {
     edge: 'Outdoor rental staging is one of the most expensive rooms to do physically. This shot is still one image credit.',
     before: 'assets/patio_empty.jpg',
     after: 'assets/patio_staged.jpg?v=2',
-    daysOnMarket: '7 Days',
-    benchmark: 'vs 44 MLS avg',
-    overAsking: '+$35,000',
-    roi: '1,785x ROI',
-    savings: '$3,200 saved vs outdoor rental',
-    agentName: 'Jessica Thornton',
-    agentBrokerage: 'The Corcoran Group',
-    agentQuote: 'A bare patio reads as unused yard. Daylight seating shows the outdoor room. You do not have to rent furniture that sits in the weather.'
   },
   renovation: {
     title: 'Virtual Remodel & Architectural Renovation',
@@ -213,14 +157,6 @@ const roomImages = {
     edge: 'A real remodel quote can push a seller to cut price. This photo lets them show the vision and keep the as-is number.',
     before: 'assets/reno_before.jpg',
     after: 'assets/reno_after.jpg',
-    daysOnMarket: '15 Days',
-    benchmark: 'vs 74 MLS avg',
-    overAsking: '+$42,000',
-    roi: '2,142x ROI',
-    savings: '$65,000 saved vs remodel',
-    agentName: 'Robert Sterling',
-    agentBrokerage: 'Berkshire Hathaway HomeServices',
-    agentQuote: 'A virtual refresh shows what the room could become. The listing still needs to say the work is not done.'
   },
   kitchen: {
     title: 'Kitchen',
@@ -984,30 +920,6 @@ function switchHeroRoom(room, btnEl) {
 
   const edgeEl = document.getElementById('galleryEdge');
   if (edgeEl && data.edge) edgeEl.textContent = data.edge;
-
-  const domEl = document.getElementById('galleryDom');
-  if (domEl) domEl.textContent = data.daysOnMarket;
-
-  const benchEl = document.getElementById('galleryDomBench');
-  if (benchEl) benchEl.textContent = data.benchmark;
-
-  const overEl = document.getElementById('galleryOverAsk');
-  if (overEl) overEl.textContent = data.overAsking;
-
-  const roiEl = document.getElementById('galleryRoi');
-  if (roiEl) roiEl.textContent = data.roi;
-
-  const savingsEl = document.getElementById('gallerySavings');
-  if (savingsEl) savingsEl.textContent = data.savings;
-
-  const quoteEl = document.getElementById('galleryQuoteText');
-  if (quoteEl) quoteEl.textContent = data.agentQuote;
-
-  const nameEl = document.getElementById('galleryAgentName');
-  if (nameEl) nameEl.textContent = data.agentName;
-
-  const brokerEl = document.getElementById('galleryAgentBroker');
-  if (brokerEl) brokerEl.textContent = data.agentBrokerage;
 
   galleryRoom = room;
   paintGalleryStyle();

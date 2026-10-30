@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/0.9">
   <url>
     <loc>https://roomgenix.com/</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-31</lastmod>
     <image:image>
       <image:loc>https://roomgenix.com/assets/hero_coastal.jpg</image:loc>
       <image:title>Virtual staging: coastal living room</image:title>
@@ -50,6 +50,18 @@
   </url>
 
   <!-- Room landing pages -->
+  <url>
+    <loc>https://roomgenix.com/what-is-virtual-staging</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://roomgenix.com/best-ai-virtual-staging-software</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://roomgenix.com/virtual-staging-living-room</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
   <url>
     <loc>https://roomgenix.com/virtual-staging-bedroom</loc>
     <lastmod>2026-10-28</lastmod>
@@ -138,7 +150,7 @@
   <!-- Blog + guides -->
   <url>
     <loc>https://roomgenix.com/blog</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-31</lastmod>
   </url>
   <url>
     <loc>https://roomgenix.com/blog/is-virtual-staging-legal</loc>
@@ -150,7 +162,7 @@
   </url>
   <url>
     <loc>https://roomgenix.com/ai-staging-keeps-room-layout</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-31</lastmod>
   </url>
   <url>
     <loc>https://roomgenix.com/virtual-vs-physical-staging-cost</loc>

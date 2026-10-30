@@ -16,6 +16,7 @@ RoomGenix is a web application that virtually stages empty-room listing photos u
 
 ## Room landing pages
 
+- [Living room virtual staging](https://roomgenix.com/virtual-staging-living-room)
 - [Bedroom virtual staging](https://roomgenix.com/virtual-staging-bedroom)
 - [Dining room virtual staging](https://roomgenix.com/virtual-staging-dining-room)
 - [Home office virtual staging](https://roomgenix.com/virtual-staging-home-office)
@@ -41,6 +42,8 @@ RoomGenix is a web application that virtually stages empty-room listing photos u
 
 ## Articles
 
+- [What is virtual staging?](https://roomgenix.com/what-is-virtual-staging)
+- [AI virtual staging software compared (2026)](https://roomgenix.com/best-ai-virtual-staging-software)
 - [Is virtual staging legal?](https://roomgenix.com/blog/is-virtual-staging-legal)
 - [Stage a vacant listing in minutes](https://roomgenix.com/blog/stage-vacant-listing-in-minutes)
 - [AI staging keeps room layout](https://roomgenix.com/ai-staging-keeps-room-layout)

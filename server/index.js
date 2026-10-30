@@ -79,7 +79,10 @@ const PAGE_ROUTES = {
   '/virtual-staging-dallas': 'virtual-staging-dallas.html',
   '/done-for-you': 'done-for-you.html',
   '/about': 'about.html',
-  '/pricing': 'pricing.html'
+  '/pricing': 'pricing.html',
+  '/what-is-virtual-staging': 'what-is-virtual-staging.html',
+  '/best-ai-virtual-staging-software': 'best-ai-virtual-staging-software.html',
+  '/virtual-staging-living-room': 'virtual-staging-living-room.html'
 };
 
 const PAGE_ALIASES = {
